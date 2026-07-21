@@ -1,6 +1,6 @@
 import * as P from '../lib/parametres2026';
 import { eur } from '../lib/format';
-import { LIEN_ISSUES, lienNouvelleIssue } from '../lib/depot';
+import { DEPOT, LIEN_ISSUES, lienNouvelleIssue } from '../lib/depot';
 
 const SOURCES = [
   {
@@ -126,11 +126,14 @@ export function Sources({ lienSimulation }: { lienSimulation?: string }) {
         </ul>
 
         <div className="mt-12 max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6">
-          <h3 className="font-semibold text-white">Un taux vous paraît faux ?</h3>
+          <h3 className="font-semibold text-white">
+            Un taux vous paraît faux ? Une idée à proposer ?
+          </h3>
           <p className="mt-2 text-sm leading-relaxed text-ink-300">
-            Dites-le. La flat tax est restée affichée à 30 % après son passage à
-            31,4 %, et c'est un utilisateur qui l'a signalé. Si vous avez la
-            référence officielle qui contredit un chiffre, elle est la bienvenue.
+            Les barèmes bougent à chaque loi de finances, et une valeur périmée ne se
+            distingue pas d'une valeur juste. Si un chiffre vous semble erroné,
+            signalez-le : avec la référence officielle qui le contredit, la correction
+            est immédiate. Le simulateur est ouvert, les contributions aussi.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <a
@@ -142,12 +145,20 @@ export function Sources({ lienSimulation }: { lienSimulation?: string }) {
               Signaler une erreur
             </a>
             <a
+              href={DEPOT}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-ink-200 transition hover:border-white/30 hover:text-white"
+            >
+              Voir le code source et contribuer
+            </a>
+            <a
               href={LIEN_ISSUES}
               target="_blank"
               rel="noreferrer"
               className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-ink-200 transition hover:border-white/30 hover:text-white"
             >
-              Voir les signalements ouverts
+              Signalements ouverts
             </a>
           </div>
           <p className="mt-3 text-xs text-ink-400">

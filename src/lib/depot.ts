@@ -1,10 +1,10 @@
 /**
  * Links back to the source repository.
  *
- * Reporting a wrong rate matters more here than in most tools: the flat tax
- * shipped at 30% for a while after the 2026 act moved it to 31.4%, and it was
- * a user who spotted it. A report is only actionable if it carries the exact
- * simulation, hence the prefilled body.
+ * Reporting a wrong rate matters more here than in most tools: brackets move
+ * with every finance act, and a stale value looks exactly like a correct one.
+ * A report is only actionable if it carries the exact simulation, hence the
+ * prefilled body.
  */
 
 export const DEPOT = 'https://github.com/Commutator-IO/sasu-simulator';
