@@ -47,12 +47,14 @@ jobs:
 
       # `npm run build` chains `tsc -b` then `vite build`, so type errors fail
       # this step.
+      #
+      # This site is served from the custom domain sasu.commutator.io, i.e.
+      # from the root, so assets must not be prefixed and BASE_PATH stays
+      # unset (vite.config.ts then falls back to "/").
+      # Without a custom domain a project site lives under /<repo>/ instead,
+      # and the build would need BASE_PATH: /${{ github.event.repository.name }}/
       - name: Build
         run: npm run build
-        env:
-          # A project site is served under /<repo>/, so Vite must prefix asset
-          # URLs. Derived from the repository name to survive a rename.
-          BASE_PATH: /${{ github.event.repository.name }}/
 
       # `enablement: true` provisions GitHub Pages on the repository if it is
       # not set up yet. Without it the step fails with "Get Pages site failed"
