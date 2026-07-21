@@ -7,6 +7,7 @@ import { Sources } from './components/Sources';
 import { eur, pct } from './lib/format';
 import { balayer, brutMaxPourBudget, simuler, type Hypotheses } from './lib/simulation';
 import { decoderEtat, encoderEtat, lienPartage, type EtatPartage } from './lib/url';
+import { DEPOT, LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
 const DEFAUTS: Omit<Hypotheses, 'brutAnnuel'> = {
@@ -493,7 +494,7 @@ export default function App() {
           </div>
         </section>
 
-        <Sources />
+        <Sources lienSimulation={lienPartage({ base, brut }, ETAT_PAR_DEFAUT)} />
       </main>
 
       <Pied />
@@ -644,10 +645,31 @@ function Pied() {
   return (
     <footer className="border-t border-ink-200/70 bg-white">
       <div className="mx-auto max-w-6xl px-5 py-10 text-sm text-ink-400">
-        <p>
-          Simulateur d'optimisation salaire / dividendes pour SASU — barèmes {P.ANNEE}.
-        </p>
-        <p className="mt-2 max-w-3xl leading-relaxed">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
+          <p>
+            Simulateur d'optimisation salaire / dividendes pour SASU — barèmes{' '}
+            {P.ANNEE}.
+          </p>
+          <p className="flex flex-wrap gap-x-5 gap-y-1">
+            <a
+              href={LIEN_ISSUES}
+              target="_blank"
+              rel="noreferrer"
+              className="transition hover:text-ink-900"
+            >
+              Signaler une erreur
+            </a>
+            <a
+              href={DEPOT}
+              target="_blank"
+              rel="noreferrer"
+              className="transition hover:text-ink-900"
+            >
+              Code source
+            </a>
+          </p>
+        </div>
+        <p className="mt-4 max-w-3xl leading-relaxed">
           Outil informatif. Les montants affichés sont des estimations : ils ne tiennent
           pas compte de votre situation complète, des crédits et réductions d'impôt, ni
           des spécificités de votre contrat de prévoyance.
