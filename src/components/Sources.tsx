@@ -1,5 +1,6 @@
 import * as P from '../lib/parametres2026';
 import { eur } from '../lib/format';
+import { LIEN_ISSUES, lienNouvelleIssue } from '../lib/depot';
 
 const SOURCES = [
   {
@@ -79,7 +80,7 @@ const HYPOTHESES = [
   'Les dividendes sont réputés prélevés sur le résultat de l’exercice simulé, décidés en assemblée après approbation des comptes.',
 ];
 
-export function Sources() {
+export function Sources({ lienSimulation }: { lienSimulation?: string }) {
   return (
     <section id="sources" className="scroll-mt-20 bg-ink-900 text-ink-100">
       <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
@@ -123,6 +124,37 @@ export function Sources() {
             </li>
           ))}
         </ul>
+
+        <div className="mt-12 max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 className="font-semibold text-white">Un taux vous paraît faux ?</h3>
+          <p className="mt-2 text-sm leading-relaxed text-ink-300">
+            Dites-le. La flat tax est restée affichée à 30 % après son passage à
+            31,4 %, et c'est un utilisateur qui l'a signalé. Si vous avez la
+            référence officielle qui contredit un chiffre, elle est la bienvenue.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <a
+              href={lienNouvelleIssue(lienSimulation)}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-400"
+            >
+              Signaler une erreur
+            </a>
+            <a
+              href={LIEN_ISSUES}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-ink-200 transition hover:border-white/30 hover:text-white"
+            >
+              Voir les signalements ouverts
+            </a>
+          </div>
+          <p className="mt-3 text-xs text-ink-400">
+            Le rapport est prérempli avec le lien de la simulation affichée, pour que
+            le cas se reproduise sans avoir à décrire vos paramètres.
+          </p>
+        </div>
       </div>
     </section>
   );
