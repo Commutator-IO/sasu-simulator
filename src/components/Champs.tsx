@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { num } from '../lib/format';
 
 // ---------------------------------------------------------------------------
-// Curseur
+// Slider
 // ---------------------------------------------------------------------------
 
 type CurseurProps = {
@@ -12,9 +12,9 @@ type CurseurProps = {
   max: number;
   pas: number;
   onChange: (v: number) => void;
-  /** Affichage de la valeur courante, à droite du label. */
+  /** Renders the current value, to the right of the label. */
   rendu: (v: number) => string;
-  /** Graduations affichées sous la piste. */
+  /** Tick marks shown under the track. */
   reperes?: { valeur: number; label: string }[];
   hint?: string;
 };
@@ -55,12 +55,12 @@ export function Curseur({
         max={max}
         step={pas}
         value={valeur}
-        // Sans cela, le navigateur restaure la valeur du champ au rechargement
-        // et elle diverge de l'état React.
+        // Without this the browser restores the field value on reload and it
+        // diverges from the React state.
         autoComplete="off"
         onChange={(e) => onChange(Number(e.target.value))}
-        // Faire défiler la page au-dessus du curseur ne doit pas en changer
-        // la valeur : on rend la molette inopérante en la laissant passer.
+        // Scrolling the page over the slider must not change its value: the
+        // wheel is neutralised by dropping focus and letting the event pass.
         onWheel={(e) => e.currentTarget.blur()}
         style={{
           ['--range-track' as string]: `linear-gradient(to right, var(--color-brand-500) ${progression}%, var(--color-ink-200) ${progression}%)`,
@@ -94,7 +94,7 @@ export function Curseur({
 }
 
 // ---------------------------------------------------------------------------
-// Saisie d'un montant
+// Amount input
 // ---------------------------------------------------------------------------
 
 type MontantProps = {
@@ -105,7 +105,7 @@ type MontantProps = {
   hint?: string;
   min?: number;
   max?: number;
-  /** Nombre de décimales autorisées ; 0 pour un montant en euros entiers. */
+  /** Decimals allowed; 0 for a whole-euro amount. */
   decimales?: number;
 };
 
@@ -137,13 +137,13 @@ export function Montant({
     return { nettoye, valeur: Number(nettoye || 0) };
   };
 
-  // Tampon local pour laisser l'utilisateur effacer le champ sans le voir
-  // repasser à zéro sous ses doigts.
+  // Local buffer so the user can clear the field without watching it snap
+  // back to zero under their fingers.
   const [brouillon, setBrouillon] = useState(() => formater(valeur));
 
   useEffect(() => {
     if (analyser(brouillon).valeur !== valeur) setBrouillon(formater(valeur));
-    // On ne resynchronise que sur changement de la valeur amont.
+    // Only resynchronise when the upstream value changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valeur]);
 
@@ -163,13 +163,13 @@ export function Montant({
             const { nettoye, valeur: v } = analyser(e.target.value);
             setBrouillon(
               decimales === 0
-                ? // Un montant en euros se relit mieux avec ses séparateurs,
-                  // y compris pendant la frappe.
+                ? // A euro amount reads better with its separators, including
+                  // while being typed.
                   nettoye === ''
                   ? ''
                   : formater(Number(nettoye))
-                : // Une saisie décimale en cours (« 1, », « 1,2 ») doit rester
-                  // telle quelle, sous peine de bloquer la frappe.
+                : // A decimal entry in progress ("1,", "1,2") must be left
+                  // alone, otherwise typing is blocked.
                   nettoye.replace('.', ','),
             );
             onChange(Math.min(max, Math.max(min, v)));
@@ -184,7 +184,7 @@ export function Montant({
 }
 
 // ---------------------------------------------------------------------------
-// Groupe de boutons radio
+// Segmented control
 // ---------------------------------------------------------------------------
 
 type SegmentProps<T extends string | number | boolean> = {

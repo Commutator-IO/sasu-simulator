@@ -10,8 +10,8 @@ type Segment = {
 };
 
 /**
- * Décomposition du résultat avant rémunération en un ruban proportionnel :
- * ce qui part en prélèvements, ce qui reste en poche, ce qui reste en réserves.
+ * Breaks the pre-salary profit down into a proportional ribbon: what goes to
+ * taxes and contributions, what lands in the pocket, what stays in reserves.
  */
 export function Cascade({ r }: { r: Resultat }) {
   const total = Math.max(r.resultatAvantRemuneration, 1);

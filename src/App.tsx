@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Curseur, Montant, Segments } from './components/Champs';
 import { Courbe } from './components/Courbe';
 import { Cascade } from './components/Cascade';
@@ -6,6 +6,7 @@ import { Detail } from './components/Detail';
 import { Sources } from './components/Sources';
 import { eur, pct } from './lib/format';
 import { balayer, brutMaxPourBudget, simuler, type Hypotheses } from './lib/simulation';
+import { decoderEtat, encoderEtat, lienPartage, type EtatPartage } from './lib/url';
 import * as P from './lib/parametres2026';
 
 const DEFAUTS: Omit<Hypotheses, 'brutAnnuel'> = {
@@ -21,10 +22,25 @@ const DEFAUTS: Omit<Hypotheses, 'brutAnnuel'> = {
   dividendesAuBareme: false,
 };
 
+const ETAT_PAR_DEFAUT: EtatPartage = { base: DEFAUTS, brut: 45_000 };
+
 export default function App() {
-  const [base, setBase] = useState(DEFAUTS);
-  const [brut, setBrut] = useState(45_000);
-  const [avanceOuvert, setAvanceOuvert] = useState(false);
+  // Initial state comes from the URL: a shared link must reopen exactly the
+  // same simulation.
+  const [initial] = useState(() =>
+    decoderEtat(
+      typeof window === 'undefined' ? '' : window.location.search,
+      ETAT_PAR_DEFAUT,
+    ),
+  );
+  const [base, setBase] = useState(initial.base);
+  const [brut, setBrut] = useState(initial.brut);
+  const [avanceOuvert, setAvanceOuvert] = useState(
+    () =>
+      initial.base.tauxDistribution !== DEFAUTS.tauxDistribution ||
+      initial.base.tauxATMP !== DEFAUTS.tauxATMP ||
+      initial.base.eligibleISReduit !== DEFAUTS.eligibleISReduit,
+  );
 
   const brutMax = useMemo(
     () =>
@@ -37,7 +53,7 @@ export default function App() {
   );
   const brutMaxArrondi = Math.max(1000, Math.floor(brutMax / 500) * 500);
 
-  // La rémunération ne peut pas dépasser ce que la société peut financer.
+  // Salary cannot exceed what the company is able to fund.
   useEffect(() => {
     setBrut((b) => Math.min(b, brutMaxArrondi));
   }, [brutMaxArrondi]);
@@ -46,13 +62,27 @@ export default function App() {
   const { points, optimum, plateau } = useMemo(() => balayer(base), [base]);
 
   const ecart = optimum.netEnPoche - r.netEnPoche;
-  // La courbe est plate à son sommet : tout un intervalle de rémunérations
-  // revient au même à quelques euros près. Le dire vaut mieux que de désigner
-  // un point unique.
+  // The curve is flat at its top: a whole range of salaries comes out the
+  // same within a few euros. Saying so beats pointing at a single value.
   const estOptimal = ecart <= plateau.tolerance;
 
   const maj = <K extends keyof typeof base>(cle: K, valeur: (typeof base)[K]) =>
     setBase((b) => ({ ...b, [cle]: valeur }));
+
+  // The URL follows the state without pushing a history entry on every slider
+  // notch. The delay avoids calling replaceState dozens of times during a
+  // single drag.
+  useEffect(() => {
+    const minuteur = setTimeout(() => {
+      const requete = encoderEtat({ base, brut }, ETAT_PAR_DEFAUT);
+      window.history.replaceState(
+        null,
+        '',
+        `${window.location.pathname}${requete}${window.location.hash}`,
+      );
+    }, 250);
+    return () => clearTimeout(minuteur);
+  }, [base, brut]);
 
   const reperes = [
     { valeur: 0, label: '0 €' },
@@ -62,7 +92,7 @@ export default function App() {
     },
     {
       valeur: Math.round(r.plafondTranche1 / 500) * 500,
-      // Le plafond proratisé n'est un Pass entier que sur douze mois.
+      // The prorated ceiling is a full annual ceiling only over twelve months.
       label: base.moisRemuneration >= 12 ? '1 Pass' : 'Plafond T1',
     },
   ].filter((x) => x.valeur > 0 && x.valeur <= brutMaxArrondi);
@@ -90,7 +120,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* --------------------------------------------- Paramètres + résultat */}
+        {/* ----------------------------------------------- Inputs + result */}
         <section className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-7">
@@ -403,6 +433,8 @@ export default function App() {
                   </div>
                 </div>
 
+                <BoutonPartage etat={{ base, brut }} />
+
                 <p className="mt-4 px-2 text-xs leading-relaxed text-ink-400">
                   Simulation indicative, hors CFE, mutuelle et prévoyance. Elle ne
                   remplace pas l'avis de votre expert-comptable.
@@ -412,7 +444,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* -------------------------------------------------------- Courbe */}
+        {/* --------------------------------------------------------- Curve */}
         <section className="border-y border-ink-200/70 bg-white">
           <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
             <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
@@ -437,7 +469,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* ------------------------------------------------------- Cascade */}
+        {/* ------------------------------------------------------- Ribbon */}
         <section className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
           <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
             Où partent vos {eur(base.resultatAvantRemuneration)} ?
@@ -451,7 +483,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* -------------------------------------------------------- Détail */}
+        {/* ----------------------------------------------------- Breakdown */}
         <section className="border-t border-ink-200/70 bg-white">
           <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
             <h2 className="mb-8 text-2xl font-semibold tracking-tight text-ink-900">
@@ -466,8 +498,8 @@ export default function App() {
 
       <Pied />
 
-      {/* Sur mobile, le panneau de résultat est loin sous le curseur : on garde
-          l'essentiel visible en permanence. */}
+      {/* On mobile the result panel sits far below the slider, so the key
+          figure is kept visible at all times. */}
       <div className="sticky bottom-0 z-20 border-t border-ink-200 bg-white/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-4 px-5 py-3">
           <div>
@@ -500,6 +532,62 @@ export default function App() {
 }
 
 // ---------------------------------------------------------------------------
+
+function BoutonPartage({ etat }: { etat: EtatPartage }) {
+  const [etatCopie, setEtatCopie] = useState<'repos' | 'copie' | 'manuel'>('repos');
+  const champ = useRef<HTMLInputElement>(null);
+
+  const lien = lienPartage(etat, ETAT_PAR_DEFAUT);
+
+  const copier = async () => {
+    try {
+      // Unavailable outside a secure context, or if the user denies clipboard
+      // access.
+      await navigator.clipboard.writeText(lien);
+      setEtatCopie('copie');
+      setTimeout(() => setEtatCopie('repos'), 2500);
+    } catch {
+      // Surface the link for manual copying rather than failing silently.
+      setEtatCopie('manuel');
+      requestAnimationFrame(() => champ.current?.select());
+    }
+  };
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={copier}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm font-medium text-ink-800 transition hover:border-brand-400 hover:text-brand-700"
+      >
+        {etatCopie === 'copie' ? (
+          <>
+            <span className="text-brand-600">✓</span> Lien copié
+          </>
+        ) : (
+          <>Copier le lien de cette simulation</>
+        )}
+      </button>
+
+      {etatCopie === 'manuel' && (
+        <input
+          ref={champ}
+          readOnly
+          value={lien}
+          onFocus={(e) => e.currentTarget.select()}
+          aria-label="Lien de la simulation, à copier"
+          className="tabular mt-2 w-full rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-xs text-ink-600 outline-none focus:border-brand-500"
+        />
+      )}
+
+      <p className="mt-2 px-2 text-xs leading-relaxed text-ink-400">
+        {etatCopie === 'manuel'
+          ? 'Copie automatique indisponible : sélectionnez le lien ci-dessus.'
+          : 'Le lien rouvre la simulation avec tous vos paramètres. Rien n’est enregistré : tout tient dans l’adresse.'}
+      </p>
+    </div>
+  );
+}
 
 function Mini({ label, valeur }: { label: string; valeur: string }) {
   return (

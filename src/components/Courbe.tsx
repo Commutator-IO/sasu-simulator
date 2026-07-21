@@ -7,19 +7,19 @@ type Props = {
   points: Point[];
   brutCourant: number;
   brutOptimal: number;
-  /** Plage de rémunérations équivalentes à l'optimum, à la tolérance près. */
+  /** Range of salaries equivalent to the optimum, within tolerance. */
   plateau?: { min: number; max: number; tolerance: number };
   onScrub?: (brut: number) => void;
 };
 
-const L = 56; // marge gauche
+const L = 56; // left margin
 const R = 16;
 const T = 16;
 const B = 34;
 const W = 720;
 const H = 260;
 
-/** Arrondit un pas de graduation à 1, 2, 2,5 ou 5 fois une puissance de dix. */
+/** Rounds an axis step to 1, 2, 2.5 or 5 times a power of ten. */
 function pasLisible(brut: number): number {
   if (brut <= 0) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(brut));
@@ -29,8 +29,8 @@ function pasLisible(brut: number): number {
 }
 
 /**
- * Courbe du net en poche en fonction de la rémunération brute.
- * Tracé en SVG, redimensionné par viewBox — aucune dépendance externe.
+ * Take-home pay plotted against gross salary. Drawn as SVG and scaled through
+ * the viewBox — no external dependency.
  */
 export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -40,9 +40,9 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
     const brutMax = Math.max(...points.map((p) => p.brut), 1);
     const netMaxBrut = Math.max(...points.map((p) => p.net));
     const netMinBrut = Math.min(...points.map((p) => p.net));
-    // On ne repart pas systématiquement de zéro : c'est l'écart entre les
-    // stratégies qui doit se lire. L'arrondi des graduations fournit l'air
-    // nécessaire au-dessus et en dessous de la courbe.
+    // Do not always start from zero: what must read clearly is the gap
+    // between strategies. Rounding the ticks provides the headroom needed
+    // above and below the curve.
     const pasY = pasLisible((netMaxBrut - netMinBrut || netMaxBrut) / 4);
     const netMin = Math.max(0, Math.floor(netMinBrut / pasY) * pasY);
     const netMax = Math.ceil((netMaxBrut + pasY / 4) / pasY) * pasY;
@@ -120,7 +120,7 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
           </linearGradient>
         </defs>
 
-        {/* Grille horizontale */}
+        {/* Horizontal grid */}
         {graduationsY.map((v) => (
           <g key={v}>
             <line
@@ -144,7 +144,7 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
           </g>
         ))}
 
-        {/* Axe des abscisses */}
+        {/* X axis */}
         {graduationsX.map((v, i) => (
           <text
             key={v}
@@ -159,7 +159,7 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
           </text>
         ))}
 
-        {/* Zone où le net ne varie pas de façon significative */}
+        {/* Band where take-home pay does not vary significantly */}
         {plateau && plateau.max > plateau.min && (
           <rect
             x={x(plateau.min)}
@@ -200,7 +200,7 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
           strokeWidth="2"
         />
 
-        {/* Position courante / survolée */}
+        {/* Current / hovered position */}
         <line
           x1={x(affiche.brut)}
           x2={x(affiche.brut)}

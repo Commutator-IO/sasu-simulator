@@ -5,40 +5,40 @@ import * as P from './parametres2026';
 // ---------------------------------------------------------------------------
 
 export type Hypotheses = {
-  /** Résultat de l'exercice avant toute rémunération du président (CA − charges). */
+  /** Profit for the year before any salary paid to the president (revenue − costs). */
   resultatAvantRemuneration: number;
-  /** Rémunération brute annuelle du président. */
+  /** President's gross annual salary. */
   brutAnnuel: number;
   /**
-   * Nombre de mois de mandat dans l'année, qui proratise les plafonds de
-   * cotisation : une société créée en juillet n'ouvre droit qu'à six plafonds
-   * mensuels.
+   * Number of months in office during the year, which prorates the
+   * contribution ceilings: a company incorporated in July only gets six
+   * monthly ceilings.
    *
-   * Attention, c'est bien la durée de la **période d'emploi** qui proratise le
-   * plafond, et non le rythme des versements : un président en poste toute
-   * l'année qui se rémunère irrégulièrement conserve un plafond annuel entier,
-   * la régularisation progressive recalculant les cotisations plafonnées de
-   * façon cumulative depuis janvier.
+   * Careful: it is the length of the **employment period** that prorates the
+   * ceiling, not the pace of the payments. A president in office all year who
+   * pays themselves irregularly keeps a full annual ceiling, because the
+   * progressive year-to-date adjustment recomputes capped contributions
+   * cumulatively from January.
    */
   moisRemuneration: number;
-  /** Part du résultat net distribuée en dividendes (0 → 1). */
+  /** Share of after-tax profit paid out as dividends (0 → 1). */
   tauxDistribution: number;
-  /** Nombre de parts du foyer fiscal. */
+  /** Number of shares in the household for the family quotient. */
   parts: number;
-  /** Le foyer est-il un couple soumis à imposition commune ? (décote) */
+  /** Is the household a jointly assessed couple? (affects the rebate) */
   couple: boolean;
-  /** Autres revenus nets imposables du foyer (salaire du conjoint, foncier…). */
+  /** Other net taxable household income (partner's salary, rental income…). */
   autresRevenus: number;
   /**
-   * Salaire brut annuel que le président perçoit d'un autre employeur — un
-   * emploi à temps partiel mené en parallèle de la SASU, typiquement.
+   * Gross annual salary the president earns from another employer — typically
+   * a part-time job held alongside the company.
    */
   salaireExterneBrut: number;
-  /** Taux AT/MP de l'entreprise, en %. */
+  /** Company's work-accident insurance rate, as a percentage. */
   tauxATMP: number;
-  /** La société est-elle éligible au taux réduit d'IS à 15 % ? */
+  /** Is the company eligible for the reduced 15% corporate tax rate? */
   eligibleISReduit: boolean;
-  /** Option pour le barème progressif sur les dividendes (au lieu du PFU). */
+  /** Opt for the progressive scale on dividends instead of the flat tax. */
   dividendesAuBareme: boolean;
 };
 
@@ -55,11 +55,11 @@ export type LigneCotisation = {
 };
 
 export type Resultat = {
-  // Volet société
+  // Company side
   resultatAvantRemuneration: number;
   brutAnnuel: number;
   moisRemuneration: number;
-  /** Plafond de tranche 1 effectivement applicable, proratisé. */
+  /** Band 1 ceiling actually applicable, prorated. */
   plafondTranche1: number;
   cotisationsPatronales: number;
   coutEmployeur: number;
@@ -68,7 +68,7 @@ export type Resultat = {
   resultatNet: number;
   reserves: number;
 
-  // Volet rémunération
+  // Salary side
   lignes: LigneCotisation[];
   cotisationsSalariales: number;
   csgCrds: number;
@@ -76,57 +76,56 @@ export type Resultat = {
   salaireNet: number;
   salaireNetImposable: number;
 
-  // Volet dividendes
+  // Dividend side
   dividendesBruts: number;
   prelevementsSociauxDividendes: number;
   irDividendes: number;
   dividendesNets: number;
 
-  // Volet salaire extérieur
+  // Outside salary
   salaireExterneBrut: number;
   salaireExterneNet: number;
   salaireExterneNetImposable: number;
 
-  // Volet impôt sur le revenu
+  // Personal income tax
   revenuImposable: number;
-  /** Impôt sur le revenu et PFU imputables à la SASU seule. */
+  /** Income tax and flat tax attributable to the company alone. */
   irTotal: number;
-  /** Impôt supplémentaire causé par la rémunération de président. */
+  /** Extra tax caused by the president's salary. */
   irSurSalaire: number;
-  /** Impôt du foyer, toutes ressources confondues. */
+  /** Household tax across all sources of income. */
   irFoyer: number;
   tmi: number;
 
-  // Prélèvement à la source
-  /** Assiette de la seule rémunération de président. */
+  // Pay-as-you-earn withholding
+  /** Withholding base for the president's salary alone. */
   assiettePAS: number;
-  /** Assiette du foyer, salaire extérieur compris. */
+  /** Household withholding base, outside salary included. */
   assiettePASFoyer: number;
   tauxPAS: number;
-  /** Retenue mensuelle sur la seule paie de la SASU. */
+  /** Monthly amount withheld on the company payslip alone. */
   prelevementMensuelPAS: number;
 
-  // Synthèse
+  // Summary
   netEnPoche: number;
   totalPrelevements: number;
   tauxPrelevementGlobal: number;
 
-  // Protection sociale
+  // Social entitlements
   trimestresValides: number;
-  /** Trimestres déjà acquis par le seul salaire extérieur. */
+  /** Pension quarters already earned by the outside salary alone. */
   trimestresExterne: number;
   pointsAgircArrco: number;
   retraiteComplementaireAnnuelle: number;
 };
 
 // ---------------------------------------------------------------------------
-// Cotisations sociales
+// Social contributions
 // ---------------------------------------------------------------------------
 
 /**
- * Plafond applicable à la tranche 1 : le plafond mensuel multiplié par le
- * nombre de mois de rémunération. Sur douze mois, on retombe exactement sur le
- * plafond annuel.
+ * Ceiling applicable to band 1: the monthly ceiling times the number of months
+ * in office. Over twelve months this lands exactly on the annual ceiling.
  */
 export function plafondTranche1(moisRemuneration = 12): number {
   return P.PMSS * bornerMois(moisRemuneration);
@@ -153,8 +152,8 @@ function assiette(type: P.Assiette, brut: number, plafond: number): number {
 }
 
 /**
- * Assiette CSG-CRDS : 98,25 % du brut, l'abattement étant plafonné à quatre
- * fois le plafond applicable.
+ * CSG-CRDS base: 98.25% of gross salary, the allowance being capped at four
+ * times the applicable ceiling.
  */
 export function assietteCSG(brut: number, moisRemuneration = 12): number {
   const plafond = 4 * plafondTranche1(moisRemuneration);
@@ -233,7 +232,7 @@ export function calculerCotisations(
   return lignes;
 }
 
-/** Coût total employeur (brut + cotisations patronales) pour un brut donné. */
+/** Total employer cost (gross + employer contributions) for a given gross. */
 export function coutEmployeur(
   brut: number,
   tauxATMP: number,
@@ -244,9 +243,9 @@ export function coutEmployeur(
 }
 
 /**
- * Brut maximal versable pour un budget employeur donné.
- * Le coût employeur étant continu et strictement croissant en fonction du brut,
- * on inverse par dichotomie.
+ * Highest gross salary payable within a given employer budget. Employer cost
+ * is continuous and strictly increasing in gross salary, so it is inverted by
+ * bisection.
  */
 export function brutMaxPourBudget(
   budget: number,
@@ -265,7 +264,7 @@ export function brutMaxPourBudget(
 }
 
 // ---------------------------------------------------------------------------
-// Impôt sur les sociétés
+// Corporate income tax
 // ---------------------------------------------------------------------------
 
 export function calculerIS(resultatFiscal: number, eligibleTauxReduit: boolean): number {
@@ -277,10 +276,10 @@ export function calculerIS(resultatFiscal: number, eligibleTauxReduit: boolean):
 }
 
 // ---------------------------------------------------------------------------
-// Impôt sur le revenu
+// Personal income tax
 // ---------------------------------------------------------------------------
 
-/** Impôt brut issu du barème progressif, pour un revenu donné. */
+/** Gross tax from the progressive scale, for a given income. */
 export function baremeIR(revenu: number): number {
   let impot = 0;
   let precedent = 0;
@@ -293,7 +292,7 @@ export function baremeIR(revenu: number): number {
   return impot;
 }
 
-/** Taux marginal d'imposition atteint par le revenu par part. */
+/** Marginal tax rate reached by the income per household share. */
 export function tauxMarginal(revenuParPart: number): number {
   for (const tranche of P.BAREME_IR) {
     if (revenuParPart <= tranche.plafond) return tranche.taux;
@@ -302,7 +301,8 @@ export function tauxMarginal(revenuParPart: number): number {
 }
 
 /**
- * Impôt sur le revenu du foyer, quotient familial plafonné et décote appliqués.
+ * Household income tax, with the family quotient cap and the low-income
+ * rebate applied.
  */
 export function calculerIR(revenuImposable: number, parts: number, couple: boolean): number {
   if (revenuImposable <= 0) return 0;
@@ -310,7 +310,7 @@ export function calculerIR(revenuImposable: number, parts: number, couple: boole
   const partsDeBase = couple ? 2 : 1;
   const impotAvecQuotient = baremeIR(revenuImposable / parts) * parts;
 
-  // Plafonnement de l'avantage lié aux demi-parts supplémentaires.
+  // Cap the benefit granted by the additional half-shares.
   const impotSansQuotient = baremeIR(revenuImposable / partsDeBase) * partsDeBase;
   const demiPartsSupp = Math.max(0, (parts - partsDeBase) * 2);
   const avantageMax = demiPartsSupp * P.PLAFOND_DEMI_PART;
@@ -319,7 +319,7 @@ export function calculerIR(revenuImposable: number, parts: number, couple: boole
   let impot =
     avantage > avantageMax ? impotSansQuotient - avantageMax : impotAvecQuotient;
 
-  // Décote.
+  // Low-income rebate.
   const seuil = couple ? P.DECOTE_COUPLE : P.DECOTE_CELIBATAIRE;
   const decote = seuil - P.DECOTE_TAUX * impot;
   if (decote > 0) impot = Math.max(0, impot - decote);
@@ -328,24 +328,23 @@ export function calculerIR(revenuImposable: number, parts: number, couple: boole
 }
 
 /**
- * Taux de prélèvement à la source du foyer (CGI art. 204 H).
+ * Household pay-as-you-earn withholding rate (tax code art. 204 H).
  *
- *                 impôt au barème × (revenus dans le champ / revenu imposable)
- *   taux =    ────────────────────────────────────────────────────────────────
- *                       assiette du prélèvement (art. 204 F)
+ *              scale tax × (in-scope income / total taxable income)
+ *   rate =    ─────────────────────────────────────────────────────
+ *                     withholding base (art. 204 F)
  *
- * L'assiette, elle, est le net imposable **avant** la déduction forfaitaire de
- * 10 % : c'est ce décalage qui fait que le taux paraît plus faible que le
- * rapport « impôt sur revenu imposable ». Le taux est arrondi à la décimale la
- * plus proche.
+ * The base is the net taxable salary **before** the flat 10% deduction. That
+ * mismatch is why the rate looks lower than a naive "tax over taxable income"
+ * ratio. The rate is rounded to the nearest decimal.
  *
- * @param irBareme        impôt du foyer issu du barème, avant réductions et
- *                        crédits d'impôt (le PFU sur dividendes en est exclu :
- *                        les revenus de capitaux mobiliers ne sont pas dans le
- *                        champ du prélèvement à la source)
- * @param revenuImposable revenu net imposable total du foyer
- * @param partDansLeChamp part de ce revenu imposable relevant du prélèvement
- * @param assiette        assiette du prélèvement, avant abattement de 10 %
+ * @param irBareme        household tax from the progressive scale, before
+ *                        reductions and credits (the flat tax on dividends is
+ *                        excluded: investment income is out of the
+ *                        withholding scope)
+ * @param revenuImposable total net taxable household income
+ * @param partDansLeChamp share of that taxable income within the scope
+ * @param assiette        withholding base, before the 10% deduction
  */
 export function tauxPrelevementSource(
   irBareme: number,
@@ -361,13 +360,13 @@ export function tauxPrelevementSource(
 }
 
 /**
- * Décompose un salaire brut du point de vue du salarié : cotisations retenues,
- * net à payer, et net imposable avant la déduction forfaitaire de 10 %.
+ * Breaks a gross salary down from the employee's point of view: contributions
+ * withheld, net pay, and net taxable pay before the flat 10% deduction.
  *
- * Sert aussi bien à la rémunération du président qu'à un salaire perçu chez un
- * autre employeur : côté salarial, les taux sont les mêmes (le président ne se
- * distingue que par l'absence de cotisation chômage, elle-même supprimée pour
- * les salariés depuis 2018).
+ * Used both for the president's salary and for a salary earned at another
+ * employer: on the employee side the rates are identical (the president only
+ * differs by the absence of an unemployment contribution, which was itself
+ * abolished for employees in 2018).
  */
 export function decomposerSalaire(
   brut: number,
@@ -393,7 +392,7 @@ export function decomposerSalaire(
     csgCrds,
     csgDeductible,
     net: brut - cotisationsHorsCSG - csgCrds,
-    // La CSG non déductible et la CRDS restent dans l'assiette imposable.
+    // Non-deductible CSG and CRDS remain part of the taxable base.
     netImposableAvantAbattement: Math.max(
       0,
       brut - cotisationsHorsCSG - csgDeductible,
@@ -401,7 +400,7 @@ export function decomposerSalaire(
   };
 }
 
-/** Salaire net imposable après déduction forfaitaire de 10 %. */
+/** Net taxable salary after the flat 10% deduction. */
 export function abattementSalaire(netImposableAvantAbattement: number): number {
   const abattement = Math.min(
     Math.max(netImposableAvantAbattement * P.ABATTEMENT_SALAIRE, P.ABATTEMENT_SALAIRE_MIN),
@@ -411,14 +410,14 @@ export function abattementSalaire(netImposableAvantAbattement: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Simulation complète
+// Full simulation
 // ---------------------------------------------------------------------------
 
 export function simuler(h: Hypotheses): Resultat {
   const brut = Math.max(0, h.brutAnnuel);
   const mois = bornerMois(h.moisRemuneration);
 
-  // --- Société -------------------------------------------------------------
+  // --- Company -------------------------------------------------------------
   const lignes = calculerCotisations(brut, h.tauxATMP, mois);
   const cotisationsPatronales = lignes.reduce((s, l) => s + l.patronal, 0);
   const cout = brut + cotisationsPatronales;
@@ -430,7 +429,7 @@ export function simuler(h: Hypotheses): Resultat {
   const dividendesBruts = distribuable * h.tauxDistribution;
   const reserves = resultatNet - dividendesBruts;
 
-  // --- Rémunération --------------------------------------------------------
+  // --- Salary --------------------------------------------------------------
   const csgCrdsLignes = lignes.filter((l) => l.famille === 'CSG-CRDS');
   const csgCrds = csgCrdsLignes.reduce((s, l) => s + l.salarial, 0);
   const csgDeductible =
@@ -441,20 +440,19 @@ export function simuler(h: Hypotheses): Resultat {
   const cotisationsSalariales = cotisationsSalarialesHorsCSG + csgCrds;
 
   const salaireNet = brut - cotisationsSalariales;
-  // Net imposable = brut − cotisations déductibles − CSG déductible.
-  // La CSG non déductible et la CRDS restent dans l'assiette imposable.
+  // Net taxable = gross − deductible contributions − deductible CSG.
+  // Non-deductible CSG and CRDS remain part of the taxable base.
   const netImposableAvantAbattement = Math.max(
     0,
     brut - cotisationsSalarialesHorsCSG - csgDeductible,
   );
 
-  // --- Salaire extérieur ---------------------------------------------------
+  // --- Outside salary ------------------------------------------------------
   const externeBrut = Math.max(0, h.salaireExterneBrut);
   const externe = decomposerSalaire(externeBrut);
 
-  // L'abattement de 10 % porte sur l'ensemble des salaires de la personne, et
-  // son plafond ne joue qu'une fois : on ne peut donc pas abattre chaque
-  // salaire séparément.
+  // The 10% deduction applies to all of a person's salaries at once, and its
+  // cap only bites once: the salaries cannot be deducted separately.
   const salairesImposables = abattementSalaire(
     netImposableAvantAbattement + externe.netImposableAvantAbattement,
   );
@@ -463,7 +461,7 @@ export function simuler(h: Hypotheses): Resultat {
   );
   const salaireNetImposable = Math.max(0, salairesImposables - salaireExterneNetImposable);
 
-  // --- Dividendes ----------------------------------------------------------
+  // --- Dividends -----------------------------------------------------------
   const prelevementsSociauxDividendes = dividendesBruts * P.PRELEVEMENTS_SOCIAUX;
 
   let irDividendes: number;
@@ -471,10 +469,10 @@ export function simuler(h: Hypotheses): Resultat {
   let irFoyer: number;
   let irSurSalaire: number;
 
-  // Deux bases : celle du foyer tel qu'il est, et celle qu'il aurait sans la
-  // rémunération de président. La différence isole l'impôt réellement causé
-  // par cette rémunération — l'impôt dû sur un emploi extérieur ou sur les
-  // revenus du conjoint n'a pas à être imputé à la SASU.
+  // Two bases: the household as it stands, and the household without the
+  // president's salary. The difference isolates the tax that salary actually
+  // causes — tax owed on an outside job or on a partner's income must not be
+  // charged to the company.
   const baseHorsDividendes = salairesImposables + h.autresRevenus;
   const baseSansRemuneration = salaireExterneNetImposable + h.autresRevenus;
   const irHorsDividendes = calculerIR(baseHorsDividendes, h.parts, h.couple);
@@ -497,10 +495,10 @@ export function simuler(h: Hypotheses): Resultat {
 
   const dividendesNets = dividendesBruts - prelevementsSociauxDividendes - irDividendes;
 
-  // --- Prélèvement à la source ---------------------------------------------
-  // Le taux est celui du foyer et s'applique à tous ses revenus dans le champ,
-  // donc aux deux salaires. Les dividendes en sont exclus : ils relèvent du
-  // prélèvement forfaitaire non libératoire de 12,8 % opéré par la société.
+  // --- Withholding ---------------------------------------------------------
+  // The rate belongs to the household and applies to all its in-scope income,
+  // hence to both salaries. Dividends are excluded: they fall under the 12.8%
+  // non-final withholding operated by the company.
   const irBareme = h.dividendesAuBareme ? irFoyer : irHorsDividendes;
   const assiettePAS = netImposableAvantAbattement;
   const assiettePASFoyer = assiettePAS + externe.netImposableAvantAbattement;
@@ -510,11 +508,11 @@ export function simuler(h: Hypotheses): Resultat {
     salairesImposables,
     assiettePASFoyer,
   );
-  // Ce que retient la SASU sur chacune de ses paies, l'autre employeur
-  // retenant sa part de son côté au même taux.
+  // What the company withholds on each of its own payslips; the other
+  // employer withholds its share separately at the same rate.
   const prelevementMensuelPAS = (assiettePAS * tauxPAS) / mois;
 
-  // --- Synthèse ------------------------------------------------------------
+  // --- Summary -------------------------------------------------------------
   const netEnPoche = salaireNet + dividendesNets - irSurSalaire;
   const totalPrelevements =
     cotisationsPatronales +
@@ -525,9 +523,9 @@ export function simuler(h: Hypotheses): Resultat {
   const assiette = h.resultatAvantRemuneration;
   const tauxPrelevementGlobal = assiette > 0 ? totalPrelevements / assiette : 0;
 
-  // --- Protection sociale --------------------------------------------------
-  // Les trimestres se comptent par personne, tous employeurs confondus, et
-  // dépendent du salaire annuel, non du nombre de mois travaillés.
+  // --- Social entitlements -------------------------------------------------
+  // Pension quarters are counted per person across all employers, and depend
+  // on annual salary rather than on the number of months worked.
   const trimestresValides = Math.min(
     4,
     Math.floor((brut + externeBrut) / P.BRUT_PAR_TRIMESTRE),
@@ -586,26 +584,21 @@ export function simuler(h: Hypotheses): Resultat {
   };
 }
 
-/**
- * Balaye tous les niveaux de rémunération possibles et retourne la courbe du
- * net en poche, ainsi que l'optimum. Le niveau de rémunération étant la
- * variable balayée, il ne fait pas partie des hypothèses attendues.
- */
 export type Plateau = {
-  /** Rémunération brute la plus basse restant dans la tolérance. */
+  /** Lowest gross salary still within the tolerance. */
   min: number;
-  /** Rémunération brute la plus haute restant dans la tolérance. */
+  /** Highest gross salary still within the tolerance. */
   max: number;
-  /** Écart de net en poche accepté sur toute la plage. */
+  /** Take-home difference accepted across the whole range. */
   tolerance: number;
 };
 
 /**
- * Plage de rémunérations dont le net en poche reste à `tolerance` près de
- * l'optimum.
+ * Range of salaries whose take-home pay stays within `tolerance` of the
+ * optimum.
  *
- * Le net croît puis décroît de part et d'autre de l'optimum : chaque borne se
- * trouve donc par dichotomie sur une branche monotone.
+ * Take-home pay rises then falls on either side of the optimum, so each bound
+ * is found by bisection on a monotonic branch.
  */
 export function plateauOptimum(
   h: Omit<Hypotheses, 'brutAnnuel'>,
@@ -617,7 +610,7 @@ export function plateauOptimum(
   const net = (brut: number) => simuler({ ...h, brutAnnuel: brut }).netEnPoche;
 
   const borne = (depart: number, arrivee: number) => {
-    // `depart` est dans la plage, `arrivee` en dehors.
+    // `depart` is inside the range, `arrivee` outside.
     if (net(arrivee) >= seuil) return arrivee;
     let dedans = depart;
     let dehors = arrivee;
@@ -636,6 +629,11 @@ export function plateauOptimum(
   };
 }
 
+/**
+ * Sweeps every payable salary level and returns the take-home curve together
+ * with the optimum. The salary level is the swept variable, so it is not part
+ * of the expected assumptions.
+ */
 export function balayer(
   h: Omit<Hypotheses, 'brutAnnuel'>,
   pas = 61,
@@ -655,7 +653,7 @@ export function balayer(
     return { brut, net: resultat.netEnPoche, resultat };
   });
 
-  // Affinage autour du meilleur point de la grille.
+  // Refine around the best point of the grid.
   let meilleur = points[0];
   for (const p of points) if (p.net > meilleur.net) meilleur = p;
 

@@ -178,7 +178,6 @@ qu'un simulateur, consulté une fois par an, n'offre pas.
   limite du taux fiscal.
 - **Comparaison SASU / EURL** à revenu net constant, la question qui précède
   toutes les autres.
-- **Partage d'une simulation par URL**, pour pouvoir l'envoyer à son comptable.
 - **Régularisation du plafond entre employeurs** : quand le président cumule sa
   rémunération avec un emploi extérieur, chaque employeur applique le Pass de
   son côté, et une régularisation annuelle recalcule les cotisations plafonnées

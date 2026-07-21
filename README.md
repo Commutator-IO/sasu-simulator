@@ -72,6 +72,30 @@ Le net en poche est la somme des deux, nette d'impôt. La courbe balaye tous les
 niveaux de rémunération finançables et affine l'optimum autour du meilleur
 point.
 
+## Partage d'une simulation
+
+Le site est entièrement statique : il n'y a ni base de données ni identifiant
+de simulation. L'état tient donc dans l'URL, en « query string », et le bouton
+« Copier le lien » produit une adresse qui rouvre la simulation à l'identique.
+
+```
+?resultat=180000&brut=31000&mois=7&parts=3&couple=1&salaireExterne=24000
+```
+
+Deux règles gouvernent ce format :
+
+- **Seuls les écarts aux valeurs par défaut sont écrits.** Les liens restent
+  courts, et surtout un changement de valeur par défaut ne se retrouve pas figé
+  dans les liens déjà partagés.
+- **Tout ce qui est relu est borné.** L'URL est une donnée non maîtrisée : les
+  valeurs non numériques, négatives, infinies ou démesurées retombent sur la
+  valeur par défaut, et une rémunération que la société ne peut pas financer
+  est ramenée au maximum possible.
+
+Le fragment (`#`) est laissé aux ancres de navigation, d'où le choix de la
+query string. L'URL est mise à jour par `replaceState` : elle suit l'état sans
+empiler une entrée d'historique à chaque cran du curseur.
+
 ## Architecture
 
 | Fichier | Rôle |
@@ -79,6 +103,7 @@ point.
 | [src/lib/parametres2026.ts](src/lib/parametres2026.ts) | Tous les taux, plafonds et barèmes, avec leurs sources en commentaire. **Le seul fichier à toucher pour passer à 2027.** |
 | [src/lib/simulation.ts](src/lib/simulation.ts) | Moteur de calcul, sans dépendance ni React |
 | [src/lib/simulation.test.ts](src/lib/simulation.test.ts) | Tests du moteur |
+| [src/lib/url.ts](src/lib/url.ts) | Sérialisation de la simulation dans l'URL, pour le partage |
 | [src/components/](src/components/) | Curseurs et champs, courbe SVG, ruban de répartition, détail du calcul, sources |
 | [src/App.tsx](src/App.tsx) | Page du simulateur |
 
