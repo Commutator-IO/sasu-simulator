@@ -15,13 +15,18 @@ réutiliser sans le dupliquer.
 **Priorité haute.** Un simulateur fiscal qui affiche un barème périmé est pire
 qu'inexistant : il inspire confiance tout en donnant un mauvais conseil.
 
-**Le cas d'école.** La première version calculait la flat tax à 30 %. Or
-l'article 12 de la LFSS 2026 avait porté la CSG sur le capital mobilier de
-9,2 % à 10,6 %, donc le PFU de 30 % à 31,4 %. L'erreur n'a été repérée que
-parce qu'un utilisateur l'a signalée. Conséquences : environ 1 000 € d'écart
-sur une simulation courante, et surtout un point de bascule entre flat tax et
-barème progressif déplacé de plusieurs dizaines de milliers d'euros — soit une
-recommandation inversée pour toute une tranche d'utilisateurs.
+**Le cas d'école.** Pendant le développement, la flat tax était calculée à
+30 %. Or l'article 12 de la LFSS 2026 avait porté la CSG sur le capital
+mobilier de 9,2 % à 10,6 %, donc le PFU de 30 % à 31,4 %. L'écart aurait été
+d'environ 1 000 € sur une simulation courante, et surtout le point de bascule
+entre flat tax et barème progressif se serait déplacé de plusieurs dizaines de
+milliers d'euros — soit une recommandation inversée pour toute une catégorie
+de profils.
+
+Corrigé avant la mise en ligne, donc jamais publié. Mais le taux avait tenu
+plusieurs itérations sans que rien ne le signale, et c'est une relecture
+humaine qui l'a arrêté, pas un garde-fou. La prochaine fois, ce sera peut-être
+après la publication.
 
 **Ce qui a rendu l'erreur possible, et qui reste à corriger.**
 
