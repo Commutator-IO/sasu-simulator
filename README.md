@@ -72,6 +72,17 @@ Le net en poche est la somme des deux, nette d'impôt. La courbe balaye tous les
 niveaux de rémunération finançables et affine l'optimum autour du meilleur
 point.
 
+## Déploiement
+
+Le site est publié sur [sasu.commutator.io](http://sasu.commutator.io/) par
+[la GitHub Action](.github/workflows/deploy.yml), à chaque poussée sur `main` :
+lint, tests, build, puis déploiement. Les pull requests passent les mêmes
+contrôles mais ne déploient pas.
+
+Le domaine étant personnalisé, le site est servi **à la racine** et les URL
+d'assets ne sont pas préfixées. Sans domaine personnalisé, un site de projet
+vit sous `/<dépôt>/` et le build a besoin de `BASE_PATH=/<dépôt>/`.
+
 ## Partage d'une simulation
 
 Le site est entièrement statique : il n'y a ni base de données ni identifiant
