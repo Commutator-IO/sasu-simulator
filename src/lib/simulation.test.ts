@@ -65,15 +65,15 @@ describe('barème de l’impôt sur le revenu', () => {
   });
 
   it('applique la décote aux impôts faibles', () => {
-    // 15 000 € pour une part : impôt brut 374 €, décote 897 − 45,25 % × 374.
+    // €15,000 for one share: gross tax €374, rebate 897 − 45.25% × 374.
     const brut = baremeIR(15_000);
     const decote = P.DECOTE_CELIBATAIRE - P.DECOTE_TAUX * brut;
     expect(calculerIR(15_000, 1, false)).toBeCloseTo(Math.max(0, brut - decote), 2);
   });
 
   it('plafonne l’avantage du quotient familial', () => {
-    // Un célibataire avec deux enfants (2 parts) : l'avantage des deux
-    // demi-parts ne peut dépasser 2 × 1 807 €.
+    // A single parent with two children (2 shares): the benefit of the two
+    // extra half-shares cannot exceed 2 × €1,807.
     const impot = calculerIR(120_000, 2, false);
     const sansEnfants = calculerIR(120_000, 1, false);
     expect(sansEnfants - impot).toBeCloseTo(2 * P.PLAFOND_DEMI_PART, 2);
@@ -144,8 +144,8 @@ describe('cotisations du président', () => {
   });
 
   it('situe les charges patronales dans la fourchette attendue', () => {
-    // Sous le Pass, la retraite complémentaire est intégralement en tranche 1 :
-    // le taux patronal global tourne autour de 35 à 40 % du brut.
+    // Below the annual ceiling, supplementary pension sits entirely in band 1:
+    // the overall employer rate lands around 35-40% of gross.
     const r = sim(40_000);
     const taux = r.cotisationsPatronales / r.brutAnnuel;
     expect(taux).toBeGreaterThan(0.33);
@@ -153,7 +153,7 @@ describe('cotisations du président', () => {
   });
 
   it('alourdit les charges patronales au-dessus du Pass', () => {
-    // La tranche 2 Agirc-Arrco (12,95 % patronal) remplace la tranche 1 (4,72 %).
+    // Agirc-Arrco band 2 (12.95% employer) replaces band 1 (4.72%).
     const bas = sim(40_000);
     const haut = sim(120_000);
     expect(haut.cotisationsPatronales / haut.brutAnnuel).toBeGreaterThan(
@@ -220,8 +220,8 @@ describe('simulation complète', () => {
   });
 
   it('applique la flat tax à 31,4 % sur les dividendes', () => {
-    // 12,8 % d'impôt sur le revenu + 18,6 % de prélèvements sociaux depuis la
-    // LFSS 2026 : le PFU n'est plus à 30 %.
+    // 12.8% income tax + 18.6% social levies since the 2026 Social Security
+    // Financing Act: the flat tax is no longer 30%.
     const r = sim(0);
     expect(r.dividendesNets).toBeCloseTo(r.dividendesBruts * (1 - 0.314), 2);
   });
@@ -232,7 +232,7 @@ describe('simulation complète', () => {
   });
 
   it('laisse la CSG des salaires à 9,2 %, non concernée par la hausse', () => {
-    // La LFSS 2026 ne relève la CSG que sur le capital mobilier.
+    // The 2026 act only raises the CSG on investment income.
     const lignes = calculerCotisations(60_000, 1.3);
     const csgD = lignes.find((l) => l.libelle === 'CSG déductible')!;
     const csgND = lignes.find((l) => l.libelle === 'CSG non déductible')!;
@@ -264,17 +264,17 @@ describe('simulation complète', () => {
 describe('prélèvement à la source', () => {
   it('assoit le prélèvement sur le net imposable avant abattement de 10 %', () => {
     const r = sim(60_000);
-    // L'assiette est bien supérieure au net imposable déclaré, qui lui subit
-    // la déduction forfaitaire.
+    // The withholding base is higher than the declared taxable salary, which
+    // does bear the flat deduction.
     expect(r.assiettePAS).toBeGreaterThan(r.salaireNetImposable);
     expect(abattementSalaire(r.assiettePAS)).toBeCloseTo(r.salaireNetImposable, 2);
   });
 
   it('prélève sur l’année l’impôt dû sur le salaire, au centime d’arrondi près', () => {
     const r = sim(60_000);
-    // L'arrondi du taux à la décimale empêche de tomber juste : l'écart ne
-    // peut pas dépasser une demi-décimale de taux appliquée à l'assiette,
-    // et c'est la déclaration de revenus qui le régularise.
+    // Rounding the rate to one decimal makes an exact match impossible: the
+    // gap cannot exceed half a decimal of rate applied to the base, and the
+    // annual tax return settles it.
     const toleranceArrondi = r.assiettePAS * (P.PAS_ARRONDI / 2);
     expect(Math.abs(r.prelevementMensuelPAS * 12 - r.irSurSalaire)).toBeLessThanOrEqual(
       toleranceArrondi,
@@ -311,16 +311,16 @@ describe('prélèvement à la source', () => {
   });
 
   it('exclut les dividendes soumis au PFU du champ du prélèvement', () => {
-    // Les revenus de capitaux mobiliers ne sont pas prélevés à la source :
-    // distribuer davantage ne doit pas changer le taux appliqué à la paie.
+    // Investment income is out of the withholding scope: paying out more
+    // dividends must not change the rate applied to the payslip.
     const peu = sim(50_000, { tauxDistribution: 0.1 });
     const tout = sim(50_000, { tauxDistribution: 1 });
     expect(peu.tauxPAS).toBeCloseTo(tout.tauxPAS, 10);
   });
 
   it('relève le taux quand le foyer opte pour le barème', () => {
-    // Les dividendes au barème font monter l'impôt du foyer, donc le taux
-    // appliqué au salaire.
+    // Dividends taxed on the scale raise household tax, hence the rate
+    // applied to the salary.
     const pfu = sim(50_000, { dividendesAuBareme: false });
     const bareme = sim(50_000, { dividendesAuBareme: true });
     expect(bareme.tauxPAS).toBeGreaterThan(pfu.tauxPAS);
@@ -335,15 +335,15 @@ describe('prélèvement à la source', () => {
 
   it('applique la formule de l’article 204 H', () => {
     expect(tauxPrelevementSource(3_000, 30_000, 30_000, 33_333)).toBeCloseTo(0.09, 10);
-    // Le prorata isole la part d'impôt afférente aux revenus dans le champ.
+    // The proration isolates the tax attributable to in-scope income.
     expect(tauxPrelevementSource(4_000, 40_000, 20_000, 22_222)).toBeCloseTo(0.09, 10);
   });
 });
 
 describe('nombre de mois de rémunération', () => {
   it('retombe sur le plafond annuel pour douze mois', () => {
-    // Le plafond annuel est exactement douze plafonds mensuels : si cette
-    // égalité se rompt, toute la proratisation dérive.
+    // The annual ceiling is exactly twelve monthly ceilings: if that identity
+    // breaks, the whole proration drifts.
     expect(plafondTranche1(12)).toBeCloseTo(P.PASS, 10);
     expect(12 * P.PMSS).toBeCloseTo(P.PASS, 10);
   });
@@ -368,8 +368,8 @@ describe('nombre de mois de rémunération', () => {
   });
 
   it('bascule davantage de rémunération en tranche 2 sur une année partielle', () => {
-    // 40 000 € versés sur six mois dépassent le plafond proratisé (24 030 €),
-    // alors qu'ils resteraient intégralement en tranche 1 sur douze mois.
+    // €40,000 paid over six months exceeds the prorated ceiling (€24,030),
+    // whereas it would stay entirely in band 1 over twelve months.
     const annee = calculerCotisations(40_000, 1.3, 12);
     const semestre = calculerCotisations(40_000, 1.3, 6);
     const t2Annee = annee.find((l) => l.libelle.includes('Agirc-Arrco T2'))!;
@@ -380,11 +380,11 @@ describe('nombre de mois de rémunération', () => {
   });
 
   it('laisse le coût employeur quasi inchangé malgré le passage en tranche 2', () => {
-    // Contre-intuitif : au-dessus du plafond, la retraite complémentaire
-    // patronale passe de 4,72 % à 12,95 %, mais la vieillesse plafonnée
-    // (8,55 %) disparaît. Les deux effets se compensent presque, et seule la
-    // CET vient s'ajouter. Ce test existe parce que l'interface a d'abord
-    // annoncé, à tort, une hausse sensible du coût.
+    // Counter-intuitive: above the ceiling the employer supplementary pension
+    // rate goes from 4.72% to 12.95%, but the capped old-age contribution
+    // (8.55%) disappears. The two effects nearly cancel out and only the CET
+    // is added. This test exists because the UI first claimed, wrongly, that
+    // the cost rose noticeably.
     const annee = sim(45_000, { moisRemuneration: 12 });
     const semestre = sim(45_000, { moisRemuneration: 6 });
     const ecart =
@@ -395,7 +395,7 @@ describe('nombre de mois de rémunération', () => {
   });
 
   it('allège les cotisations salariales et augmente les points de retraite', () => {
-    // La tranche 2 achète les points à 17 % contre 6,20 % en tranche 1.
+    // Band 2 buys pension points at 17% versus 6.20% in band 1.
     const annee = sim(45_000, { moisRemuneration: 12 });
     const semestre = sim(45_000, { moisRemuneration: 6 });
     expect(semestre.cotisationsSalariales).toBeLessThan(annee.cotisationsSalariales);
@@ -461,8 +461,8 @@ describe('salaire perçu chez un autre employeur', () => {
   });
 
   it('n’applique l’abattement de 10 % qu’une fois sur les deux salaires', () => {
-    // Deux salaires de 150 000 € dépassent largement le plafond de
-    // l'abattement : la déduction totale ne peut pas valoir deux plafonds.
+    // Two salaries of €150,000 are well past the deduction cap: the total
+    // deduction cannot amount to two caps.
     const r = sim(150_000, {
       resultatAvantRemuneration: 400_000,
       salaireExterneBrut: 150_000,
@@ -474,8 +474,8 @@ describe('salaire perçu chez un autre employeur', () => {
 
   it('n’impute pas à la SASU l’impôt dû sur le salaire extérieur', () => {
     const r = sim(0, { salaireExterneBrut: 60_000 });
-    // Sans rémunération de président, la SASU ne cause aucun impôt sur salaire,
-    // alors même que le foyer est imposable.
+    // With no president's salary the company causes no salary tax at all,
+    // even though the household is taxable.
     expect(r.irSurSalaire).toBeCloseTo(0, 6);
     expect(r.irFoyer).toBeGreaterThan(0);
   });
@@ -508,8 +508,8 @@ describe('salaire perçu chez un autre employeur', () => {
     expect(r.trimestresValides).toBe(4);
     expect(r.trimestresExterne).toBe(4);
 
-    // Un mi-temps qui ne valide que deux trimestres : la rémunération de
-    // président complète jusqu'à quatre.
+    // A part-time job earning only two quarters: the president's salary tops
+    // it up to four.
     const partiel = sim(2 * P.BRUT_PAR_TRIMESTRE, {
       salaireExterneBrut: 2 * P.BRUT_PAR_TRIMESTRE,
     });
@@ -524,13 +524,13 @@ describe('salaire perçu chez un autre employeur', () => {
       decomposerSalaire(30_000).netImposableAvantAbattement,
       6,
     );
-    // La retenue affichée ne porte que sur la paie de la SASU.
+    // The displayed withholding covers the company payslip only.
     expect(r.prelevementMensuelPAS * 12).toBeCloseTo(r.assiettePAS * r.tauxPAS, 6);
   });
 
   it('applique le même taux de prélèvement aux deux employeurs', () => {
-    // Le taux est celui du foyer : il ne dépend pas de la répartition entre
-    // les deux paies, à revenu total constant.
+    // The rate belongs to the household: it does not depend on how income is
+    // split between the two payslips, at constant total income.
     const a = sim(40_000, { salaireExterneBrut: 40_000 });
     const b = sim(40_000, { salaireExterneBrut: 40_000 });
     expect(a.tauxPAS).toBeCloseTo(b.tauxPAS, 10);
@@ -560,8 +560,8 @@ describe('recherche de l’optimum', () => {
   });
 
   it('recommande une rémunération non nulle sur un résultat courant', () => {
-    // Les premiers euros de salaire sont peu taxés (tranches à 0 et 11 %)
-    // alors que le dividende subit d'emblée IS + flat tax.
+    // The first euros of salary are lightly taxed (0% and 11% brackets)
+    // whereas a dividend bears corporate tax plus flat tax from the start.
     const { optimum } = balayer(BASE);
     expect(optimum.brutAnnuel).toBeGreaterThan(5_000);
   });
@@ -591,13 +591,13 @@ describe('recherche de l’optimum', () => {
   });
 
   it('confirme que la courbe est plate à son sommet', () => {
-    // C'est la raison d'être du plateau : le badge « vous êtes à l'optimum »
-    // s'affichait sur plusieurs milliers d'euros de rémunération sans que
-    // l'utilisateur comprenne pourquoi.
+    // This is why the plateau exists: the "you are at the optimum" badge used
+    // to show across several thousand euros of salary without the user
+    // understanding why.
     const { optimum, plateau } = balayer(BASE);
     expect(plateau.max - plateau.min).toBeGreaterThan(1_000);
 
-    // S'écarter de 2 000 € de l'optimum coûte moins de 200 €.
+    // Moving €2,000 away from the optimum costs less than €200.
     const ecarte = simuler({ ...BASE, brutAnnuel: optimum.brutAnnuel + 2_000 });
     expect(optimum.netEnPoche - ecarte.netEnPoche).toBeLessThan(200);
   });
@@ -615,8 +615,8 @@ describe('recherche de l’optimum', () => {
   });
 
   it('déplace l’optimum quand le foyer a déjà d’autres revenus', () => {
-    // Avec un foyer déjà imposé dans les tranches hautes, le salaire perd de
-    // son avantage : l'optimum recule.
+    // With a household already taxed in the upper brackets, salary loses its
+    // edge and the optimum moves down.
     const seul = balayer(BASE).optimum.brutAnnuel;
     const avecRevenus = balayer({ ...BASE, autresRevenus: 120_000 }).optimum.brutAnnuel;
     expect(avecRevenus).toBeLessThan(seul);

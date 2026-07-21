@@ -1,42 +1,45 @@
 /**
- * Paramètres fiscaux et sociaux applicables en 2026.
+ * French tax and social security parameters applicable in 2026.
  *
- * Sources :
- *  - PASS 2026 : 48 060 € / an, 4 005 € / mois (Urssaf, arrêté du 15/12/2025)
- *  - Taux de droit commun 2026 maladie 13 % et allocations familiales 5,25 %
- *    (la réduction de taux est remplacée au 01/01/2026 par la RGDU, dont les
- *    mandataires sociaux ne bénéficient pas — cf. `RGDU` plus bas)
- *  - Agirc-Arrco 2026 : T1 7,87 %, T2 21,59 %, CEG 2,15 % / 2,70 %, CET 0,35 %
- *    répartition 60 % employeur / 40 % salarié
- *  - Barème IR 2026 (revenus 2025), loi de finances 2026 du 19/02/2026
- *  - IS : 15 % jusqu'à 42 500 € puis 25 %
- *  - PFU : 12,8 % IR + 18,6 % prélèvements sociaux, soit 31,4 % depuis la
- *    LFSS 2026 (loi n° 2025-1403 du 30 décembre 2025, art. 12)
+ * Sources:
+ *  - PASS 2026: €48,060/year, €4,005/month (Urssaf, order of 15/12/2025)
+ *  - 2026 standard rates: health 13% and family allowances 5.25% (the reduced
+ *    rates were replaced on 01/01/2026 by the RGDU, which company officers are
+ *    not eligible for — see `RGDU_APPLICABLE_AU_PRESIDENT` below)
+ *  - Agirc-Arrco 2026: T1 7.87%, T2 21.59%, CEG 2.15%/2.70%, CET 0.35%,
+ *    split 60% employer / 40% employee
+ *  - 2026 income tax brackets (2025 income), Finance Act of 19/02/2026
+ *  - Corporate tax: 15% up to €42,500 then 25%
+ *  - Flat tax: 12.8% income tax + 18.6% social levies, i.e. 31.4% since the
+ *    2026 Social Security Financing Act (law 2025-1403 of 30/12/2025, art. 12)
+ *
+ * User-facing labels stay in French: this is a French tax tool.
  */
 
 export const ANNEE = 2026;
 
-/** Plafond annuel de la sécurité sociale. */
+/** Annual social security ceiling. */
 export const PASS = 48_060;
-/** Plafond mensuel. */
+/** Monthly ceiling. */
 export const PMSS = 4_005;
 
-/** Smic horaire brut au 1er janvier 2026. */
+/** Gross hourly minimum wage as of 1 January 2026. */
 export const SMIC_HORAIRE = 11.88;
-/** Smic mensuel brut (35 h) au 1er janvier 2026. */
+/** Gross monthly minimum wage (35 h/week) as of 1 January 2026. */
 export const SMIC_MENSUEL = 1_823.03;
 
 // ---------------------------------------------------------------------------
-// Cotisations sociales — président de SASU (assimilé salarié)
+// Social contributions — SASU president (employee-equivalent status)
 // ---------------------------------------------------------------------------
 
 /**
- * Assiettes possibles :
- *  - `totalite`  : totalité du brut
- *  - `t1`        : tranche 1, de 0 à 1 PASS
- *  - `t2`        : tranche 2, de 1 à 8 PASS
- *  - `tranche_a_4pass` : de 0 à 4 PASS (Apec)
- *  - `totalite_si_sup_pass` : totalité du brut, uniquement si brut > 1 PASS (CET)
+ * Contribution bases:
+ *  - `totalite`             : the whole gross salary
+ *  - `t1`                   : band 1, from 0 to 1 PASS
+ *  - `t2`                   : band 2, from 1 to 8 PASS
+ *  - `tranche_a_4pass`      : from 0 to 4 PASS (Apec)
+ *  - `totalite_si_sup_pass` : the whole gross salary, only when it exceeds
+ *                             1 PASS (CET)
  */
 export type Assiette =
   | 'totalite'
@@ -46,26 +49,26 @@ export type Assiette =
   | 'totalite_si_sup_pass';
 
 export type Cotisation = {
-  /** Libellé affiché dans le détail. */
+  /** Label shown in the breakdown table. */
   libelle: string;
-  /** Regroupement pour le tableau de synthèse. */
+  /** Grouping used by the summary table. */
   famille: 'Sécurité sociale' | 'Retraite complémentaire' | 'Autres' | 'CSG-CRDS';
-  /** Taux patronal en %. */
+  /** Employer rate, as a percentage. */
   patronal: number;
-  /** Taux salarial en %. */
+  /** Employee rate, as a percentage. */
   salarial: number;
   assiette: Assiette;
-  /** Le président de SASU ne cotise pas au chômage : conservé pour mémoire. */
+  /** SASU presidents pay no unemployment contribution; kept for the record. */
   exclu?: boolean;
   note?: string;
 };
 
 /**
- * Le président de SASU est affilié au régime général mais **sans assurance
- * chômage** (pas de contrat de travail). Il est également exclu de la réduction
- * générale dégressive unique (RGDU), réservée aux salariés relevant de
- * l'assurance chômage : les taux maladie et allocations familiales s'appliquent
- * donc à leur niveau de droit commun quelle que soit la rémunération.
+ * A SASU president belongs to the general social security scheme but has **no
+ * unemployment insurance** (no employment contract). They are likewise
+ * excluded from the RGDU, the single sliding-scale reduction reserved for
+ * employees covered by unemployment insurance. Health and family allowance
+ * contributions therefore apply at their standard rate whatever the salary.
  */
 export const RGDU_APPLICABLE_AU_PRESIDENT = false;
 
@@ -166,21 +169,21 @@ export const COTISATIONS: Cotisation[] = [
   },
 ];
 
-/** Taux AT/MP par défaut (bureau / activité tertiaire). Paramétrable. */
+/** Default work-accident rate (office / service activity). Configurable. */
 export const AT_MP_DEFAUT = 1.3;
 
 // --- CSG / CRDS -------------------------------------------------------------
 
-/** Abattement pour frais professionnels sur l'assiette CSG-CRDS. */
+/** Professional expense allowance on the CSG-CRDS base. */
 export const CSG_ABATTEMENT = 0.0175;
-/** L'abattement de 1,75 % est plafonné à 4 PASS. */
+/** The 1.75% allowance is capped at 4 PASS. */
 export const CSG_ABATTEMENT_PLAFOND = 4 * PASS;
 export const CSG_DEDUCTIBLE = 6.8;
 export const CSG_NON_DEDUCTIBLE = 2.4;
 export const CRDS = 0.5;
 
 // ---------------------------------------------------------------------------
-// Impôt sur les sociétés
+// Corporate income tax
 // ---------------------------------------------------------------------------
 
 export const IS_SEUIL_TAUX_REDUIT = 42_500;
@@ -188,7 +191,7 @@ export const IS_TAUX_REDUIT = 0.15;
 export const IS_TAUX_NORMAL = 0.25;
 
 // ---------------------------------------------------------------------------
-// Impôt sur le revenu — barème 2026 (revenus 2025)
+// Personal income tax — 2026 brackets (2025 income)
 // ---------------------------------------------------------------------------
 
 export const BAREME_IR: { plafond: number; taux: number }[] = [
@@ -199,93 +202,92 @@ export const BAREME_IR: { plafond: number; taux: number }[] = [
   { plafond: Infinity, taux: 0.45 },
 ];
 
-/** Déduction forfaitaire de 10 % pour frais professionnels. */
+/** Flat 10% deduction for professional expenses. */
 export const ABATTEMENT_SALAIRE = 0.1;
 export const ABATTEMENT_SALAIRE_MIN = 508;
 export const ABATTEMENT_SALAIRE_MAX = 14_556;
 
-/** Décote : montant forfaitaire et taux. */
+/** Low-income tax rebate: flat amount and rate. */
 export const DECOTE_CELIBATAIRE = 897;
 export const DECOTE_COUPLE = 1_483;
 export const DECOTE_TAUX = 0.4525;
 
-/** Plafonnement du quotient familial, par demi-part supplémentaire. */
+/** Cap on the family quotient benefit, per additional half-share. */
 export const PLAFOND_DEMI_PART = 1_807;
 
 // ---------------------------------------------------------------------------
-// Prélèvement à la source
+// Pay-as-you-earn withholding
 // ---------------------------------------------------------------------------
 
 /**
- * Le taux est arrondi à la décimale la plus proche, exprimé en pourcentage
- * (CGI art. 204 H et BOI-IR-PAS-20-20-10) : 6,85 % devient 6,9 %.
+ * The withholding rate is rounded to the nearest decimal of a percentage
+ * point (tax code art. 204 H and BOI-IR-PAS-20-20-10): 6.85% becomes 6.9%.
  */
 export const PAS_ARRONDI = 0.001;
 
 /**
- * Revenu fiscal de référence en deçà duquel on peut demander une dispense du
- * prélèvement forfaitaire non libératoire de 12,8 % sur les dividendes
- * (CGI art. 242 quater).
+ * Reference taxable income below which one may opt out of the 12.8%
+ * non-final withholding on dividends (tax code art. 242 quater).
  */
 export const DISPENSE_PFNL_CELIBATAIRE = 50_000;
 export const DISPENSE_PFNL_COUPLE = 75_000;
 
 // ---------------------------------------------------------------------------
-// Dividendes
+// Dividends
 // ---------------------------------------------------------------------------
 
 export const PFU_IR = 0.128;
 
 /**
- * Prélèvements sociaux sur les revenus du capital mobilier : 18,6 % depuis le
- * 1ᵉʳ janvier 2026, contre 17,2 % auparavant.
+ * Social levies on investment income: 18.6% since 1 January 2026, up from
+ * 17.2%.
  *
- * L'article 12 de la LFSS 2026 (loi n° 2025-1403 du 30 décembre 2025) porte la
- * CSG sur le capital mobilier de 9,2 % à 10,6 %, soit :
+ * Article 12 of the 2026 Social Security Financing Act (law 2025-1403 of
+ * 30 December 2025) raises the CSG on investment income from 9.2% to 10.6%:
  *
- *   CSG 10,6 % + CRDS 0,5 % + prélèvement de solidarité 7,5 % = 18,6 %
+ *   CSG 10.6% + CRDS 0.5% + solidarity levy 7.5% = 18.6%
  *
- * Le PFU passe donc de 30 % à **31,4 %**. Attention, la hausse ne concerne que
- * le capital mobilier : l'assurance-vie, les PEL-CEL, les revenus fonciers et
- * les plus-values immobilières restent à 17,2 %, et la CSG sur les revenus
- * d'activité reste à 9,2 % (cf. `CSG_DEDUCTIBLE` et `CSG_NON_DEDUCTIBLE`).
+ * The flat tax therefore moves from 30% to **31.4%**. Note that the increase
+ * only concerns investment income: life insurance, regulated savings plans,
+ * rental income and property capital gains stay at 17.2%, and the CSG on
+ * earned income stays at 9.2% (see `CSG_DEDUCTIBLE` / `CSG_NON_DEDUCTIBLE`).
  */
 export const PRELEVEMENTS_SOCIAUX = 0.186;
 export const PFU_TOTAL = PFU_IR + PRELEVEMENTS_SOCIAUX;
 
-/** Abattement de 40 % en cas d'option pour le barème progressif. */
+/** 40% allowance when opting for the progressive income tax scale. */
 export const ABATTEMENT_DIVIDENDES = 0.4;
 
 /**
- * Part de CSG déductible du revenu global sur les dividendes au barème.
- * La hausse de 1,4 point de la CSG n'a pas été suivie d'une hausse de la
- * fraction déductible : elle reste fixée à 6,8 points.
+ * Share of the CSG on dividends deductible from total taxable income when
+ * opting for the progressive scale. The 1.4 point CSG increase was not
+ * matched by a rise in the deductible share, which stays at 6.8 points.
  */
 export const CSG_DEDUCTIBLE_DIVIDENDES = 0.068;
 
 // ---------------------------------------------------------------------------
-// Repère de marché — baromètre Malt
+// Market benchmark — Malt day-rate survey
 // ---------------------------------------------------------------------------
 
 /**
- * Tarif journalier moyen constaté par Malt pour les profils tech en 2026.
+ * Average daily rate reported by Malt for tech freelancers in 2026.
  * https://www.malt.fr/t/barometre-tarifs/tech/
  */
 export const TJM_MOYEN_MALT = 520;
 
 /**
- * Base de jours retenue par le baromètre Malt : 251 jours ouvrés moins cinq
- * semaines de congés. C'est une hypothèse de plein emploi — un freelance
- * facture en pratique plutôt 180 à 216 jours.
+ * Number of days used by the Malt survey: 251 working days minus five weeks
+ * of holiday. This assumes full occupancy — in practice a freelancer bills
+ * closer to 180-216 days.
  */
 export const JOURS_FACTURES_MALT = 226;
 
-/** Frais de fonctionnement, également retenus à 10 % par le baromètre Malt. */
+/** Running costs, also assumed at 10% by the Malt survey. */
 export const TAUX_FRAIS_REFERENCE = 0.1;
 
 /**
- * Valeur par défaut du simulateur : le chiffre d'affaires d'un TJM moyen Malt
- * sur une année pleine, diminué des frais, arrondi au millier.
+ * Simulator default: the revenue of an average Malt day rate over a full
+ * year, less costs, rounded to the nearest thousand.
  */
 export const RESULTAT_PAR_DEFAUT =
   Math.round(
@@ -293,17 +295,17 @@ export const RESULTAT_PAR_DEFAUT =
   ) * 1_000;
 
 /**
- * Écart annuel de net en poche en deçà duquel deux niveaux de rémunération
- * sont tenus pour équivalents.
+ * Yearly take-home difference below which two salary levels are treated as
+ * equivalent.
  *
- * L'optimum est un maximum : la courbe y est plate, et le net varie donc de
- * façon quadratique autour de ce point. Concrètement, s'écarter de 2 000 € de
- * l'optimum ne coûte qu'une soixantaine d'euros. Annoncer un point unique
- * serait trompeur ; on affiche une plage.
+ * The optimum is a maximum: the curve is flat there, so take-home pay varies
+ * quadratically around that point. Moving €2,000 away from the optimum only
+ * costs around sixty euros. Advertising a single point would be misleading,
+ * so a range is shown instead.
  */
 export const TOLERANCE_OPTIMUM = 100;
 
-/** Tarif journalier qu'implique un résultat donné, à jours et frais constants. */
+/** Day rate implied by a given profit, at constant days and costs. */
 export function tjmEquivalent(resultatAvantRemuneration: number): number {
   return (
     resultatAvantRemuneration / (JOURS_FACTURES_MALT * (1 - TAUX_FRAIS_REFERENCE))
@@ -311,15 +313,15 @@ export function tjmEquivalent(resultatAvantRemuneration: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// Retraite
+// Pension
 // ---------------------------------------------------------------------------
 
-/** Un trimestre est validé par tranche de 150 × Smic horaire de salaire brut. */
+/** One quarter is earned per 150 × hourly minimum wage of gross salary. */
 export const BRUT_PAR_TRIMESTRE = 150 * SMIC_HORAIRE;
-/** Salaire de référence Agirc-Arrco 2026 (prix d'achat d'un point). */
+/** Agirc-Arrco 2026 reference salary (purchase price of one point). */
 export const SALAIRE_REFERENCE_AGIRC_ARRCO = 20.1877;
-/** Valeur de service du point Agirc-Arrco en 2026. */
+/** Agirc-Arrco point value in 2026. */
 export const VALEUR_POINT_AGIRC_ARRCO = 1.4386;
-/** Taux de calcul des points (hors taux d'appel de 127 %). */
+/** Point-accrual rates (excluding the 127% call rate). */
 export const TAUX_POINTS_T1 = 0.062;
 export const TAUX_POINTS_T2 = 0.17;

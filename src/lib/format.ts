@@ -24,6 +24,6 @@ export const pct = (v: number, decimales = 1) =>
     maximumFractionDigits: decimales,
   }).format(v);
 
-/** Taux de cotisation : « 8,55 % », sans zéros inutiles. */
+/** Contribution rate: "8,55 %", without trailing zeros. */
 export const tauxPct = (v: number) =>
   `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(v)} %`;
