@@ -1,18 +1,23 @@
 # SASU simulator
 
-Boîte à outils d'optimisation fiscale pour les SASU. Premier outil livré : le
-**simulateur salaire / dividendes**, qui cherche le niveau de rémunération du
-président laissant le plus d'argent en poche, une fois payés les cotisations
-sociales, l'impôt sur les sociétés et l'impôt sur le revenu.
+Boîte à outils fiscale pour les SASU. Barèmes **2026**.
 
-Barèmes **2026**.
+| Outil | Page | Ce qu'il répond |
+| --- | --- | --- |
+| **Salaire ou dividendes** | `/` | Quel niveau de rémunération du président laisse le plus d'argent en poche, cotisations, IS et IR payés |
+| **Acomptes d'IS** | `/acomptes/` | De combien réduire légalement ses acomptes trimestriels quand le bénéfice baisse |
+
+Le site est statique : chaque outil est une vraie page, avec son propre
+`index.html` généré par Vite. GitHub Pages sert `/acomptes/` directement, sans
+routeur côté client ni redirection. Les liens internes portent la barre finale,
+qui évite un aller-retour de redirection.
 
 ## Démarrer
 
 ```bash
 npm install
 npm run dev      # serveur de développement
-npm test         # 119 tests sur le moteur de calcul
+npm test         # 142 tests sur les moteurs de calcul
 npm run build    # build de production
 npm run lint
 ```
@@ -114,8 +119,10 @@ empiler une entrée d'historique à chaque cran du curseur.
 | Fichier | Rôle |
 | --- | --- |
 | [src/lib/parametres2026.ts](src/lib/parametres2026.ts) | Tous les taux, plafonds et barèmes, avec leurs sources en commentaire. **Le seul fichier à toucher pour passer à 2027.** |
-| [src/lib/simulation.ts](src/lib/simulation.ts) | Moteur de calcul, sans dépendance ni React |
-| [src/lib/simulation.test.ts](src/lib/simulation.test.ts) | Tests du moteur |
+| [src/lib/simulation.ts](src/lib/simulation.ts) | Moteur salaire / dividendes, sans dépendance ni React |
+| [src/lib/acomptes.ts](src/lib/acomptes.ts) | Moteur des acomptes d'IS, qui réutilise le calcul d'IS du premier |
+| [src/lib/*.test.ts](src/lib/) | Tests des moteurs |
+| [src/components/Cadre.tsx](src/components/Cadre.tsx) | En-tête à onglets et pied de page, partagés par les outils |
 | [src/lib/url.ts](src/lib/url.ts) | Sérialisation de la simulation dans l'URL, pour le partage |
 | [src/components/](src/components/) | Curseurs et champs, courbe SVG, ruban de répartition, détail du calcul, sources |
 | [src/App.tsx](src/App.tsx) | Page du simulateur |
