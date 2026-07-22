@@ -41,25 +41,16 @@ describe('impôt sur les sociétés', () => {
     expect(calculerIS(100_000, true)).toBeCloseTo(6_375 + 57_500 * 0.25, 2);
   });
 
-  it('applique 25 % sur tout le bénéfice si la société est inéligible', () => {
+  it('applique 25 % partout si la société est inéligible, et rien sur un déficit', () => {
     expect(calculerIS(42_500, false)).toBeCloseTo(10_625, 2);
-  });
-
-  it("n'impose pas un résultat déficitaire", () => {
     expect(calculerIS(-10_000, true)).toBe(0);
   });
 });
 
 describe('barème de l’impôt sur le revenu', () => {
-  it('exonère la première tranche', () => {
+  it('exonère la première tranche puis cumule les suivantes', () => {
     expect(baremeIR(11_600)).toBe(0);
-  });
-
-  it('taxe la deuxième tranche à 11 %', () => {
     expect(baremeIR(20_000)).toBeCloseTo((20_000 - 11_600) * 0.11, 2);
-  });
-
-  it('cumule les tranches franchies', () => {
     const attendu =
       (29_579 - 11_600) * 0.11 + (84_577 - 29_579) * 0.3 + (100_000 - 84_577) * 0.41;
     expect(baremeIR(100_000)).toBeCloseTo(attendu, 2);
@@ -72,45 +63,30 @@ describe('barème de l’impôt sur le revenu', () => {
     expect(calculerIR(15_000, 1, false)).toBeCloseTo(Math.max(0, brut - decote), 2);
   });
 
-  it('plafonne l’avantage du quotient familial', () => {
+  it('plafonne l’avantage du quotient familial, sauf pour le quotient conjugal', () => {
     // A single parent with two children (2 shares): the benefit of the two
     // extra half-shares cannot exceed 2 × €1,807.
     const impot = calculerIR(120_000, 2, false);
     const sansEnfants = calculerIR(120_000, 1, false);
     expect(sansEnfants - impot).toBeCloseTo(2 * P.PLAFOND_DEMI_PART, 2);
-  });
-
-  it('ne plafonne pas le quotient conjugal d’un couple', () => {
+    // A couple's two shares are not capped.
     expect(calculerIR(120_000, 2, true)).toBeCloseTo(baremeIR(60_000) * 2, 2);
   });
-});
 
-describe('abattement salarial de 10 %', () => {
-  it('applique 10 % dans le cas courant', () => {
+  it('abat 10 % sur les salaires, entre plancher et plafond', () => {
     expect(abattementSalaire(50_000)).toBeCloseTo(45_000, 2);
-  });
-
-  it('plafonne la déduction pour les hauts revenus', () => {
     expect(abattementSalaire(300_000)).toBeCloseTo(300_000 - P.ABATTEMENT_SALAIRE_MAX, 2);
-  });
-
-  it('garantit la déduction minimale', () => {
     expect(abattementSalaire(2_000)).toBeCloseTo(2_000 - P.ABATTEMENT_SALAIRE_MIN, 2);
   });
 });
 
-describe('assiette CSG-CRDS', () => {
-  it('abat 1,75 % en deçà de 4 Pass', () => {
+describe('cotisations du président', () => {
+  it('abat 1,75 % sur la CSG jusqu’à quatre Pass seulement', () => {
     expect(assietteCSG(40_000)).toBeCloseTo(40_000 * 0.9825, 2);
-  });
-
-  it('ne l’abat plus au-delà de 4 Pass', () => {
     const plafond = 4 * P.PASS;
     expect(assietteCSG(plafond + 50_000)).toBeCloseTo(plafond * 0.9825 + 50_000, 2);
   });
-});
 
-describe('cotisations du président', () => {
   it('ne retient aucune cotisation chômage', () => {
     const libelles = calculerCotisations(60_000, 1.3).map((l) => l.libelle.toLowerCase());
     expect(libelles.some((l) => l.includes('chômage'))).toBe(false);
@@ -118,14 +94,10 @@ describe('cotisations du président', () => {
   });
 
   it("ne déclenche la CET qu'au-delà d'un Pass", () => {
-    const sous = calculerCotisations(P.PASS - 1_000, 1.3).find((l) =>
-      l.libelle.includes('CET'),
-    );
-    const au_dela = calculerCotisations(P.PASS + 1_000, 1.3).find((l) =>
-      l.libelle.includes('CET'),
-    );
-    expect(sous?.patronal).toBe(0);
-    expect(au_dela?.patronal).toBeGreaterThan(0);
+    const cet = (brut: number) =>
+      calculerCotisations(brut, 1.3).find((l) => l.libelle.includes('CET'))!.patronal;
+    expect(cet(P.PASS - 1_000)).toBe(0);
+    expect(cet(P.PASS + 1_000)).toBeGreaterThan(0);
   });
 
   it('plafonne la tranche 2 à huit Pass', () => {
@@ -135,101 +107,64 @@ describe('cotisations du président', () => {
     expect(ligne?.basePatronale).toBeCloseTo(7 * P.PASS, 2);
   });
 
-  it('produit un coût employeur strictement croissant', () => {
+  it('produit un coût employeur strictement croissant, inversible', () => {
     let precedent = -1;
     for (let brut = 0; brut <= 400_000; brut += 5_000) {
       const cout = coutEmployeur(brut, 1.3);
       expect(cout).toBeGreaterThan(precedent);
       precedent = cout;
     }
+    for (const budget of [10_000, 75_000, 250_000]) {
+      expect(coutEmployeur(brutMaxPourBudget(budget, 1.3), 1.3)).toBeCloseTo(budget, 0);
+    }
+    expect(brutMaxPourBudget(0, 1.3)).toBe(0);
+    expect(brutMaxPourBudget(-5_000, 1.3)).toBe(0);
   });
 
   it('situe les charges patronales dans la fourchette attendue', () => {
     // Below the annual ceiling, supplementary pension sits entirely in band 1:
-    // the overall employer rate lands around 35-40% of gross.
-    const r = sim(40_000);
-    const taux = r.cotisationsPatronales / r.brutAnnuel;
+    // the overall employer rate lands around 35-40% of gross. Past the ceiling
+    // band 2 (12.95% employer) replaces band 1 (4.72%) and the rate rises.
+    const bas = sim(40_000);
+    const taux = bas.cotisationsPatronales / bas.brutAnnuel;
     expect(taux).toBeGreaterThan(0.33);
     expect(taux).toBeLessThan(0.42);
-  });
 
-  it('alourdit les charges patronales au-dessus du Pass', () => {
-    // Agirc-Arrco band 2 (12.95% employer) replaces band 1 (4.72%).
-    const bas = sim(40_000);
     const haut = sim(120_000);
-    expect(haut.cotisationsPatronales / haut.brutAnnuel).toBeGreaterThan(
-      bas.cotisationsPatronales / bas.brutAnnuel,
-    );
+    expect(haut.cotisationsPatronales / haut.brutAnnuel).toBeGreaterThan(taux);
   });
 
   it('laisse un net salarial entre 70 et 80 % du brut', () => {
     for (const brut of [30_000, 60_000, 120_000]) {
-      const r = sim(brut);
-      expect(r.salaireNet / brut).toBeGreaterThan(0.7);
-      expect(r.salaireNet / brut).toBeLessThan(0.8);
+      expect(sim(brut).salaireNet / brut).toBeGreaterThan(0.7);
+      expect(sim(brut).salaireNet / brut).toBeLessThan(0.8);
     }
+    // Un salaire extérieur se décompose de la même façon.
+    const d = decomposerSalaire(50_000);
+    expect(d.net / 50_000).toBeGreaterThan(0.7);
+    expect(d.net / 50_000).toBeLessThan(0.8);
+    expect(d.netImposableAvantAbattement).toBeGreaterThan(d.net);
+  });
+
+  it('laisse la CSG des salaires à 9,2 %, non concernée par la hausse de 2026', () => {
+    // The 2026 act only raises the CSG on investment income.
+    const lignes = calculerCotisations(60_000, 1.3);
+    const csgD = lignes.find((l) => l.libelle === 'CSG déductible')!;
+    const csgND = lignes.find((l) => l.libelle === 'CSG non déductible')!;
+    expect(csgD.tauxSalarial + csgND.tauxSalarial).toBeCloseTo(9.2, 10);
   });
 });
 
-describe('inversion du coût employeur', () => {
-  it('retrouve le brut correspondant à un budget donné', () => {
-    for (const budget of [10_000, 75_000, 250_000]) {
-      const brut = brutMaxPourBudget(budget, 1.3);
-      expect(coutEmployeur(brut, 1.3)).toBeCloseTo(budget, 0);
-    }
-  });
-
-  it('renvoie zéro pour un budget nul ou négatif', () => {
-    expect(brutMaxPourBudget(0, 1.3)).toBe(0);
-    expect(brutMaxPourBudget(-5_000, 1.3)).toBe(0);
-  });
-});
-
-describe('simulation complète', () => {
-  it('conserve l’équilibre comptable : résultat = net en poche + réserves + prélèvements', () => {
-    for (const brut of [0, 25_000, 60_000, 100_000]) {
-      for (const dividendesAuBareme of [false, true]) {
-        for (const autresRevenus of [0, 35_000]) {
-          const r = sim(brut, { dividendesAuBareme, autresRevenus });
-          expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-            r.resultatAvantRemuneration + r.reservesAnterieures,
-            4,
-          );
-        }
-      }
-    }
-  });
-
-  it('recompose le net en poche à partir des deux chiffres affichés', () => {
-    // Le panneau de résultat affiche le net en poche, puis le salaire net
-    // après impôt et les dividendes nets. Les deux doivent en faire la somme
-    // exacte, sans quoi le lecteur soupçonne à raison une incohérence.
-    for (const brut of [0, 9_500, 45_000, 90_000]) {
-      for (const sur of [
-        {},
-        { salaireExterneBrut: 13_800, moisRemuneration: 6 },
-        { dividendesAuBareme: true, autresRevenus: 20_000 },
-      ]) {
-        const r = sim(brut, { resultatAvantRemuneration: 110_000, ...sur });
-        expect(r.salaireNet - r.irSurSalaire + r.dividendesNets).toBeCloseTo(
-          r.netEnPoche,
-          6,
-        );
-      }
-    }
-  });
-
-  it('conserve l’équilibre lorsque le résultat est mis en réserve', () => {
-    const r = sim(50_000, { tauxDistribution: 0.4 });
-    expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(150_000, 4);
-  });
-
+describe('arbitrage rémunération / dividendes', () => {
   it('verse tout en dividendes lorsque la rémunération est nulle', () => {
     const r = sim(0);
     expect(r.salaireNet).toBe(0);
     expect(r.is).toBeCloseTo(calculerIS(150_000, true), 2);
     expect(r.dividendesBruts).toBeCloseTo(150_000 - r.is, 2);
+    // Les dividendes n'ouvrent aucun droit à la retraite.
     expect(r.trimestresValides).toBe(0);
+    expect(r.pointsAgircArrco).toBe(0);
+    expect(r.dividendesNets).toBeGreaterThan(0);
   });
 
   it('valide quatre trimestres dès 600 heures de Smic', () => {
@@ -237,33 +172,40 @@ describe('simulation complète', () => {
     expect(sim(4 * P.BRUT_PAR_TRIMESTRE - 1).trimestresValides).toBe(3);
   });
 
-  it('n’ouvre aucun droit retraite via les dividendes', () => {
-    const r = sim(0);
-    expect(r.pointsAgircArrco).toBe(0);
-    expect(r.dividendesNets).toBeGreaterThan(0);
-  });
-
-  it('applique la flat tax à 31,4 % sur les dividendes', () => {
+  it('applique la flat tax à 31,4 %, dont 18,6 % de prélèvements sociaux', () => {
     // 12.8% income tax + 18.6% social levies since the 2026 Social Security
     // Financing Act: the flat tax is no longer 30%.
     const r = sim(0);
     expect(r.dividendesNets).toBeCloseTo(r.dividendesBruts * (1 - 0.314), 2);
-  });
-
-  it('retient 18,6 % de prélèvements sociaux sur les dividendes', () => {
-    const r = sim(0);
     expect(r.prelevementsSociauxDividendes).toBeCloseTo(r.dividendesBruts * 0.186, 2);
   });
 
-  it('laisse la CSG des salaires à 9,2 %, non concernée par la hausse', () => {
-    // The 2026 act only raises the CSG on investment income.
-    const lignes = calculerCotisations(60_000, 1.3);
-    const csgD = lignes.find((l) => l.libelle === 'CSG déductible')!;
-    const csgND = lignes.find((l) => l.libelle === 'CSG non déductible')!;
-    expect(csgD.tauxSalarial + csgND.tauxSalarial).toBeCloseTo(9.2, 10);
+  it('ne dépasse jamais le budget de la société', () => {
+    const r = sim(brutMaxPourBudget(150_000, P.AT_MP_DEFAUT));
+    expect(r.resultatFiscal).toBeCloseTo(0, 0);
+    expect(r.dividendesBruts).toBeCloseTo(0, 0);
   });
 
-  it('partage l’impôt du barème entre salaire et dividendes', () => {
+  it('rend le barème favorable à faible revenu, la flat tax à haut revenu', () => {
+    const comparer = (resultat: number) => ({
+      pfu: simuler({ ...BASE, resultatAvantRemuneration: resultat, brutAnnuel: 0 })
+        .netEnPoche,
+      bareme: simuler({
+        ...BASE,
+        resultatAvantRemuneration: resultat,
+        brutAnnuel: 0,
+        dividendesAuBareme: true,
+      }).netEnPoche,
+    });
+    const petit = comparer(25_000);
+    expect(petit.bareme).toBeGreaterThan(petit.pfu);
+    const gros = comparer(400_000);
+    expect(gros.pfu).toBeGreaterThan(gros.bareme);
+  });
+});
+
+describe('partage de l’impôt entre salaire et dividendes', () => {
+  it('partage l’impôt du barème plutôt que de servir le salaire en premier', () => {
     // Régression : au barème, le salaire était taxé comme s'il était seul et
     // les dividendes récupéraient les tranches marginales. L'impôt imputé au
     // salaire était sous-évalué de près de 7 000 €, et le « salaire net après
@@ -272,10 +214,7 @@ describe('simulation complète', () => {
     const r = sim(45_000, h);
 
     // Bornes des deux attributions extrêmes : le salaire d'abord, ou en dernier.
-    const salaireDAbord = sim(45_000, {
-      ...h,
-      dividendesAuBareme: false,
-    }).irSurSalaire;
+    const salaireDAbord = sim(45_000, { ...h, dividendesAuBareme: false }).irSurSalaire;
     const dividendesImposables =
       r.dividendesBruts * (1 - P.ABATTEMENT_DIVIDENDES) -
       r.dividendesBruts * P.CSG_DEDUCTIBLE_DIVIDENDES;
@@ -289,47 +228,18 @@ describe('simulation complète', () => {
     expect(r.irSurSalaire).toBeCloseTo((salaireDAbord + salaireEnDernier) / 2, 2);
   });
 
-  it('répartit sans rien perdre : les deux parts recomposent l’impôt du foyer', () => {
-    for (const bareme of [false, true]) {
-      for (const autres of [0, 35_000]) {
-        const r = sim(45_000, {
-          resultatAvantRemuneration: 180_000,
-          dividendesAuBareme: bareme,
-          autresRevenus: autres,
-        });
-        const irSansLaSASU = calculerIR(autres, 1, false);
-        expect(r.irSurSalaire + r.irDividendes).toBeCloseTo(r.irFoyer - irSansLaSASU, 2);
-      }
-    }
-  });
-
-  it('laisse le mode flat tax inchangé, les dividendes étant hors barème', () => {
-    // Le partage ne doit jouer qu'au barème : sous PFU le salaire supporte
-    // exactement son propre impôt.
+  it('ne joue pas sous flat tax, les dividendes étant hors barème', () => {
     const r = sim(45_000, { resultatAvantRemuneration: 180_000 });
     expect(r.irSurSalaire).toBeCloseTo(calculerIR(r.salaireNetImposable, 1, false), 2);
     expect(r.irDividendes).toBeCloseTo(r.dividendesBruts * P.PFU_IR, 2);
   });
 
-  it('rend le barème plus favorable que la flat tax à faible revenu', () => {
-    const petit = { ...BASE, resultatAvantRemuneration: 25_000 };
-    const pfu = simuler({ ...petit, brutAnnuel: 0, dividendesAuBareme: false });
-    const bareme = simuler({ ...petit, brutAnnuel: 0, dividendesAuBareme: true });
-    expect(bareme.netEnPoche).toBeGreaterThan(pfu.netEnPoche);
-  });
-
-  it('rend la flat tax plus favorable que le barème à haut revenu', () => {
-    const gros = { ...BASE, resultatAvantRemuneration: 400_000 };
-    const pfu = simuler({ ...gros, brutAnnuel: 0, dividendesAuBareme: false });
-    const bareme = simuler({ ...gros, brutAnnuel: 0, dividendesAuBareme: true });
-    expect(pfu.netEnPoche).toBeGreaterThan(bareme.netEnPoche);
-  });
-
-  it('ne dépasse jamais le budget de la société', () => {
-    const brutMax = brutMaxPourBudget(150_000, P.AT_MP_DEFAUT);
-    const r = sim(brutMax);
-    expect(r.resultatFiscal).toBeCloseTo(0, 0);
-    expect(r.dividendesBruts).toBeCloseTo(0, 0);
+  it('n’impute pas à la SASU l’impôt dû sur un salaire extérieur', () => {
+    const r = sim(0, { salaireExterneBrut: 60_000 });
+    // With no president's salary the company causes no salary tax at all,
+    // even though the household is taxable.
+    expect(r.irSurSalaire).toBeCloseTo(0, 6);
+    expect(r.irFoyer).toBeGreaterThan(0);
   });
 });
 
@@ -342,139 +252,87 @@ describe('prélèvement à la source', () => {
     expect(abattementSalaire(r.assiettePAS)).toBeCloseTo(r.salaireNetImposable, 2);
   });
 
-  it('prélève sur l’année l’impôt dû sur le salaire, au centime d’arrondi près', () => {
-    const r = sim(60_000);
-    // Rounding the rate to one decimal makes an exact match impossible: the
-    // gap cannot exceed half a decimal of rate applied to the base, and the
-    // annual tax return settles it.
-    const toleranceArrondi = r.assiettePAS * (P.PAS_ARRONDI / 2);
-    expect(Math.abs(r.prelevementMensuelPAS * 12 - r.irSurSalaire)).toBeLessThanOrEqual(
-      toleranceArrondi,
-    );
-  });
-
-  it('fait toujours coïncider la retenue avec le taux et l’assiette affichés', () => {
-    // Régression : la ligne « Prélèvement à la source » montrait l'impôt
-    // imputable au salaire tout en l'annotant du taux de PAS. Multiplier le
-    // taux affiché par l'assiette affichée ne retombait pas sur le montant,
-    // avec des écarts allant jusqu'à 4 000 € dès que le foyer avait d'autres
-    // ressources.
-    for (const sur of [
-      {},
-      { autresRevenus: 40_000 },
-      { salaireExterneBrut: 40_000 },
-      { dividendesAuBareme: true },
-      { couple: true, parts: 3, salaireExterneBrut: 30_000 },
-    ]) {
-      const r = sim(45_000, { resultatAvantRemuneration: 180_000, ...sur });
-      expect(r.prelevementAnnuelPAS).toBeCloseTo(r.tauxPAS * r.assiettePAS, 6);
-      expect(r.prelevementMensuelPAS * r.moisRemuneration).toBeCloseTo(
-        r.prelevementAnnuelPAS,
-        6,
-      );
-    }
-  });
-
-  it('distingue la retenue de l’impôt définitif quand le foyer a d’autres ressources', () => {
-    // Les deux ne coïncident que si la rémunération est le seul revenu, et
-    // seulement à l'arrondi du taux près.
-    const seul = sim(45_000, { resultatAvantRemuneration: 180_000 });
-    expect(Math.abs(seul.prelevementAnnuelPAS - seul.irSurSalaire)).toBeLessThanOrEqual(
-      seul.assiettePAS * (P.PAS_ARRONDI / 2),
-    );
-
-    const avecAutres = sim(45_000, {
-      resultatAvantRemuneration: 180_000,
-      autresRevenus: 40_000,
-    });
-    // L'acompte est calculé au taux du foyer et sous-estime ici l'impôt
-    // réellement imputable à la rémunération.
-    expect(avecAutres.prelevementAnnuelPAS).toBeLessThan(avecAutres.irSurSalaire);
-  });
-
-  it('n’impute jamais un impôt négatif à la rémunération', () => {
-    for (const brut of [0, 5_000, 20_000, 60_000]) {
-      for (const autres of [0, 30_000, 90_000]) {
-        expect(sim(brut, { autresRevenus: autres }).irSurSalaire).toBeGreaterThanOrEqual(
-          0,
-        );
-      }
-    }
-  });
-
-  it('arrondit le taux à la décimale la plus proche', () => {
+  it('applique la formule de l’article 204 H, arrondie à la décimale', () => {
+    expect(tauxPrelevementSource(3_000, 30_000, 30_000, 33_333)).toBeCloseTo(0.09, 10);
+    // The proration isolates the tax attributable to in-scope income.
+    expect(tauxPrelevementSource(4_000, 40_000, 20_000, 22_222)).toBeCloseTo(0.09, 10);
     for (const brut of [30_000, 45_000, 60_000, 90_000, 150_000]) {
       const taux = sim(brut).tauxPAS * 100;
       expect(taux).toBeCloseTo(Math.round(taux * 10) / 10, 10);
     }
   });
 
-  it('reste nul quand le foyer n’est pas imposable', () => {
-    const r = sim(14_000, { resultatAvantRemuneration: 20_000 });
-    expect(r.irSurSalaire).toBe(0);
-    expect(r.tauxPAS).toBe(0);
-    expect(r.prelevementMensuelPAS).toBe(0);
+  it('distingue la retenue de l’impôt définitif quand le foyer a d’autres ressources', () => {
+    // Rounding the rate to one decimal makes an exact match impossible even
+    // when the salary is the only income: the gap cannot exceed half a decimal
+    // of rate applied to the base, and the annual return settles it.
+    const seul = sim(45_000, { resultatAvantRemuneration: 180_000 });
+    expect(Math.abs(seul.prelevementAnnuelPAS - seul.irSurSalaire)).toBeLessThanOrEqual(
+      seul.assiettePAS * (P.PAS_ARRONDI / 2),
+    );
+
+    // L'acompte est calculé au taux du foyer et sous-estime ici l'impôt
+    // réellement imputable à la rémunération.
+    const avecAutres = sim(45_000, {
+      resultatAvantRemuneration: 180_000,
+      autresRevenus: 40_000,
+    });
+    expect(avecAutres.prelevementAnnuelPAS).toBeLessThan(avecAutres.irSurSalaire);
   });
 
-  it('est nul en l’absence de rémunération', () => {
-    const r = sim(0);
-    expect(r.assiettePAS).toBe(0);
-    expect(r.tauxPAS).toBe(0);
+  it('reste nul quand le foyer n’est pas imposable ou n’est pas rémunéré', () => {
+    const pauvre = sim(14_000, { resultatAvantRemuneration: 20_000 });
+    expect(pauvre.irSurSalaire).toBe(0);
+    expect(pauvre.tauxPAS).toBe(0);
+    expect(pauvre.prelevementMensuelPAS).toBe(0);
+
+    const sansSalaire = sim(0);
+    expect(sansSalaire.assiettePAS).toBe(0);
+    expect(sansSalaire.tauxPAS).toBe(0);
   });
 
-  it('croît avec la rémunération', () => {
+  it('croît avec la rémunération sans atteindre le taux marginal', () => {
     let precedent = -1;
     for (const brut of [20_000, 40_000, 60_000, 100_000, 140_000]) {
-      const taux = sim(brut, { resultatAvantRemuneration: 300_000 }).tauxPAS;
-      expect(taux).toBeGreaterThanOrEqual(precedent);
-      precedent = taux;
+      const r = sim(brut, { resultatAvantRemuneration: 300_000 });
+      expect(r.tauxPAS).toBeGreaterThanOrEqual(precedent);
+      expect(r.tauxPAS).toBeLessThan(r.tmi);
+      precedent = r.tauxPAS;
     }
   });
 
-  it('exclut les dividendes soumis au PFU du champ du prélèvement', () => {
+  it('exclut du champ les dividendes soumis au PFU, mais pas ceux au barème', () => {
     // Investment income is out of the withholding scope: paying out more
     // dividends must not change the rate applied to the payslip.
-    const peu = sim(50_000, { tauxDistribution: 0.1 });
-    const tout = sim(50_000, { tauxDistribution: 1 });
-    expect(peu.tauxPAS).toBeCloseTo(tout.tauxPAS, 10);
+    expect(sim(50_000, { tauxDistribution: 0.1 }).tauxPAS).toBeCloseTo(
+      sim(50_000, { tauxDistribution: 1 }).tauxPAS,
+      10,
+    );
+    // Opting for the scale brings them back in and raises household tax.
+    expect(sim(50_000, { dividendesAuBareme: true }).tauxPAS).toBeGreaterThan(
+      sim(50_000, { dividendesAuBareme: false }).tauxPAS,
+    );
   });
 
-  it('relève le taux quand le foyer opte pour le barème', () => {
-    // Dividends taxed on the scale raise household tax, hence the rate
-    // applied to the salary.
-    const pfu = sim(50_000, { dividendesAuBareme: false });
-    const bareme = sim(50_000, { dividendesAuBareme: true });
-    expect(bareme.tauxPAS).toBeGreaterThan(pfu.tauxPAS);
-  });
-
-  it('reste sous le taux marginal du foyer', () => {
-    for (const brut of [30_000, 60_000, 120_000]) {
-      const r = sim(brut, { resultatAvantRemuneration: 300_000 });
-      expect(r.tauxPAS).toBeLessThan(r.tmi);
-    }
-  });
-
-  it('applique la formule de l’article 204 H', () => {
-    expect(tauxPrelevementSource(3_000, 30_000, 30_000, 33_333)).toBeCloseTo(0.09, 10);
-    // The proration isolates the tax attributable to in-scope income.
-    expect(tauxPrelevementSource(4_000, 40_000, 20_000, 22_222)).toBeCloseTo(0.09, 10);
+  it('n’applique le taux du foyer qu’à la fiche de paie de la société', () => {
+    const r = sim(45_000, { salaireExterneBrut: 30_000 });
+    // The household base covers both salaries...
+    expect(r.assiettePASFoyer - r.assiettePAS).toBeCloseTo(
+      decomposerSalaire(30_000).netImposableAvantAbattement,
+      6,
+    );
+    // ...but the withholding shown is the one the company operates.
+    expect(r.prelevementAnnuelPAS).toBeCloseTo(r.tauxPAS * r.assiettePAS, 6);
   });
 });
 
 describe('nombre de mois de rémunération', () => {
-  it('retombe sur le plafond annuel pour douze mois', () => {
+  it('proratise le plafond de tranche 1, et borne les valeurs aberrantes', () => {
     // The annual ceiling is exactly twelve monthly ceilings: if that identity
     // breaks, the whole proration drifts.
     expect(plafondTranche1(12)).toBeCloseTo(P.PASS, 10);
     expect(12 * P.PMSS).toBeCloseTo(P.PASS, 10);
-  });
-
-  it('proratise le plafond au nombre de mois', () => {
     expect(plafondTranche1(6)).toBeCloseTo(6 * P.PMSS, 10);
-    expect(plafondTranche1(1)).toBeCloseTo(P.PMSS, 10);
-  });
-
-  it('borne les valeurs aberrantes', () => {
     expect(plafondTranche1(0)).toBeCloseTo(P.PMSS, 10);
     expect(plafondTranche1(-3)).toBeCloseTo(P.PMSS, 10);
     expect(plafondTranche1(24)).toBeCloseTo(P.PASS, 10);
@@ -491,13 +349,23 @@ describe('nombre de mois de rémunération', () => {
   it('bascule davantage de rémunération en tranche 2 sur une année partielle', () => {
     // €40,000 paid over six months exceeds the prorated ceiling (€24,030),
     // whereas it would stay entirely in band 1 over twelve months.
-    const annee = calculerCotisations(40_000, 1.3, 12);
-    const semestre = calculerCotisations(40_000, 1.3, 6);
-    const t2Annee = annee.find((l) => l.libelle.includes('Agirc-Arrco T2'))!;
-    const t2Semestre = semestre.find((l) => l.libelle.includes('Agirc-Arrco T2'))!;
+    const t2 = (mois: number) =>
+      calculerCotisations(40_000, 1.3, mois).find((l) =>
+        l.libelle.includes('Agirc-Arrco T2'),
+      )!.basePatronale;
+    expect(t2(12)).toBe(0);
+    expect(t2(6)).toBeCloseTo(40_000 - 6 * P.PMSS, 6);
 
-    expect(t2Annee.basePatronale).toBe(0);
-    expect(t2Semestre.basePatronale).toBeCloseTo(40_000 - 6 * P.PMSS, 6);
+    // La CET suit le même plafond proratisé.
+    const cet = (mois: number) =>
+      calculerCotisations(30_000, 1.3, mois).find((l) => l.libelle.includes('CET'))!
+        .patronal;
+    expect(cet(12)).toBe(0);
+    expect(cet(6)).toBeGreaterThan(0);
+
+    // Ainsi que le plafond de l'abattement CSG.
+    const plafond6 = 4 * plafondTranche1(6);
+    expect(assietteCSG(plafond6 + 10_000, 6)).toBeCloseTo(plafond6 * 0.9825 + 10_000, 6);
   });
 
   it('laisse le coût employeur quasi inchangé malgré le passage en tranche 2', () => {
@@ -513,56 +381,23 @@ describe('nombre de mois de rémunération', () => {
       annee.cotisationsPatronales;
     expect(ecart).toBeGreaterThan(0);
     expect(ecart).toBeLessThan(0.01);
-  });
 
-  it('allège les cotisations salariales et augmente les points de retraite', () => {
-    // Band 2 buys pension points at 17% versus 6.20% in band 1.
-    const annee = sim(45_000, { moisRemuneration: 12 });
-    const semestre = sim(45_000, { moisRemuneration: 6 });
+    // Côté salarié en revanche, la tranche 2 achète des points à 17 % contre
+    // 6,20 % en tranche 1 : moins de cotisations, plus de droits.
     expect(semestre.cotisationsSalariales).toBeLessThan(annee.cotisationsSalariales);
     expect(semestre.salaireNet).toBeGreaterThan(annee.salaireNet);
     expect(semestre.pointsAgircArrco).toBeGreaterThan(annee.pointsAgircArrco * 1.5);
   });
 
-  it('déclenche la CET dès le plafond proratisé', () => {
-    const lignes = calculerCotisations(30_000, 1.3, 6);
-    const cet = lignes.find((l) => l.libelle.includes('CET'))!;
-    expect(cet.patronal).toBeGreaterThan(0);
-    // Sur douze mois, 30 000 € restent sous le Pass : pas de CET.
-    const sur12 = calculerCotisations(30_000, 1.3, 12).find((l) =>
-      l.libelle.includes('CET'),
-    )!;
-    expect(sur12.patronal).toBe(0);
-  });
-
-  it('proratise aussi le plafond de l’abattement CSG', () => {
-    const plafond6 = 4 * plafondTranche1(6);
-    expect(assietteCSG(plafond6 + 10_000, 6)).toBeCloseTo(
-      plafond6 * 0.9825 + 10_000,
-      6,
-    );
-  });
-
   it('ne change pas les trimestres validés, qui dépendent du salaire annuel', () => {
-    const annee = sim(4 * P.BRUT_PAR_TRIMESTRE, { moisRemuneration: 12 });
-    const trimestre = sim(4 * P.BRUT_PAR_TRIMESTRE, { moisRemuneration: 3 });
-    expect(annee.trimestresValides).toBe(4);
-    expect(trimestre.trimestresValides).toBe(4);
+    const brut = 4 * P.BRUT_PAR_TRIMESTRE;
+    expect(sim(brut, { moisRemuneration: 12 }).trimestresValides).toBe(4);
+    expect(sim(brut, { moisRemuneration: 3 }).trimestresValides).toBe(4);
   });
 
   it('étale la retenue à la source sur le nombre de paies réel', () => {
     const r = sim(60_000, { moisRemuneration: 6 });
-    expect(r.prelevementMensuelPAS * 6).toBeCloseTo(r.assiettePAS * r.tauxPAS, 6);
-  });
-
-  it('conserve l’équilibre comptable sur une année partielle', () => {
-    for (const mois of [1, 3, 6, 9, 12]) {
-      const r = sim(30_000, { moisRemuneration: mois });
-      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-        r.resultatAvantRemuneration + r.reservesAnterieures,
-        4,
-      );
-    }
+    expect(r.prelevementMensuelPAS * 6).toBeCloseTo(r.prelevementAnnuelPAS, 6);
   });
 
   it('respecte le budget de la société quel que soit le nombre de mois', () => {
@@ -593,35 +428,14 @@ describe('salaire perçu chez un autre employeur', () => {
     expect(deduction).toBeCloseTo(P.ABATTEMENT_SALAIRE_MAX, 2);
   });
 
-  it('n’impute pas à la SASU l’impôt dû sur le salaire extérieur', () => {
-    const r = sim(0, { salaireExterneBrut: 60_000 });
-    // With no president's salary the company causes no salary tax at all,
-    // even though the household is taxable.
-    expect(r.irSurSalaire).toBeCloseTo(0, 6);
-    expect(r.irFoyer).toBeGreaterThan(0);
-  });
-
-  it('conserve l’équilibre comptable malgré le salaire extérieur', () => {
-    for (const brut of [0, 30_000, 60_000]) {
-      const r = sim(brut, { salaireExterneBrut: 40_000 });
-      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-        r.resultatAvantRemuneration + r.reservesAnterieures,
-        4,
-      );
-    }
-  });
-
-  it('renchérit la rémunération de président en la poussant vers le haut du barème', () => {
+  it('renchérit la rémunération de président et déplace l’optimum', () => {
     const seul = sim(40_000);
     const cumul = sim(40_000, { salaireExterneBrut: 45_000 });
     expect(cumul.irSurSalaire).toBeGreaterThan(seul.irSurSalaire);
     expect(cumul.tmi).toBeGreaterThanOrEqual(seul.tmi);
-  });
-
-  it('déplace l’optimum vers les dividendes', () => {
-    const seul = balayer(BASE).optimum.brutAnnuel;
-    const cumul = balayer({ ...BASE, salaireExterneBrut: 45_000 }).optimum.brutAnnuel;
-    expect(cumul).toBeLessThan(seul);
+    expect(balayer({ ...BASE, salaireExterneBrut: 45_000 }).optimum.brutAnnuel).toBeLessThan(
+      balayer(BASE).optimum.brutAnnuel,
+    );
   });
 
   it('compte les trimestres tous employeurs confondus', () => {
@@ -637,119 +451,63 @@ describe('salaire perçu chez un autre employeur', () => {
     expect(partiel.trimestresExterne).toBe(2);
     expect(partiel.trimestresValides).toBe(4);
   });
-
-  it('inclut les deux salaires dans l’assiette du prélèvement à la source', () => {
-    const r = sim(45_000, { salaireExterneBrut: 30_000 });
-    expect(r.assiettePASFoyer).toBeGreaterThan(r.assiettePAS);
-    expect(r.assiettePASFoyer - r.assiettePAS).toBeCloseTo(
-      decomposerSalaire(30_000).netImposableAvantAbattement,
-      6,
-    );
-    // The displayed withholding covers the company payslip only.
-    expect(r.prelevementMensuelPAS * 12).toBeCloseTo(r.assiettePAS * r.tauxPAS, 6);
-  });
-
-  it('applique le même taux de prélèvement aux deux employeurs', () => {
-    // The rate belongs to the household: it does not depend on how income is
-    // split between the two payslips, at constant total income.
-    const a = sim(40_000, { salaireExterneBrut: 40_000 });
-    const b = sim(40_000, { salaireExterneBrut: 40_000 });
-    expect(a.tauxPAS).toBeCloseTo(b.tauxPAS, 10);
-    expect(a.tauxPAS).toBeGreaterThan(0);
-  });
-
-  it('décompose un salaire extérieur comme celui du président', () => {
-    const d = decomposerSalaire(50_000);
-    expect(d.net / 50_000).toBeGreaterThan(0.7);
-    expect(d.net / 50_000).toBeLessThan(0.8);
-    expect(d.netImposableAvantAbattement).toBeGreaterThan(d.net);
-  });
 });
 
 describe('réserves distribuables des exercices antérieurs', () => {
   const AVEC = { resultatAvantRemuneration: 120_000, reservesDistribuables: 200_000 };
+  const SANS = { resultatAvantRemuneration: 120_000 };
 
   it('ne les soumet pas une seconde fois à l’impôt sur les sociétés', () => {
     // L'IS a été payé lors des exercices d'origine.
-    const sans = sim(45_000, { resultatAvantRemuneration: 120_000 });
+    const sans = sim(45_000, SANS);
     const avec = sim(45_000, AVEC);
     expect(avec.is).toBeCloseTo(sans.is, 6);
     expect(avec.resultatFiscal).toBeCloseTo(sans.resultatFiscal, 6);
-  });
-
-  it('les ajoute au distribuable', () => {
-    const r = sim(45_000, { ...AVEC, tauxDistribution: 0.4 });
-    expect(r.distribuable).toBeCloseTo(r.resultatNet + 200_000, 6);
-    expect(r.dividendesBruts).toBeCloseTo(r.distribuable * 0.4, 6);
-  });
-
-  it('augmente les dividendes à hauteur de la part distribuée', () => {
-    const sans = sim(45_000, { resultatAvantRemuneration: 120_000 });
-    const avec = sim(45_000, AVEC);
     expect(avec.dividendesBruts - sans.dividendesBruts).toBeCloseTo(200_000, 6);
   });
 
-  it('laisse en réserve ce qui n’est pas distribué', () => {
+  it('les ajoute au distribuable, et laisse en réserve le reste', () => {
     const r = sim(45_000, { ...AVEC, tauxDistribution: 0.25 });
-    expect(r.reserves).toBeCloseTo(r.resultatNet + 200_000 - r.dividendesBruts, 6);
+    expect(r.distribuable).toBeCloseTo(r.resultatNet + 200_000, 6);
+    expect(r.dividendesBruts).toBeCloseTo(r.distribuable * 0.25, 6);
+    expect(r.reserves).toBeCloseTo(r.distribuable - r.dividendesBruts, 6);
     expect(r.reserves).toBeGreaterThan(0);
   });
 
-  it('conserve l’équilibre, réserves apportées comprises', () => {
-    for (const taux of [0, 0.4, 1]) {
-      const r = sim(45_000, { ...AVEC, tauxDistribution: taux });
-      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-        r.resultatAvantRemuneration + r.reservesAnterieures,
-        4,
-      );
-    }
+  it('ne change l’impôt sur la rémunération que sous option barème', () => {
+    // Sous flat tax les dividendes restent hors barème : leur montant n'a
+    // aucun effet sur l'impôt du salaire, si gros soient-ils.
+    const sansPfu = sim(45_000, SANS);
+    const avecPfu = sim(45_000, AVEC);
+    expect(avecPfu.irSurSalaire).toBeCloseTo(sansPfu.irSurSalaire, 6);
+    expect(avecPfu.tauxPAS).toBeCloseTo(sansPfu.tauxPAS, 10);
+
+    const sansBareme = sim(45_000, { ...SANS, dividendesAuBareme: true });
+    const avecBareme = sim(45_000, { ...AVEC, dividendesAuBareme: true });
+    expect(avecBareme.irSurSalaire).toBeGreaterThan(sansBareme.irSurSalaire);
+    expect(avecBareme.tmi).toBeGreaterThanOrEqual(sansBareme.tmi);
   });
 
-  it('ne change pas l’impôt sur la rémunération sous flat tax', () => {
-    // Les dividendes restent hors barème : leur montant n'a aucun effet sur
-    // l'impôt du salaire, si gros soient-ils.
-    const sans = sim(45_000, { resultatAvantRemuneration: 120_000 });
-    const avec = sim(45_000, AVEC);
-    expect(avec.irSurSalaire).toBeCloseTo(sans.irSurSalaire, 6);
-    expect(avec.tauxPAS).toBeCloseTo(sans.tauxPAS, 10);
-  });
-
-  it('renchérit fortement la rémunération sous option barème', () => {
-    const sans = sim(45_000, {
-      resultatAvantRemuneration: 120_000,
-      dividendesAuBareme: true,
-    });
-    const avec = sim(45_000, { ...AVEC, dividendesAuBareme: true });
-    expect(avec.irSurSalaire).toBeGreaterThan(sans.irSurSalaire);
-    expect(avec.tmi).toBeGreaterThanOrEqual(sans.tmi);
-  });
-
-  it('laisse l’optimum intact sous flat tax, et quasi nul sous barème', () => {
-    // Sous flat tax, les dividendes sont hors barème : l'arbitrage de l'année
-    // ne dépend pas de ce qu'on distribue en plus.
-    const sansReserves = balayer({ ...BASE, resultatAvantRemuneration: 120_000 }).optimum;
+  it('laisse l’optimum intact sous flat tax, et l’écrase sous barème', () => {
+    const sansReserves = balayer({ ...BASE, ...SANS }).optimum;
     const avecReserves = balayer({ ...BASE, ...AVEC }).optimum;
     expect(avecReserves.brutAnnuel).toBeCloseTo(sansReserves.brutAnnuel, 0);
     expect(avecReserves.brutAnnuel).toBeGreaterThan(10_000);
 
-    // Sous barème, la rémunération est taxée au marginal : l'optimum est
-    // écrasé, avec ou sans réserves.
+    // Sous barème, la rémunération est taxée au marginal.
     const bareme = balayer({ ...BASE, ...AVEC, dividendesAuBareme: true }).optimum;
     expect(bareme.brutAnnuel).toBeLessThan(5_000);
   });
 
   it('signale le franchissement probable du seuil des hauts revenus', () => {
-    expect(sim(45_000, { resultatAvantRemuneration: 120_000 }).cehrPossible).toBe(false);
+    expect(sim(45_000, SANS).cehrPossible).toBe(false);
     expect(sim(45_000, AVEC).cehrPossible).toBe(true);
     // Le seuil double pour un couple soumis à imposition commune.
     expect(sim(45_000, { ...AVEC, couple: true, parts: 2 }).cehrPossible).toBe(false);
   });
 
   it('ignore une valeur négative', () => {
-    const r = sim(45_000, {
-      resultatAvantRemuneration: 120_000,
-      reservesDistribuables: -50_000,
-    });
+    const r = sim(45_000, { ...SANS, reservesDistribuables: -50_000 });
     expect(r.reservesAnterieures).toBe(0);
     expect(r.distribuable).toBeCloseTo(Math.max(0, r.resultatNet), 6);
   });
@@ -761,10 +519,6 @@ describe('recherche de l’optimum', () => {
     for (const p of points) {
       expect(optimum.netEnPoche).toBeGreaterThanOrEqual(p.net - 0.01);
     }
-  });
-
-  it('reste dans le domaine finançable', () => {
-    const { optimum } = balayer(BASE);
     expect(optimum.brutAnnuel).toBeGreaterThanOrEqual(0);
     expect(optimum.coutEmployeur).toBeLessThanOrEqual(150_000 + 1);
   });
@@ -772,27 +526,19 @@ describe('recherche de l’optimum', () => {
   it('recommande une rémunération non nulle sur un résultat courant', () => {
     // The first euros of salary are lightly taxed (0% and 11% brackets)
     // whereas a dividend bears corporate tax plus flat tax from the start.
-    const { optimum } = balayer(BASE);
-    expect(optimum.brutAnnuel).toBeGreaterThan(5_000);
+    expect(balayer(BASE).optimum.brutAnnuel).toBeGreaterThan(5_000);
   });
 
-  it('encadre l’optimum par un plateau', () => {
+  it('encadre l’optimum par un plateau, et n’y admet que ce qui y a sa place', () => {
     const { optimum, plateau } = balayer(BASE);
     expect(plateau.min).toBeLessThanOrEqual(optimum.brutAnnuel);
     expect(plateau.max).toBeGreaterThanOrEqual(optimum.brutAnnuel);
-  });
 
-  it('garde tout le plateau dans la tolérance', () => {
-    const { optimum, plateau } = balayer(BASE);
     for (let i = 0; i <= 20; i++) {
       const brut = plateau.min + ((plateau.max - plateau.min) * i) / 20;
       const net = simuler({ ...BASE, brutAnnuel: brut }).netEnPoche;
       expect(optimum.netEnPoche - net).toBeLessThanOrEqual(plateau.tolerance + 0.01);
     }
-  });
-
-  it('exclut de la plage ce qui est juste au-delà de ses bornes', () => {
-    const { optimum, plateau } = balayer(BASE);
     for (const brut of [plateau.min - 200, plateau.max + 200]) {
       if (brut < 0) continue;
       const net = simuler({ ...BASE, brutAnnuel: brut }).netEnPoche;
@@ -827,8 +573,98 @@ describe('recherche de l’optimum', () => {
   it('déplace l’optimum quand le foyer a déjà d’autres revenus', () => {
     // With a household already taxed in the upper brackets, salary loses its
     // edge and the optimum moves down.
-    const seul = balayer(BASE).optimum.brutAnnuel;
-    const avecRevenus = balayer({ ...BASE, autresRevenus: 120_000 }).optimum.brutAnnuel;
-    expect(avecRevenus).toBeLessThan(seul);
+    expect(balayer({ ...BASE, autresRevenus: 120_000 }).optimum.brutAnnuel).toBeLessThan(
+      balayer(BASE).optimum.brutAnnuel,
+    );
+  });
+});
+
+describe('invariants, quelle que soit la situation', () => {
+  // Un seul balayage remplace les vérifications éparpillées : chaque fois
+  // qu'une fonctionnalité s'ajoutait — mois de rémunération, salaire
+  // extérieur, réserves antérieures — sa propre copie de ces contrôles
+  // apparaissait à côté des précédentes.
+  const cas: Hypotheses[] = [];
+  for (const brutAnnuel of [0, 25_000, 60_000, 100_000]) {
+    for (const dividendesAuBareme of [false, true]) {
+      for (const autresRevenus of [0, 35_000]) {
+        for (const salaireExterneBrut of [0, 40_000]) {
+          for (const moisRemuneration of [3, 12]) {
+            for (const reservesDistribuables of [0, 200_000]) {
+              for (const tauxDistribution of [0.4, 1]) {
+                cas.push({
+                  ...BASE,
+                  brutAnnuel,
+                  dividendesAuBareme,
+                  autresRevenus,
+                  salaireExterneBrut,
+                  moisRemuneration,
+                  reservesDistribuables,
+                  tauxDistribution,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  it('couvre un éventail représentatif', () => {
+    expect(cas.length).toBeGreaterThan(200);
+  });
+
+  it('conserve l’équilibre : résultat et réserves = net en poche + réserves + prélèvements', () => {
+    for (const h of cas) {
+      const r = simuler(h);
+      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
+        r.resultatAvantRemuneration + r.reservesAnterieures,
+        4,
+      );
+    }
+  });
+
+  it('recompose le net en poche à partir des deux chiffres affichés', () => {
+    // Le panneau de résultat affiche le net en poche, puis le salaire net
+    // après impôt et les dividendes nets. Les deux doivent en faire la somme
+    // exacte, sans quoi le lecteur soupçonne à raison une incohérence.
+    for (const h of cas) {
+      const r = simuler(h);
+      expect(r.salaireNet - r.irSurSalaire + r.dividendesNets).toBeCloseTo(r.netEnPoche, 6);
+    }
+  });
+
+  it('répartit l’impôt du foyer sans rien perdre ni inventer', () => {
+    for (const h of cas) {
+      const r = simuler(h);
+      // Ce que la SASU n'explique pas reste imputé au reste du foyer.
+      const irSansLaSASU = simuler({
+        ...h,
+        brutAnnuel: 0,
+        tauxDistribution: 0,
+        reservesDistribuables: 0,
+      }).irFoyer;
+      expect(r.irSurSalaire + r.irDividendes).toBeCloseTo(r.irFoyer - irSansLaSASU, 2);
+      // Aucune part négative : un impôt imputé au salaire ne peut pas réduire
+      // celui du foyer.
+      expect(r.irSurSalaire).toBeGreaterThanOrEqual(0);
+      expect(r.irDividendes).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('fait toujours coïncider la retenue avec le taux et l’assiette affichés', () => {
+    // Régression : la ligne « Prélèvement à la source » montrait l'impôt
+    // imputable au salaire tout en l'annotant du taux de PAS. Multiplier le
+    // taux affiché par l'assiette affichée ne retombait pas sur le montant,
+    // avec des écarts allant jusqu'à 4 000 € dès que le foyer avait d'autres
+    // ressources.
+    for (const h of cas) {
+      const r = simuler(h);
+      expect(r.prelevementAnnuelPAS).toBeCloseTo(r.tauxPAS * r.assiettePAS, 6);
+      expect(r.prelevementMensuelPAS * r.moisRemuneration).toBeCloseTo(
+        r.prelevementAnnuelPAS,
+        6,
+      );
+    }
   });
 });
