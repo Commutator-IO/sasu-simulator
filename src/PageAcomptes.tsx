@@ -46,6 +46,13 @@ export default function PageAcomptes() {
     return () => clearTimeout(minuteur);
   }, [h]);
 
+  // What the slider shows: the manual amount, or what the active strategy
+  // works out to for the next unpaid instalment.
+  const versementCourant =
+    h.strategie === 'manuel'
+      ? h.versementManuel
+      : (r.echeances.find((e) => !e.passee)?.ajuste ?? 0);
+
   const maj = <K extends keyof HypothesesAcomptes>(
     cle: K,
     valeur: HypothesesAcomptes[K],
@@ -144,54 +151,35 @@ export default function PageAcomptes() {
                 </div>
 
                 <div className="mt-6">
-                  <span className="field-label">Votre stratégie</span>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    {(
-                      [
-                        ['appele', 'Verser l’appel', "Ce que le fisc réclame, sans plus"],
-                        ['conserver', 'Conserver la trésorerie', 'Le minimum légal, le plus tard possible'],
-                        ['lisser', 'Lisser sur deux ans', 'Échéances et solde de même hauteur'],
-                      ] as const
-                    ).map(([cle, titre, detail]) => {
-                      const actif = h.strategie === cle;
-                      return (
-                        <button
-                          key={cle}
-                          type="button"
-                          aria-pressed={actif}
-                          onClick={() => maj('strategie', cle)}
-                          className={[
-                            'rounded-xl border p-3 text-left transition',
-                            actif
-                              ? 'border-brand-500 bg-brand-50'
-                              : 'border-ink-200 hover:border-ink-300',
-                          ].join(' ')}
-                        >
-                          <span
-                            className={[
-                              'block text-sm font-medium',
-                              actif ? 'text-brand-700' : 'text-ink-800',
-                            ].join(' ')}
-                          >
-                            {titre}
-                          </span>
-                          <span className="mt-0.5 block text-xs leading-snug text-ink-500">
-                            {detail}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {/* One decision, then a fine adjustment that only shows
+                      when it can do something. The strategy buttons and the
+                      slider used to be two controls for the same value, sitting
+                      in separate blocks. */}
+                  <Segments
+                    label="Vos versements à venir"
+                    valeur={h.strategie === 'appele'}
+                    options={[
+                      { valeur: true, label: 'Verser ce qui est appelé' },
+                      { valeur: false, label: 'Ajuster' },
+                    ]}
+                    onChange={(verserAppel) =>
+                      setH((v) => ({
+                        ...v,
+                        strategie: verserAppel ? 'appele' : 'conserver',
+                      }))
+                    }
+                    hint={
+                      h.strategie === 'appele'
+                        ? "Le montant réclamé, sans plus. C'est l'option par défaut si vous ne faites rien."
+                        : "La loi permet de réduire un acompte sous votre responsabilité, et rien n'interdit d'en verser davantage."
+                    }
+                  />
 
-                  {r.versementPlafond > 0 && (
-                    <div className="mt-5 rounded-2xl bg-ink-50 p-5 sm:p-6">
+                  {h.strategie !== 'appele' && r.versementPlafond > 0 && (
+                    <div className="mt-4 rounded-2xl bg-ink-50 p-5 sm:p-6">
                       <Curseur
-                        label="Versement à chaque échéance restante"
-                        valeur={Math.round(
-                          h.strategie === 'manuel'
-                            ? h.versementManuel
-                            : (r.echeances.find((e) => !e.passee)?.ajuste ?? 0),
-                        )}
+                        label="À verser à chaque échéance restante"
+                        valeur={Math.round(versementCourant)}
                         min={0}
                         max={Math.ceil(r.versementPlafond / 100) * 100}
                         pas={100}
@@ -203,13 +191,61 @@ export default function PageAcomptes() {
                           }))
                         }
                         rendu={eur}
-                        reperes={[
-                          { valeur: Math.round(r.versementConserver), label: 'Conserver' },
-                          { valeur: Math.round(r.versementLisser), label: 'Lisser' },
-                          { valeur: Math.round(r.versementPlafond), label: 'Solde nul' },
-                        ].filter((x) => x.valeur > 0)}
-                        hint={`Déplacez-le pour arbitrer entre trésorerie conservée et pic évité. Le pic actuel, d'ici juin prochain, est de ${eur(r.picTresorerie)}.`}
                       />
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(
+                          [
+                            ['conserver', 'Conserver la trésorerie', r.versementConserver],
+                            ['lisser', 'Lisser sur deux ans', r.versementLisser],
+                          ] as const
+                        ).map(([cle, titre, montant]) => {
+                          const actif =
+                            h.strategie === cle ||
+                            (h.strategie === 'manuel' &&
+                              Math.abs(h.versementManuel - montant) < 60);
+                          return (
+                            <button
+                              key={cle}
+                              type="button"
+                              aria-pressed={actif}
+                              onClick={() => maj('strategie', cle)}
+                              className={[
+                                'rounded-lg border px-3 py-1.5 text-xs font-medium transition',
+                                actif
+                                  ? 'border-brand-500 bg-white text-brand-700'
+                                  : 'border-ink-200 bg-white/60 text-ink-500 hover:border-ink-300 hover:text-ink-800',
+                              ].join(' ')}
+                            >
+                              {titre} · {eur(montant)}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* The consequence, right under the control that causes it */}
+                      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-ink-200 pt-4 text-xs sm:grid-cols-3">
+                        <div>
+                          <dt className="text-ink-400">Reste à verser</dt>
+                          <dd className="tabular font-semibold text-ink-800">
+                            {eur(r.resteAVerser)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-ink-400">
+                            {r.solde >= 0 ? 'Solde au 15 mai' : 'Restitution au 15 mai'}
+                          </dt>
+                          <dd className="tabular font-semibold text-ink-800">
+                            {eur(Math.abs(r.solde))}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-ink-400">Plus grosse sortie</dt>
+                          <dd className="tabular font-semibold text-ink-800">
+                            {eur(r.picTresorerie)}
+                          </dd>
+                        </div>
+                      </dl>
                     </div>
                   )}
                 </div>

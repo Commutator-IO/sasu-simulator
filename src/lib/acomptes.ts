@@ -327,7 +327,10 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
 
   const acompteDu = motifDispense !== null ? 0 : isReference / NB_ECHEANCES;
 
-  let restantAPayer = besoin;
+  // Every adjusted strategy spreads a flat amount over the remaining dates.
+  // Paying the full call and then stopping would settle the same total, but
+  // earlier — which defeats the point of keeping cash. A flat amount is also
+  // what the slider can faithfully represent.
   const echeances: Echeance[] = parDefaut.map((montant, i) => {
     const passee = i < passees;
     let aVenir: number;
@@ -336,13 +339,12 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
     } else if (h.strategie === 'appele') {
       aVenir = montant;
     } else if (h.strategie === 'conserver') {
-      aVenir = Math.min(montant, Math.max(0, restantAPayer));
+      aVenir = versementConserver;
     } else if (h.strategie === 'lisser') {
       aVenir = versementLisser;
     } else {
       aVenir = borner(h.versementManuel, 0, Number.MAX_SAFE_INTEGER);
     }
-    if (!passee) restantAPayer -= aVenir;
     return {
       rang: i + 1,
       date: DATES[i],
