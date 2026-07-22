@@ -169,6 +169,44 @@ qu'un simulateur, consulté une fois par an, n'offre pas.
 
 ---
 
+## Couverture de tests de l'interface
+
+Le moteur est couvert ; l'interface ne l'est pas du tout. Dix fichiers `.tsx`,
+zéro test.
+
+**Pourquoi ça compte.** Les défauts trouvés sur la page des acomptes ont tous
+échappé aux tests, parce qu'aucun ne regarde le JSX :
+
+| Défaut | Trouvé par |
+| --- | --- |
+| Le curseur affichait 5 563 € pendant que le bouton annonçait 1 500 € | l'utilisateur |
+| Deux stratégies au comportement identique dès que le bénéfice monte | l'utilisateur |
+| Le pic de trésorerie nommé différemment à deux endroits | relecture |
+| Un message renvoyant à un vocabulaire disparu de l'interface | relecture |
+| « Les suivantes s'ajustent », faux sous « verser ce qui est appelé » | relecture |
+
+Ce ne sont pas des broutilles de style : `Message` choisit une branche parmi
+sept par ordre de priorité, `reductionPossible` décide quel préréglage
+s'affiche, le curseur bascule la stratégie en `manuel`. C'est de la logique, et
+elle n'est vérifiée nulle part.
+
+**Deux approches, non exclusives.**
+
+- **Extraire la décision.** Sortir dans `src/lib/` les fonctions pures qui
+  décident — quel message, quels préréglages, quel montant montre le curseur —
+  et ne laisser au JSX que le rendu. Aucune dépendance ajoutée, et cela couvre
+  exactement les défauts ci-dessus. Ne verra pas un composant qui plante au
+  rendu.
+- **Rendre les composants**, avec `@testing-library/react` et `jsdom`. Trois
+  dépendances de développement et une suite plus lente, mais cela attrape aussi
+  le rendu lui-même, et c'est ce qui aurait détecté l'incohérence
+  curseur / bouton en simulant le clic.
+
+**À tenir dans tous les cas.** Les balayages d'invariants étiquettent chaque
+cas et utilisent `expect.soft`, pour qu'un échec nomme la combinaison fautive
+et les remonte toutes ensemble. Un balayage muet coûte plus cher à diagnostiquer
+qu'il ne rapporte.
+
 ---
 
 ## Ce que proposent les cabinets en ligne
