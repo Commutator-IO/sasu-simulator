@@ -41,7 +41,16 @@ export type Echeance = {
   rang: number;
   /** Due date for a 31 December year-end. */
   date: string;
-  /** Amount due under the standard rules, before any adjustment. */
+  /**
+   * The instalment properly due: a quarter of the tax on the reference year,
+   * identical for all four (BOI-IS-DECLA-20-10-10 § 110).
+   */
+  acompteDu: number;
+  /**
+   * Amount actually called at this date. It equals `acompteDu` except at the
+   * first two: the March one is provisionally computed on the year before
+   * last, and the June one is increased or reduced accordingly (§ 120).
+   */
   parDefaut: number;
   /** Amount paid, or to be paid: declared for past instalments, computed otherwise. */
   ajuste: number;
@@ -208,6 +217,8 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
   const besoin = Math.max(0, isPrevisionnel - dejaVerse);
   const parEcheanceRestante = restantes > 0 ? besoin / restantes : 0;
 
+  const acompteDu = motifDispense !== null ? 0 : isReference / NB_ECHEANCES;
+
   const echeances: Echeance[] = parDefaut.map((montant, i) => {
     const passee = i < passees;
     const aVenir = motifDispense !== null
@@ -218,6 +229,7 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
     return {
       rang: i + 1,
       date: DATES[i],
+      acompteDu,
       parDefaut: montant,
       ajuste: passee ? dejaVerseParEcheance[i] : aVenir,
       passee,

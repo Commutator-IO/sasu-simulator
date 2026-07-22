@@ -50,8 +50,6 @@ export default function PageAcomptes() {
     valeur: HypothesesAcomptes[K],
   ) => setH((v) => ({ ...v, [cle]: valeur }));
 
-  const maxEcheance = Math.max(...r.echeances.map((e) => e.parDefaut), 1);
-
   // Declaring a due date as past prefills it with the amount that was called:
   // paying what was asked is the usual case, editing it the exception.
   const majEcheancesPassees = (n: number) =>
@@ -359,6 +357,12 @@ export default function PageAcomptes() {
               calculées sur votre bénéfice prévisionnel.
             </p>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
+              Chaque acompte dû vaut un quart de l'impôt de référence. Celui du
+              15 mars est toutefois <em>appelé</em> sur la base de l'avant-dernier
+              exercice, faute de comptes approuvés, et l'écart est repris sur celui du
+              15 juin&nbsp;: c'est pourquoi les deux colonnes peuvent différer.
+            </p>
+            <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
               Le graphique déborde sur l'année suivante, car c'est là que se joue
               l'essentiel&nbsp;: le solde du 15 mai tombe entre les deux premiers
               acomptes de l'année d'après, et celui du 15 juin est justement celui qui
@@ -376,9 +380,9 @@ export default function PageAcomptes() {
                   <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wide text-ink-400">
                     <th className="px-4 py-3 font-medium">Échéance</th>
                     <th className="px-4 py-3 font-medium">Assise sur</th>
+                    <th className="px-4 py-3 text-right font-medium">Acompte dû</th>
                     <th className="px-4 py-3 text-right font-medium">Appelé</th>
                     <th className="px-4 py-3 text-right font-medium">Versé</th>
-                    <th className="px-4 py-3 font-medium">Poids</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -399,6 +403,16 @@ export default function PageAcomptes() {
                         )}
                       </td>
                       <td className="tabular px-4 py-3 text-right text-ink-500">
+                        {eur(e.acompteDu)}
+                      </td>
+                      <td
+                        className={[
+                          'tabular px-4 py-3 text-right',
+                          Math.abs(e.parDefaut - e.acompteDu) > 1
+                            ? 'font-medium text-gold-600'
+                            : 'text-ink-500',
+                        ].join(' ')}
+                      >
                         {eur(e.parDefaut)}
                       </td>
                       <td
@@ -409,26 +423,20 @@ export default function PageAcomptes() {
                       >
                         {eur(e.ajuste)}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="flex h-2 w-full max-w-24 overflow-hidden rounded-full bg-ink-100">
-                          <span
-                            className="h-full rounded-full bg-brand-500"
-                            style={{ width: `${(e.ajuste / maxEcheance) * 100}%` }}
-                          />
-                        </span>
-                      </td>
                     </tr>
                   ))}
                   <tr className="bg-ink-50 font-semibold">
                     <td className="px-4 py-3 text-ink-900">Total</td>
                     <td />
                     <td className="tabular px-4 py-3 text-right text-ink-500">
+                      {eur(r.isReference)}
+                    </td>
+                    <td className="tabular px-4 py-3 text-right text-ink-500">
                       {eur(r.totalParDefaut)}
                     </td>
                     <td className="tabular px-4 py-3 text-right text-ink-900">
                       {eur(r.totalAjuste)}
                     </td>
-                    <td />
                   </tr>
                   <tr>
                     <td className="px-4 py-3 text-ink-800">
@@ -438,10 +446,10 @@ export default function PageAcomptes() {
                       {r.solde >= 0 ? 'Solde restant dû' : 'Excédent restitué'}
                     </td>
                     <td />
+                    <td />
                     <td className="tabular px-4 py-3 text-right font-semibold text-ink-900">
                       {r.solde >= 0 ? eur(r.solde) : `− ${eur(-r.solde)}`}
                     </td>
-                    <td />
                   </tr>
                 </tbody>
               </table>
