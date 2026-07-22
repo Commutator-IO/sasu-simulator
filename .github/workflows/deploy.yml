@@ -1,4 +1,4 @@
-name: Déploiement GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    name: Construire
+    name: Build and test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -42,7 +42,7 @@ jobs:
       # Tax parameters do not ship without their tests. Vitest exits non-zero
       # both on a failing test and when it finds no test file at all, so the
       # suite cannot silently disappear.
-      - name: Tests du moteur de calcul
+      - name: Unit tests
         run: npm test
 
       # `npm run build` chains `tsc -b` then `vite build`, so type errors fail
@@ -70,7 +70,7 @@ jobs:
           path: dist
 
   deploy:
-    name: Déployer
+    name: Deploy
     needs: build
     # A pull request does not deploy; it only runs the checks.
     if: github.event_name != 'pull_request'
