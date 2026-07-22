@@ -14,7 +14,8 @@ const BASE: HypothesesAcomptes = {
   beneficePrevisionnel: 120_000,
   eligibleISReduit: true,
   premierExercice: false,
-  moduler: false,
+  strategie: 'appele',
+  versementManuel: 0,
   echeancesPassees: 0,
   versements: [],
 };
@@ -158,69 +159,114 @@ describe('échéancier de droit commun', () => {
   });
 });
 
-describe('modulation des acomptes', () => {
+describe('stratégies de versement', () => {
   const enBaisse = {
     beneficeAvantDernier: 200_000,
     beneficePrecedent: 200_000,
     beneficePrevisionnel: 40_000,
   };
+  const enHausse = {
+    beneficeAvantDernier: 120_000,
+    beneficePrecedent: 120_000,
+    beneficePrevisionnel: 300_000,
+  };
 
-  it('ne change rien quand elle est désactivée', () => {
-    const r = calc(enBaisse);
+  it('verse exactement l’appel sous la stratégie « appelé »', () => {
+    const r = calc({ ...enBaisse, strategie: 'appele' });
     expect(r.totalAjuste).toBeCloseTo(r.totalParDefaut, 6);
     expect(r.gainTresorerie).toBeCloseTo(0, 6);
+    expect(r.tresorerieAvancee).toBeCloseTo(0, 6);
   });
 
-  it('plafonne le total versé à l’impôt réellement attendu', () => {
-    const r = calc({ ...enBaisse, moduler: true });
-    expect(r.totalAjuste).toBeCloseTo(r.isPrevisionnel, 6);
-    expect(r.totalAjuste).toBeLessThan(r.totalParDefaut);
-  });
-
-  it('libère la trésorerie correspondante', () => {
-    const r = calc({ ...enBaisse, moduler: true });
-    expect(r.gainTresorerie).toBeCloseTo(r.totalParDefaut - r.isPrevisionnel, 6);
-    expect(r.gainTresorerie).toBeGreaterThan(0);
-  });
-
-  it('répartit également le reste dû sur les échéances à venir', () => {
-    const r = calc({ ...enBaisse, moduler: true });
-    const aVenir = r.echeances.filter((e) => !e.passee);
-    for (const e of aVenir) {
-      expect(e.ajuste).toBeCloseTo(r.isPrevisionnel / aVenir.length, 6);
-    }
-  });
-
-  it('ne laisse rien à payer au solde', () => {
-    // Objectif de l'ajustement : ne pas découvrir une somme à régler en mai.
-    for (const previsionnel of [0, 20_000, 40_000, 120_000, 400_000]) {
-      for (let passees = 0; passees < 4; passees++) {
-        const r = calc({ ...enBaisse, beneficePrevisionnel: previsionnel, moduler: true, echeancesPassees: passees });
-        expect(r.solde).toBeLessThanOrEqual(0.01);
+  describe('conserver la trésorerie', () => {
+    it('ne verse jamais plus que l’appel', () => {
+      for (const cas of [enBaisse, enHausse]) {
+        const r = calc({ ...cas, strategie: 'conserver' });
+        for (const e of r.echeances.filter((x) => !x.passee)) {
+          expect(e.ajuste).toBeLessThanOrEqual(e.parDefaut + 0.01);
+        }
+        expect(r.tresorerieAvancee).toBeCloseTo(0, 6);
       }
-    }
+    });
+
+    it('s’arrête dès que l’impôt attendu est couvert', () => {
+      const r = calc({ ...enBaisse, strategie: 'conserver' });
+      expect(r.totalAjuste).toBeCloseTo(r.isPrevisionnel, 6);
+      expect(r.gainTresorerie).toBeGreaterThan(0);
+      expect(r.solde).toBeCloseTo(0, 6);
+    });
+
+    it('laisse un solde à payer quand le bénéfice monte', () => {
+      // On ne peut pas verser moins que l'appel : le complément part au solde,
+      // et la trésorerie reste disponible jusque-là.
+      const r = calc({ ...enHausse, strategie: 'conserver' });
+      expect(r.totalAjuste).toBeCloseTo(r.totalParDefaut, 6);
+      expect(r.solde).toBeGreaterThan(0);
+    });
   });
 
-  it('complète les échéances quand le bénéfice monte au lieu de baisser', () => {
-    // Verser plus que l'appel est permis : cela évite un solde à régler en mai.
-    const r = calc({ beneficePrevisionnel: 200_000, moduler: true });
-    expect(r.isPrevisionnel).toBeGreaterThan(r.isReference);
-    expect(r.totalAjuste).toBeGreaterThan(r.totalParDefaut);
-    expect(r.totalAjuste).toBeCloseTo(r.isPrevisionnel, 6);
-    // La trésorerie n'est pas gardée : elle est avancée.
-    expect(r.gainTresorerie).toBeLessThan(0);
-    expect(r.solde).toBeCloseTo(0, 6);
+  describe('lisser sur deux années', () => {
+    it('égalise les échéances restantes et le solde', () => {
+      const r = calc({ ...enHausse, strategie: 'lisser' });
+      const aVenir = r.echeances.filter((e) => !e.passee);
+      for (const e of aVenir) {
+        expect(e.ajuste).toBeCloseTo(r.versementLisser, 6);
+        expect(e.ajuste).toBeCloseTo(r.solde, 6);
+      }
+    });
+
+    it('abaisse le pic de trésorerie face à la stratégie de conservation', () => {
+      const conserver = calc({ ...enHausse, strategie: 'conserver' });
+      const lisser = calc({ ...enHausse, strategie: 'lisser' });
+      expect(lisser.picTresorerie).toBeLessThanOrEqual(conserver.picTresorerie);
+      expect(lisser.solde).toBeLessThan(conserver.solde);
+    });
+
+    it('avance de la trésorerie quand le bénéfice monte', () => {
+      const r = calc({ ...enHausse, strategie: 'lisser' });
+      expect(r.tresorerieAvancee).toBeGreaterThan(0);
+      // Le champ opposé reste à zéro plutôt que de devenir négatif.
+      expect(r.gainTresorerie).toBe(0);
+    });
   });
 
-  it('ne complète pas quand l’ajustement est désactivé', () => {
-    const r = calc({ beneficePrevisionnel: 200_000, moduler: false });
-    expect(r.totalAjuste).toBeCloseTo(r.totalParDefaut, 6);
-    expect(r.solde).toBeGreaterThan(0);
+  describe('curseur manuel', () => {
+    it('applique le montant choisi à chaque échéance restante', () => {
+      const r = calc({ ...enHausse, strategie: 'manuel', versementManuel: 5_000 });
+      for (const e of r.echeances.filter((x) => !x.passee)) {
+        expect(e.ajuste).toBeCloseTo(5_000, 6);
+      }
+      expect(r.totalAjuste).toBeCloseTo(20_000, 6);
+    });
+
+    it('encadre les deux stratégies entre zéro et le plafond utile', () => {
+      const r = calc({ ...enHausse, strategie: 'lisser' });
+      expect(r.versementLisser).toBeGreaterThan(0);
+      expect(r.versementLisser).toBeLessThan(r.versementPlafond);
+      expect(r.versementConserver).toBeLessThanOrEqual(r.versementPlafond);
+    });
+
+    it('annule le solde au plafond', () => {
+      const r0 = calc({ ...enHausse, strategie: 'lisser' });
+      const r = calc({
+        ...enHausse,
+        strategie: 'manuel',
+        versementManuel: r0.versementPlafond,
+      });
+      expect(r.solde).toBeCloseTo(0, 4);
+    });
+
+    it('borne un montant négatif', () => {
+      const r = calc({ ...enHausse, strategie: 'manuel', versementManuel: -900 });
+      for (const e of r.echeances) expect(e.ajuste).toBeGreaterThanOrEqual(0);
+    });
   });
 
-  it('signale le risque de majoration dès qu’elle réduit les versements', () => {
-    expect(calc({ ...enBaisse, moduler: true }).risqueMajoration).toBe(true);
-    expect(calc(enBaisse).risqueMajoration).toBe(false);
+  it('ne signale un risque de majoration que si l’on verse moins que l’appel', () => {
+    expect(calc({ ...enBaisse, strategie: 'conserver' }).risqueMajoration).toBe(true);
+    expect(calc({ ...enBaisse, strategie: 'appele' }).risqueMajoration).toBe(false);
+    // En versant plus que l'appel, aucun manque n'est possible.
+    expect(calc({ ...enHausse, strategie: 'lisser' }).risqueMajoration).toBe(false);
   });
 });
 
@@ -229,7 +275,7 @@ describe('échéances déjà passées', () => {
     beneficeAvantDernier: 200_000,
     beneficePrecedent: 200_000,
     beneficePrevisionnel: 40_000,
-    moduler: true,
+    strategie: 'conserver' as const,
   };
 
   it('marque les échéances passées et laisse les autres à venir', () => {
@@ -310,8 +356,8 @@ describe('échéances déjà passées', () => {
 
   it('boucle le compte quel que soit le nombre d’échéances passées', () => {
     for (let passees = 0; passees <= 4; passees++) {
-      for (const moduler of [false, true]) {
-        const r = calc({ ...enBaisse, moduler, echeancesPassees: passees });
+      for (const strategie of ['appele', 'conserver', 'lisser'] as const) {
+        const r = calc({ ...enBaisse, strategie, echeancesPassees: passees });
         expect(r.dejaVerse + r.resteAVerser).toBeCloseTo(r.totalAjuste, 6);
         expect(r.totalAjuste + r.solde).toBeCloseTo(r.isPrevisionnel, 4);
       }
@@ -350,9 +396,9 @@ describe('échéances déjà passées', () => {
 
 describe('solde', () => {
   it('boucle le compte : acomptes versés plus solde égalent l’impôt dû', () => {
-    for (const moduler of [false, true]) {
+    for (const strategie of ['appele', 'conserver', 'lisser'] as const) {
       for (const previsionnel of [0, 40_000, 120_000, 400_000]) {
-        const r = calc({ beneficePrevisionnel: previsionnel, moduler });
+        const r = calc({ beneficePrevisionnel: previsionnel, strategie });
         expect(r.totalAjuste + r.solde).toBeCloseTo(r.isPrevisionnel, 4);
       }
     }
@@ -373,7 +419,7 @@ describe('solde', () => {
       beneficeAvantDernier: 200_000,
       beneficePrecedent: 200_000,
       beneficePrevisionnel: 40_000,
-      moduler: true,
+      strategie: 'conserver',
     });
     expect(r.solde).toBeCloseTo(0, 4);
   });
