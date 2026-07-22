@@ -73,7 +73,7 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
     {
       cle: 'suite-juin',
       libelle: '15 juin',
-      sousTitre: 'régularisé sur N',
+      sousTitre: 'rattrapage sur N',
       appele: 0,
       verse: r.suite.acompte2,
       couleur: 'var(--color-gold-500)',
@@ -243,7 +243,7 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
           <span className="h-2.5 w-2.5 rounded-sm bg-brand-500" /> À verser
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm bg-gold-500" /> Solde et régularisation
+          <span className="h-2.5 w-2.5 rounded-sm bg-gold-500" /> Solde et rattrapage
         </span>
       </figcaption>
     </figure>
