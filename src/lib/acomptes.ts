@@ -115,6 +115,21 @@ export type ResultatAcomptes = {
    * instalments are cut *and* nothing has been overpaid to absorb a surprise.
    */
   risqueMajoration: boolean;
+  /**
+   * What follows the balance, next year. The balance for the current year
+   * falls on 15 May, i.e. between the first and second instalments of the
+   * following year — and that second instalment is the one regularised on the
+   * current year's profit. A profit that jumps therefore lands twice within
+   * a month.
+   */
+  suite: {
+    /** 15 March of next year, still resting on the previous year. */
+    acompte1: number;
+    /** 15 June of next year, regularised on the current year. */
+    acompte2: number;
+    /** What leaves the account between 15 May and 15 June of next year. */
+    cumulMaiJuin: number;
+  };
 };
 
 const DATES = ['15 mars', '15 juin', '15 septembre', '15 décembre'];
@@ -234,6 +249,22 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
     excedentDejaVerse: Math.max(0, dejaVerse - isPrevisionnel),
     solde: isPrevisionnel - totalAjuste,
     matelasSecurite: Math.max(0, totalAjuste - isPrevisionnel),
+    // Next year the roles shift by one: this year's profit becomes the
+    // reference, and the previous year drives the first instalment.
+    suite: (() => {
+      const suivantes = echeancierParDefaut({
+        beneficeAvantDernier: h.beneficePrecedent,
+        beneficePrecedent: h.beneficePrevisionnel,
+        eligibleISReduit: h.eligibleISReduit,
+        premierExercice: false,
+      });
+      const solde = isPrevisionnel - totalAjuste;
+      return {
+        acompte1: suivantes[0],
+        acompte2: suivantes[1],
+        cumulMaiJuin: Math.max(0, solde) + suivantes[1],
+      };
+    })(),
     // Adjusting is only safe while the forecast holds. But a company that has
     // already paid more than it expects to owe cannot fall short: warning it
     // would be crying wolf.
