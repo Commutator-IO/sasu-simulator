@@ -610,6 +610,16 @@ describe('invariants, quelle que soit la situation', () => {
     }
   }
 
+  /**
+   * Chaque cas porte son étiquette : un balayage qui échoue doit dire lequel,
+   * sans quoi il faut instrumenter à la main pour le retrouver. `expect.soft`
+   * les signale tous d'un coup au lieu de s'arrêter au premier.
+   */
+  const nom = (h: Hypotheses) =>
+    `brut=${h.brutAnnuel} mois=${h.moisRemuneration} externe=${h.salaireExterneBrut}` +
+    ` autres=${h.autresRevenus} reserves=${h.reservesDistribuables}` +
+    ` distrib=${h.tauxDistribution} bareme=${h.dividendesAuBareme}`;
+
   it('couvre un éventail représentatif', () => {
     expect(cas.length).toBeGreaterThan(200);
   });
@@ -617,7 +627,7 @@ describe('invariants, quelle que soit la situation', () => {
   it('conserve l’équilibre : résultat et réserves = net en poche + réserves + prélèvements', () => {
     for (const h of cas) {
       const r = simuler(h);
-      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
+      expect.soft(r.netEnPoche + r.reserves + r.totalPrelevements, nom(h)).toBeCloseTo(
         r.resultatAvantRemuneration + r.reservesAnterieures,
         4,
       );
@@ -630,7 +640,9 @@ describe('invariants, quelle que soit la situation', () => {
     // exacte, sans quoi le lecteur soupçonne à raison une incohérence.
     for (const h of cas) {
       const r = simuler(h);
-      expect(r.salaireNet - r.irSurSalaire + r.dividendesNets).toBeCloseTo(r.netEnPoche, 6);
+      expect
+        .soft(r.salaireNet - r.irSurSalaire + r.dividendesNets, nom(h))
+        .toBeCloseTo(r.netEnPoche, 6);
     }
   });
 
@@ -644,11 +656,13 @@ describe('invariants, quelle que soit la situation', () => {
         tauxDistribution: 0,
         reservesDistribuables: 0,
       }).irFoyer;
-      expect(r.irSurSalaire + r.irDividendes).toBeCloseTo(r.irFoyer - irSansLaSASU, 2);
+      expect
+        .soft(r.irSurSalaire + r.irDividendes, nom(h))
+        .toBeCloseTo(r.irFoyer - irSansLaSASU, 2);
       // Aucune part négative : un impôt imputé au salaire ne peut pas réduire
       // celui du foyer.
-      expect(r.irSurSalaire).toBeGreaterThanOrEqual(0);
-      expect(r.irDividendes).toBeGreaterThanOrEqual(0);
+      expect.soft(r.irSurSalaire, nom(h)).toBeGreaterThanOrEqual(0);
+      expect.soft(r.irDividendes, nom(h)).toBeGreaterThanOrEqual(0);
     }
   });
 
@@ -660,11 +674,10 @@ describe('invariants, quelle que soit la situation', () => {
     // ressources.
     for (const h of cas) {
       const r = simuler(h);
-      expect(r.prelevementAnnuelPAS).toBeCloseTo(r.tauxPAS * r.assiettePAS, 6);
-      expect(r.prelevementMensuelPAS * r.moisRemuneration).toBeCloseTo(
-        r.prelevementAnnuelPAS,
-        6,
-      );
+      expect.soft(r.prelevementAnnuelPAS, nom(h)).toBeCloseTo(r.tauxPAS * r.assiettePAS, 6);
+      expect
+        .soft(r.prelevementMensuelPAS * r.moisRemuneration, nom(h))
+        .toBeCloseTo(r.prelevementAnnuelPAS, 6);
     }
   });
 });
