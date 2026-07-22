@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   calculerAcomptes,
   coutSousEstimation,
+  isExercice,
   isSur,
+  ramenerADouzeMois,
   SEUIL_DISPENSE,
   type HypothesesAcomptes,
 } from './acomptes';
@@ -10,7 +12,9 @@ import { calculerIS } from './simulation';
 
 const BASE: HypothesesAcomptes = {
   beneficeAvantDernier: 120_000,
+  moisAvantDernier: 12,
   beneficePrecedent: 120_000,
+  moisPrecedent: 12,
   beneficePrevisionnel: 120_000,
   eligibleISReduit: true,
   premierExercice: false,
@@ -156,6 +160,64 @@ describe('échéancier de droit commun', () => {
         }
       }
     }
+  });
+});
+
+describe('exercice de durée différente de douze mois', () => {
+  // Cas réel, tiré d'un exemple : premier exercice du le premier jour au
+  // quinze mois plus tard, soit 15 mois, pour 150 000 € de résultat fiscal. L'exercice
+  // suivant fait 12 mois pour 24 000 €.
+  const reel = {
+    beneficeAvantDernier: 150_000,
+    moisAvantDernier: 15,
+    beneficePrecedent: 24_000,
+    moisPrecedent: 12,
+    beneficePrevisionnel: 24_000,
+  };
+
+  it('ramène le bénéfice de référence à douze mois', () => {
+    // CGI annexe III, art. 360. Sans cette règle, quinze mois de bénéfice
+    // gonfleraient les acomptes d'un quart.
+    expect(ramenerADouzeMois(150_000, 15)).toBeCloseTo(120_000, 1);
+    expect(ramenerADouzeMois(100_000, 12)).toBeCloseTo(100_000, 6);
+    expect(ramenerADouzeMois(50_000, 6)).toBeCloseTo(100_000, 6);
+  });
+
+  it('retombe sur l’acompte appelé par le comptable', () => {
+    const r = calc(reel);
+    // Le premier acompte repose sur l'avant-dernier exercice ramené à 12 mois.
+    expect(r.echeances[0].parDefaut).toBeGreaterThan(6_000);
+    expect(r.echeances[0].parDefaut).toBeLessThan(6_600);
+  });
+
+  it('proratise le plafond du taux réduit à la durée de l’exercice', () => {
+    // Sur quinze mois, la tranche à 15 % couvre 53 125 € et non 42 500 €.
+    const surQuinze = isExercice(150_000, 15, true);
+    const surDouze = isExercice(150_000, 12, true);
+    expect(surQuinze).toBeLessThan(surDouze);
+    expect(surQuinze).toBeCloseTo(53_125 * 0.15 + (150_000 - 53_125) * 0.25, 2);
+  });
+
+  it('distingue l’impôt réel de l’exercice de la base des acomptes', () => {
+    // Il faut que l'exercice *de référence* soit long : ici quinze mois.
+    const r = calc({ beneficePrecedent: 150_000, moisPrecedent: 15 });
+    // La base des acomptes est ramenée à douze mois.
+    expect(r.isReference).toBeCloseTo(isSur(ramenerADouzeMois(150_000, 15), true), 6);
+    // L'impôt réellement dû se calcule sur la durée effective, plafond du
+    // taux réduit proratisé compris.
+    expect(r.isReferenceReel).toBeCloseTo(isExercice(150_000, 15, true), 6);
+    expect(r.isReference).toBeLessThan(r.isReferenceReel);
+  });
+
+  it('ne change rien sur un exercice de douze mois', () => {
+    const douze = calc({ moisAvantDernier: 12, moisPrecedent: 12 });
+    expect(douze.isReference).toBeCloseTo(douze.isReferenceReel, 6);
+  });
+
+  it('borne une durée aberrante', () => {
+    expect(ramenerADouzeMois(120_000, 0)).toBeCloseTo(120_000, 6);
+    expect(ramenerADouzeMois(120_000, -5)).toBeCloseTo(120_000, 6);
+    expect(Number.isFinite(calc({ moisPrecedent: 0 }).isReference)).toBe(true);
   });
 });
 

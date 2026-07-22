@@ -11,7 +11,9 @@ import { arrondi, booleen, MAX_MONTANT, nombre } from './url';
 
 const CLES = {
   precedent: 'precedent',
+  moisPrecedent: 'moisPrecedent',
   avantDernier: 'avantDernier',
+  moisAvantDernier: 'moisAvantDernier',
   previsionnel: 'previsionnel',
   isReduit: 'isReduit',
   premierExercice: 'premierExercice',
@@ -64,6 +66,8 @@ export function encoderAcomptes(
     arrondi(h.beneficePrevisionnel),
     defauts.beneficePrevisionnel,
   );
+  ajouter(CLES.moisAvantDernier, arrondi(h.moisAvantDernier), defauts.moisAvantDernier);
+  ajouter(CLES.moisPrecedent, arrondi(h.moisPrecedent), defauts.moisPrecedent);
   ajouter(CLES.isReduit, h.eligibleISReduit, defauts.eligibleISReduit);
   ajouter(CLES.premierExercice, h.premierExercice, defauts.premierExercice);
   if (h.strategie !== defauts.strategie) params.set(CLES.strategie, h.strategie);
@@ -108,6 +112,8 @@ export function decoderAcomptes(
       0,
       MAX_MONTANT,
     ),
+    moisAvantDernier: nombre(p.get(CLES.moisAvantDernier), defauts.moisAvantDernier, 1, 24),
+    moisPrecedent: nombre(p.get(CLES.moisPrecedent), defauts.moisPrecedent, 1, 24),
     eligibleISReduit: booleen(p.get(CLES.isReduit), defauts.eligibleISReduit),
     premierExercice: booleen(p.get(CLES.premierExercice), defauts.premierExercice),
     strategie: lireStrategie(p.get(CLES.strategie), defauts.strategie),
