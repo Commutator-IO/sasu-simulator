@@ -187,11 +187,15 @@ describe('inversion du coût employeur', () => {
 describe('simulation complète', () => {
   it('conserve l’équilibre comptable : résultat = net en poche + réserves + prélèvements', () => {
     for (const brut of [0, 25_000, 60_000, 100_000]) {
-      const r = sim(brut);
-      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-        r.resultatAvantRemuneration,
-        4,
-      );
+      for (const dividendesAuBareme of [false, true]) {
+        for (const autresRevenus of [0, 35_000]) {
+          const r = sim(brut, { dividendesAuBareme, autresRevenus });
+          expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
+            r.resultatAvantRemuneration,
+            4,
+          );
+        }
+      }
     }
   });
 
@@ -237,6 +241,54 @@ describe('simulation complète', () => {
     const csgD = lignes.find((l) => l.libelle === 'CSG déductible')!;
     const csgND = lignes.find((l) => l.libelle === 'CSG non déductible')!;
     expect(csgD.tauxSalarial + csgND.tauxSalarial).toBeCloseTo(9.2, 10);
+  });
+
+  it('partage l’impôt du barème entre salaire et dividendes', () => {
+    // Régression : au barème, le salaire était taxé comme s'il était seul et
+    // les dividendes récupéraient les tranches marginales. L'impôt imputé au
+    // salaire était sous-évalué de près de 7 000 €, et le « salaire net après
+    // impôt » d'autant surévalué.
+    const h = { resultatAvantRemuneration: 180_000, dividendesAuBareme: true };
+    const r = sim(45_000, h);
+
+    // Bornes des deux attributions extrêmes : le salaire d'abord, ou en dernier.
+    const salaireDAbord = sim(45_000, {
+      ...h,
+      dividendesAuBareme: false,
+    }).irSurSalaire;
+    const dividendesImposables =
+      r.dividendesBruts * (1 - P.ABATTEMENT_DIVIDENDES) -
+      r.dividendesBruts * P.CSG_DEDUCTIBLE_DIVIDENDES;
+    const salaireEnDernier =
+      calculerIR(r.salaireNetImposable + dividendesImposables, 1, false) -
+      calculerIR(dividendesImposables, 1, false);
+
+    expect(r.irSurSalaire).toBeGreaterThan(salaireDAbord);
+    expect(r.irSurSalaire).toBeLessThan(salaireEnDernier);
+    // Moyenne exacte des deux contributions marginales.
+    expect(r.irSurSalaire).toBeCloseTo((salaireDAbord + salaireEnDernier) / 2, 2);
+  });
+
+  it('répartit sans rien perdre : les deux parts recomposent l’impôt du foyer', () => {
+    for (const bareme of [false, true]) {
+      for (const autres of [0, 35_000]) {
+        const r = sim(45_000, {
+          resultatAvantRemuneration: 180_000,
+          dividendesAuBareme: bareme,
+          autresRevenus: autres,
+        });
+        const irSansLaSASU = calculerIR(autres, 1, false);
+        expect(r.irSurSalaire + r.irDividendes).toBeCloseTo(r.irFoyer - irSansLaSASU, 2);
+      }
+    }
+  });
+
+  it('laisse le mode flat tax inchangé, les dividendes étant hors barème', () => {
+    // Le partage ne doit jouer qu'au barème : sous PFU le salaire supporte
+    // exactement son propre impôt.
+    const r = sim(45_000, { resultatAvantRemuneration: 180_000 });
+    expect(r.irSurSalaire).toBeCloseTo(calculerIR(r.salaireNetImposable, 1, false), 2);
+    expect(r.irDividendes).toBeCloseTo(r.dividendesBruts * P.PFU_IR, 2);
   });
 
   it('rend le barème plus favorable que la flat tax à faible revenu', () => {
