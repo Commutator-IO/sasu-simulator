@@ -352,6 +352,41 @@ describe('solde', () => {
   });
 });
 
+describe('enchaînement mars — mai — juin de l’année suivante', () => {
+  it('assoit le premier acompte suivant sur l’exercice précédent', () => {
+    // Les rôles se décalent d'un cran : au 15 mars N+1, ce sont les comptes de
+    // N qui ne sont pas encore approuvés.
+    const r = calc({ beneficePrecedent: 120_000, beneficePrevisionnel: 300_000 });
+    expect(r.suite.acompte1).toBeCloseTo(r.isReference / 4, 6);
+  });
+
+  it('régularise le deuxième acompte suivant sur l’exercice en cours', () => {
+    const r = calc({ beneficePrecedent: 120_000, beneficePrevisionnel: 300_000 });
+    // Après deux acomptes, la moitié de l'impôt de l'exercice en cours.
+    expect(r.suite.acompte1 + r.suite.acompte2).toBeCloseTo(r.isPrevisionnel / 2, 6);
+  });
+
+  it('cumule le solde et l’acompte de juin', () => {
+    // C'est le « double coup » : deux échéances lourdes à un mois d'écart.
+    const r = calc({ beneficePrecedent: 120_000, beneficePrevisionnel: 300_000 });
+    expect(r.solde).toBeGreaterThan(0);
+    expect(r.suite.cumulMaiJuin).toBeCloseTo(r.solde + r.suite.acompte2, 6);
+    expect(r.suite.cumulMaiJuin).toBeGreaterThan(r.totalAjuste);
+  });
+
+  it('ne compte pas une restitution comme une sortie', () => {
+    const r = calc({ beneficePrecedent: 300_000, beneficePrevisionnel: 20_000 });
+    expect(r.solde).toBeLessThan(0);
+    expect(r.suite.cumulMaiJuin).toBeCloseTo(r.suite.acompte2, 6);
+  });
+
+  it('n’appelle aucun acompte suivant sous le seuil de dispense', () => {
+    const r = calc({ beneficePrevisionnel: 15_000 });
+    expect(r.suite.acompte1).toBe(0);
+    expect(r.suite.acompte2).toBe(0);
+  });
+});
+
 describe('coût d’une sous-estimation', () => {
   it('est nul si rien ne manque', () => {
     expect(coutSousEstimation(0)).toBe(0);

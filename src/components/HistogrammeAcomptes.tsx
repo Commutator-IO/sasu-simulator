@@ -2,17 +2,21 @@ import { eur } from '../lib/format';
 import type { ResultatAcomptes } from '../lib/acomptes';
 
 /**
- * Quarterly instalments as grouped bars: what is called for against what is
- * actually paid, plus the balance as a separate, detached bar.
+ * Cash going out, from the first instalment of the year to the second
+ * instalment of the next.
  *
- * Hand-drawn SVG scaled through the viewBox, like the other chart — no
- * external dependency.
+ * The point of running past 31 December is the 15 March → 15 May → 15 June
+ * sequence: the balance lands between next year's first two instalments, and
+ * the June one is the one regularised on this year's profit. A profit that
+ * jumps is therefore paid twice within a month.
+ *
+ * Hand-drawn SVG scaled through the viewBox — no external dependency.
  */
 
-const W = 720;
-const H = 300;
-const HAUT = 24;
-const BAS = 62;
+const W = 860;
+const H = 320;
+const HAUT = 26;
+const BAS = 78;
 const GAUCHE = 8;
 const DROITE = 8;
 
@@ -24,25 +28,56 @@ function pasLisible(brut: number): number {
   return palier * magnitude;
 }
 
+type Colonne = {
+  cle: string;
+  libelle: string;
+  sousTitre: string;
+  appele: number;
+  verse: number;
+  couleur: string;
+  anneeSuivante: boolean;
+};
+
 export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
   const solde = r.solde;
-  const colonnes = [
+
+  const colonnes: Colonne[] = [
     ...r.echeances.map((e) => ({
       cle: `t${e.rang}`,
       libelle: e.date,
+      sousTitre: e.passee ? 'déjà versé' : 'à venir',
       appele: e.parDefaut,
       verse: e.ajuste,
-      passee: e.passee,
-      estSolde: false,
+      couleur: e.passee ? 'var(--color-ink-500)' : 'var(--color-brand-500)',
+      anneeSuivante: false,
     })),
+    {
+      cle: 'suite-mars',
+      libelle: '15 mars',
+      sousTitre: 'acompte, sur N−1',
+      appele: 0,
+      verse: r.suite.acompte1,
+      couleur: 'var(--color-brand-300)',
+      anneeSuivante: true,
+    },
     {
       cle: 'solde',
       libelle: '15 mai',
+      sousTitre:
+        solde > 0.5 ? 'solde à payer' : solde < -0.5 ? 'restitution' : 'rien à payer',
       appele: 0,
-      // A refund points the other way; the bar shows its size either way.
       verse: Math.abs(solde),
-      passee: false,
-      estSolde: true,
+      couleur: solde > 0.5 ? 'var(--color-gold-500)' : 'var(--color-brand-200)',
+      anneeSuivante: true,
+    },
+    {
+      cle: 'suite-juin',
+      libelle: '15 juin',
+      sousTitre: 'régularisé sur N',
+      appele: 0,
+      verse: r.suite.acompte2,
+      couleur: 'var(--color-gold-500)',
+      anneeSuivante: true,
     },
   ];
 
@@ -50,13 +85,14 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
   const pas = pasLisible(maxi / 3);
   const plafond = Math.ceil(maxi / pas) * pas;
 
-  const largeurUtile = W - GAUCHE - DROITE;
-  const largeurColonne = largeurUtile / colonnes.length;
+  const largeurColonne = (W - GAUCHE - DROITE) / colonnes.length;
   const y = (v: number) => HAUT + (1 - v / plafond) * (H - HAUT - BAS);
   const hauteur = (v: number) => Math.max(v > 0 ? 2 : 0, (v / plafond) * (H - HAUT - BAS));
 
   const graduations: number[] = [];
   for (let v = 0; v <= plafond + 1; v += pas) graduations.push(v);
+
+  const debutSuivante = GAUCHE + largeurColonne * r.echeances.length;
 
   return (
     <figure className="m-0">
@@ -64,8 +100,29 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
         viewBox={`0 0 ${W} ${H}`}
         className="w-full select-none"
         role="img"
-        aria-label="Montants versés à chaque échéance trimestrielle"
+        aria-label="Sorties de trésorerie, des acomptes de l'année au solde et à l'acompte de juin suivant"
       >
+        {/* The following year sits on its own tinted band */}
+        <rect
+          x={debutSuivante}
+          y={HAUT - 18}
+          width={W - DROITE - debutSuivante}
+          height={H - HAUT - BAS + 18}
+          fill="var(--color-ink-100)"
+          opacity="0.55"
+          rx="6"
+        />
+        <text
+          x={debutSuivante + 8}
+          y={HAUT - 6}
+          fontSize="10"
+          fontWeight="600"
+          fill="var(--color-ink-400)"
+          letterSpacing="0.05em"
+        >
+          ANNÉE SUIVANTE
+        </text>
+
         {graduations.map((v) => (
           <g key={v}>
             <line
@@ -90,16 +147,16 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
 
         {colonnes.map((c, i) => {
           const centre = GAUCHE + largeurColonne * (i + 0.5);
-          const largeurBarre = Math.min(38, largeurColonne * 0.3);
-          const gauche = centre - largeurBarre - 2;
-          const droite = centre + 2;
+          const largeurBarre = Math.min(34, largeurColonne * 0.32);
+          const paire = c.appele > 0;
+          const xAppele = centre - largeurBarre - 2;
+          const xVerse = paire ? centre + 2 : centre - largeurBarre / 2;
 
           return (
             <g key={c.cle}>
-              {/* Called for: outlined, since it is a reference rather than a payment */}
-              {!c.estSolde && c.appele > 0 && (
+              {paire && (
                 <rect
-                  x={gauche}
+                  x={xAppele}
                   y={y(c.appele)}
                   width={largeurBarre}
                   height={hauteur(c.appele)}
@@ -107,27 +164,17 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
                   fill="var(--color-ink-200)"
                 />
               )}
-
               <rect
-                x={c.estSolde ? centre - largeurBarre / 2 : droite}
+                x={xVerse}
                 y={y(c.verse)}
                 width={largeurBarre}
                 height={hauteur(c.verse)}
                 rx="3"
-                fill={
-                  c.estSolde
-                    ? solde > 0.5
-                      ? 'var(--color-gold-500)'
-                      : 'var(--color-brand-300)'
-                    : c.passee
-                      ? 'var(--color-ink-500)'
-                      : 'var(--color-brand-500)'
-                }
+                fill={c.couleur}
               />
-
               {c.verse > 0 && (
                 <text
-                  x={c.estSolde ? centre : droite + largeurBarre / 2}
+                  x={xVerse + largeurBarre / 2}
                   y={y(c.verse) - 6}
                   textAnchor="middle"
                   className="tabular"
@@ -138,10 +185,9 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
                   {eur(c.verse)}
                 </text>
               )}
-
               <text
                 x={centre}
-                y={H - BAS + 18}
+                y={H - BAS + 20}
                 textAnchor="middle"
                 fontSize="12"
                 fill="var(--color-ink-600)"
@@ -150,24 +196,40 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
               </text>
               <text
                 x={centre}
-                y={H - BAS + 34}
+                y={H - BAS + 35}
                 textAnchor="middle"
                 fontSize="10"
                 fill="var(--color-ink-400)"
               >
-                {c.estSolde
-                  ? solde > 0.5
-                    ? 'à payer'
-                    : solde < -0.5
-                      ? 'restitué'
-                      : 'rien à payer'
-                  : c.passee
-                    ? 'déjà versé'
-                    : 'à venir'}
+                {c.sousTitre}
               </text>
             </g>
           );
         })}
+
+        {/* The May–June cluster is the crunch worth naming */}
+        {r.suite.cumulMaiJuin > 0 && (
+          <>
+            <line
+              x1={GAUCHE + largeurColonne * 5.1}
+              x2={GAUCHE + largeurColonne * 6.9}
+              y1={H - BAS + 48}
+              y2={H - BAS + 48}
+              stroke="var(--color-gold-500)"
+              strokeWidth="1.5"
+            />
+            <text
+              x={GAUCHE + largeurColonne * 6}
+              y={H - BAS + 64}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="600"
+              fill="var(--color-gold-600)"
+            >
+              {eur(r.suite.cumulMaiJuin)} en un mois
+            </text>
+          </>
+        )}
       </svg>
 
       <figcaption className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-ink-500">
@@ -181,10 +243,7 @@ export function HistogrammeAcomptes({ r }: { r: ResultatAcomptes }) {
           <span className="h-2.5 w-2.5 rounded-sm bg-brand-500" /> À verser
         </span>
         <span className="flex items-center gap-1.5">
-          <span
-            className={`h-2.5 w-2.5 rounded-sm ${solde > 0.5 ? 'bg-gold-500' : 'bg-brand-300'}`}
-          />
-          Solde
+          <span className="h-2.5 w-2.5 rounded-sm bg-gold-500" /> Solde et régularisation
         </span>
       </figcaption>
     </figure>

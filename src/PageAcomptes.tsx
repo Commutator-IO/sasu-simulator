@@ -358,6 +358,13 @@ export default function PageAcomptes() {
               déjà passées reprennent ce que vous avez déclaré ; les suivantes sont
               calculées sur votre bénéfice prévisionnel.
             </p>
+            <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
+              Le graphique déborde sur l'année suivante, car c'est là que se joue
+              l'essentiel&nbsp;: le solde du 15 mai tombe entre les deux premiers
+              acomptes de l'année d'après, et celui du 15 juin est justement celui qui
+              régularise sur l'exercice que vous simulez. Un bénéfice qui progresse se
+              paie donc deux fois en un mois.
+            </p>
 
             <div className="card mt-8 p-5 sm:p-8">
               <HistogrammeAcomptes r={r} />
