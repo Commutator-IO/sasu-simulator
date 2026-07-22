@@ -53,6 +53,10 @@ export default function PageAcomptes() {
       ? h.versementManuel
       : (r.echeances.find((e) => !e.passee)?.ajuste ?? 0);
 
+  // Reducing below the call only means something when the profit falls: above
+  // the reference, "au plus juste" and "verser l'appel" are the same total.
+  const reductionPossible = r.isPrevisionnel < r.isReference - 1;
+
   const maj = <K extends keyof HypothesesAcomptes>(
     cle: K,
     valeur: HypothesesAcomptes[K],
@@ -165,7 +169,11 @@ export default function PageAcomptes() {
                     onChange={(verserAppel) =>
                       setH((v) => ({
                         ...v,
-                        strategie: verserAppel ? 'appele' : 'conserver',
+                        strategie: verserAppel
+                          ? 'appele'
+                          : reductionPossible
+                            ? 'conserver'
+                            : 'lisser',
                       }))
                     }
                     hint={
@@ -191,12 +199,23 @@ export default function PageAcomptes() {
                           }))
                         }
                         rendu={eur}
+                        hint={
+                          reductionPossible
+                            ? "Sous le montant appelé, vous modulez sous votre responsabilité. Au-dessus, vous payez d'avance — toujours permis."
+                            : "Votre bénéfice ne baisse pas : il n'y a rien à réduire. Verser davantage étale l'impôt et évite un solde en mai."
+                        }
                       />
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         {(
                           [
-                            ['conserver', 'Conserver la trésorerie', r.versementConserver],
+                            // Only worth offering when it actually pays less
+                            // than what is called: otherwise it is the same
+                            // thing as "verser ce qui est appelé", and showing
+                            // two buttons for one behaviour confuses.
+                            ...(reductionPossible
+                              ? ([['conserver', 'Au plus juste', r.versementConserver]] as const)
+                              : []),
                             ['lisser', 'Lisser sur deux ans', r.versementLisser],
                           ] as const
                         ).map(([cle, titre, montant]) => {
