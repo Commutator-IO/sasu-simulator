@@ -137,9 +137,9 @@ describe('échéancier de droit commun', () => {
   });
 
   it('laisse le premier acompte dépasser l’impôt de référence après un effondrement', () => {
-    // Cas signalé : 24 000 € de bénéfice l'an dernier, mais 106 000 € l'année
-    // d'avant. L'acompte du 15 mars vaut un quart de l'impôt sur 106 000 €,
-    // sans rapport apparent avec la référence — d'où l'impression d'erreur.
+    // Bénéfice qui s'effondre d'une année sur l'autre : l'acompte de mars vaut
+    // un quart de l'impôt sur l'exercice d'avant, sans rapport apparent avec
+    // la référence — d'où une impression d'erreur.
     const r = calc({ beneficeAvantDernier: 106_000, beneficePrecedent: 24_000 });
     expect(r.isReference).toBeCloseTo(24_000 * 0.15, 2);
     expect(r.echeances[0].parDefaut).toBeCloseTo(r.isAvantDernier / 4, 6);
@@ -164,10 +164,10 @@ describe('échéancier de droit commun', () => {
 });
 
 describe('exercice de durée différente de douze mois', () => {
-  // Cas réel, tiré d'un exemple : premier exercice du le premier jour au
-  // quinze mois plus tard, soit 15 mois, pour 150 000 € de résultat fiscal. L'exercice
-  // suivant fait 12 mois pour 24 000 €.
-  const reel = {
+  // Une société créée en cours d'année clôt souvent un premier exercice long,
+  // puis revient à douze mois. L'acompte de mars repose alors sur un exercice
+  // qui n'a pas la durée d'une année pleine.
+  const premierExerciceLong = {
     beneficeAvantDernier: 150_000,
     moisAvantDernier: 15,
     beneficePrecedent: 24_000,
@@ -178,16 +178,17 @@ describe('exercice de durée différente de douze mois', () => {
   it('ramène le bénéfice de référence à douze mois', () => {
     // CGI annexe III, art. 360. Sans cette règle, quinze mois de bénéfice
     // gonfleraient les acomptes d'un quart.
-    expect(ramenerADouzeMois(150_000, 15)).toBeCloseTo(120_000, 1);
+    expect(ramenerADouzeMois(150_000, 15)).toBeCloseTo(120_000, 6);
     expect(ramenerADouzeMois(100_000, 12)).toBeCloseTo(100_000, 6);
     expect(ramenerADouzeMois(50_000, 6)).toBeCloseTo(100_000, 6);
   });
 
-  it('retombe sur l’acompte appelé par le comptable', () => {
-    const r = calc(reel);
-    // Le premier acompte repose sur l'avant-dernier exercice ramené à 12 mois.
-    expect(r.echeances[0].parDefaut).toBeGreaterThan(6_000);
-    expect(r.echeances[0].parDefaut).toBeLessThan(6_600);
+  it('assoit l’acompte de mars sur le bénéfice ramené à douze mois', () => {
+    const r = calc(premierExerciceLong);
+    // 150 000 € sur quinze mois valent 120 000 € sur douze.
+    expect(r.echeances[0].quart).toBeCloseTo(isSur(120_000, true) / 4, 6);
+    // Sans la règle, la base serait un quart plus élevée.
+    expect(r.echeances[0].quart).toBeLessThan(isSur(150_000, true) / 4);
   });
 
   it('proratise le plafond du taux réduit à la durée de l’exercice', () => {

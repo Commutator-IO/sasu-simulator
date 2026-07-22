@@ -169,6 +169,85 @@ qu'un simulateur, consulté une fois par an, n'offre pas.
 
 ---
 
+---
+
+## Ce que proposent les cabinets en ligne
+
+Relevé de l'existant chez trois acteurs, pour situer ce qui manque ici et ce
+qui ne vaut pas la peine d'être refait.
+
+**Dougs** — une cinquantaine d'outils, de loin le catalogue le plus fourni.
+Création (forme juridique, capital social, SASU vs EURL, ARCE, holding),
+fiscalité (TVA, IS et ses acomptes, CFE, CVAE, seuils micro, taxe véhicules,
+distribution de dividendes), social (taxe d'apprentissage, formation
+professionnelle), rémunération (dirigeant TNS, dirigeant assimilé salarié,
+frais kilométriques), personnel (coût d'embauche, rupture conventionnelle,
+licenciement, intéressement), finance (CAF, plan de financement, emprunt,
+amortissement, effet de levier, TRI), gestion (seuil de rentabilité, prix de
+vente, coût de revient, rotation des stocks), trésorerie (délais de paiement,
+affacturage, découvert), transmission (plus-values de cession).
+
+**L-Expert-Comptable** — une cinquantaine également, plus orientée droit du
+travail et fiscalité des personnes. Revenus par statut (SASU, EURL, EI, micro,
+libérale), IS/IR, dividendes, honoraires d'expert-comptable, plafond Madelin,
+amortissements ; puis brut/net, coût salarié, indemnités de licenciement et de
+congés payés, IJSS, congé maternité, chômage, réduction Fillon ; enfin impôt
+sur le revenu, quotient familial, prélèvement à la source, TJM freelance.
+
+**Indy** — presque rien en propre. Quelques simulateurs de charges et de
+revenu pour l'auto-entrepreneur, adossés à des pages de guide. Leur produit
+est l'application comptable, pas les calculateurs.
+
+**Ce qu'il faut en retenir.** Le volume est déjà pris : aligner cinquante
+calculateurs de plus n'aurait aucun intérêt. Trois choses manquent en revanche
+partout, et sont déjà les nôtres :
+
+- **les sources.** Aucun de ces outils ne cite le texte appliqué. Nous
+  référençons le BOFiP et Légifrance paramètre par paramètre ;
+- **l'arbitrage plutôt que le calcul.** Ils répondent « combien » ; nous
+  répondons « quel niveau choisir », courbe et optimum à l'appui ;
+- **le partage et l'ouverture.** Une simulation tient dans une URL, et le code
+  est vérifiable.
+
+La ligne directrice à tenir : peu d'outils, mais chacun sourcé, décidable et
+partageable.
+
+## Autres calculateurs envisageables
+
+Classés par intérêt pour un freelance en SASU, en réutilisant le moteur
+existant.
+
+**TJM nécessaire pour un revenu net cible.** L'inverse du simulateur
+salaire / dividendes : on part du net voulu et on remonte au tarif journalier.
+C'est la question que se pose réellement un indépendant qui fixe ses prix, et
+tout le calcul est déjà écrit — il ne manque que l'inversion.
+
+**ARE et ARCE.** Le cumul allocation chômage / création d'entreprise décide du
+niveau de rémunération des premiers mois, et interagit directement avec
+l'arbitrage salaire / dividendes : se verser un salaire réduit l'ARE, pas les
+dividendes. Aucun outil ne traite les deux ensemble.
+
+**Coût du premier salarié.** Le moteur de cotisations est déjà là ; il faudrait
+y ajouter le chômage et l'AGS, dont le président est exempté, et la réduction
+générale dégressive dont un salarié bénéficie.
+
+**CFE.** Oubliée par presque tous les créateurs, exonérée la première année
+puis due sur une base minimale qui dépend du chiffre d'affaires et de la
+commune. Peu de calcul, beaucoup de valeur.
+
+**TVA : régime et seuils.** Franchise en base, réel simplifié, réel normal, et
+les échéances qui vont avec. Sujet fréquent au démarrage.
+
+**Indemnités journalières et droits ouverts.** Le simulateur affiche déjà les
+trimestres validés et les points Agirc-Arrco ; les IJSS maladie et maternité
+compléteraient la réponse à « qu'est-ce que mon salaire m'achète ».
+
+**Plus-value de cession.** L'horizon de sortie, avec abattements pour durée de
+détention et départ à la retraite.
+
+**Holding et régime mère-fille.** Réservé aux structures qui grossissent, mais
+c'est la suite logique de la question des dividendes.
+
 ## Améliorations du simulateur existant
 
 - **Grille de taux par défaut du prélèvement à la source**, applicable tant que
