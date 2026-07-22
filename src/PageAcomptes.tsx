@@ -6,6 +6,8 @@ import {
   calculerAcomptes,
   coutSousEstimation,
   DEFAUTS_ACOMPTES,
+  echeancierParDefaut,
+  NB_ECHEANCES,
   SEUIL_DISPENSE,
   type HypothesesAcomptes,
 } from './lib/acomptes';
@@ -48,6 +50,25 @@ export default function PageAcomptes() {
   ) => setH((v) => ({ ...v, [cle]: valeur }));
 
   const maxEcheance = Math.max(...r.echeances.map((e) => e.parDefaut), 1);
+
+  // Declaring a due date as past prefills it with the amount that was called:
+  // paying what was asked is the usual case, editing it the exception.
+  const majEcheancesPassees = (n: number) =>
+    setH((v) => {
+      const appele = echeancierParDefaut(v);
+      const versements = Array.from(
+        { length: NB_ECHEANCES },
+        (_, i) => v.versements[i] ?? appele[i],
+      );
+      return { ...v, echeancesPassees: n, versements };
+    });
+
+  const majVersement = (i: number, montant: number) =>
+    setH((v) => {
+      const versements = [...v.versements];
+      versements[i] = montant;
+      return { ...v, versements };
+    });
 
   return (
     <div className="min-h-screen">
@@ -134,6 +155,55 @@ export default function PageAcomptes() {
                     hint="La loi vous autorise à réduire ou suspendre vos acomptes dès lors que ceux déjà versés couvrent l'impôt que vous estimez devoir — sous votre responsabilité."
                   />
                 </div>
+
+                <div className="mt-8 rounded-2xl bg-ink-50 p-5 sm:p-6">
+                  <h3 className="text-sm font-medium text-ink-700">
+                    Où en êtes-vous dans l'année&nbsp;?
+                  </h3>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-500">
+                    Déclarez les échéances déjà passées et ce que vous avez réellement
+                    versé. Les suivantes s'ajustent au bénéfice prévisionnel.
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {[0, 1, 2, 3, 4].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        aria-pressed={h.echeancesPassees === n}
+                        onClick={() => majEcheancesPassees(n)}
+                        className={[
+                          'rounded-lg px-3 py-2 text-sm font-medium transition',
+                          h.echeancesPassees === n
+                            ? 'bg-white text-ink-900 shadow-sm ring-1 ring-ink-200'
+                            : 'text-ink-500 hover:bg-white/60 hover:text-ink-800',
+                        ].join(' ')}
+                      >
+                        {n === 0 ? 'Aucune' : `${n} échéance${n > 1 ? 's' : ''}`}
+                      </button>
+                    ))}
+                  </div>
+
+                  {h.echeancesPassees > 0 && (
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      {r.echeances
+                        .filter((e) => e.passee)
+                        .map((e) => (
+                          <Montant
+                            key={e.rang}
+                            label={`Versé le ${e.date}`}
+                            valeur={h.versements[e.rang - 1] ?? e.parDefaut}
+                            onChange={(v) => majVersement(e.rang - 1, v)}
+                            hint={
+                              Math.abs((h.versements[e.rang - 1] ?? e.parDefaut) - e.parDefaut) < 1
+                                ? 'Montant appelé'
+                                : `Appelé : ${eur(e.parDefaut)}`
+                            }
+                          />
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -206,17 +276,42 @@ export default function PageAcomptes() {
                         </strong>{' '}
                         Si le bénéfice dépasse finalement votre prévision, le manque est
                         traité comme un retard de paiement : majoration de 5 % et
-                        intérêt de 0,20 % par mois. Sur{' '}
-                        {eur(r.gainTresorerie)} de sous-versement, cela représenterait
-                        de l'ordre de{' '}
+                        intérêt de 0,20 % par mois, soit de l'ordre de{' '}
                         <strong className="font-semibold text-ink-900">
-                          {eur(coutSousEstimation(r.gainTresorerie))}
+                          {eur(coutSousEstimation(1_000))} pour 1 000 €
+                        </strong>{' '}
+                        manquants. Vos versements couvrent exactement l'impôt prévu :
+                        le moindre dépassement de bénéfice crée un manque.
+                      </p>
+                    )}
+
+                    {!r.risqueMajoration && r.matelasSecurite > 0 && h.moduler && (
+                      <p className="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
+                        Vos versements dépassent déjà l'impôt prévu de{' '}
+                        <strong className="font-semibold text-ink-900">
+                          {eur(r.matelasSecurite)}
                         </strong>
-                        .
+                        . Tant que le bénéfice réel reste sous cette marge, aucune
+                        majoration n'est encourue.
+                      </p>
+                    )}
+
+                    {r.excedentDejaVerse > 0 && (
+                      <p className="mt-4 rounded-xl bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
+                        <strong className="font-semibold text-ink-900">
+                          {eur(r.excedentDejaVerse)} déjà versés en trop.
+                        </strong>{' '}
+                        Un acompte payé ne se reprend pas : cet excédent ne vous
+                        reviendra qu'au solde, le 15 mai de l'année suivante. Seules les
+                        échéances à venir peuvent encore être réduites.
                       </p>
                     )}
 
                     <dl className="mt-6 space-y-3">
+                      {h.echeancesPassees > 0 && (
+                        <Stat label="Déjà versé" valeur={eur(r.dejaVerse)} />
+                      )}
+                      <Stat label="Reste à verser cette année" valeur={eur(r.resteAVerser)} />
                       <Stat
                         label="Total versé sur l'année"
                         valeur={eur(r.totalAjuste)}
@@ -243,7 +338,9 @@ export default function PageAcomptes() {
             </h2>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
               Quatre acomptes trimestriels — et non des mensualités — pour une clôture
-              au 31 décembre, puis le solde au 15 mai de l'année suivante.
+              au 31 décembre, puis le solde au 15 mai de l'année suivante. Les échéances
+              déjà passées reprennent ce que vous avez déclaré ; les suivantes sont
+              calculées sur votre bénéfice prévisionnel.
             </p>
 
             <div className="card mt-8 overflow-x-auto p-1">
@@ -262,11 +359,17 @@ export default function PageAcomptes() {
                     <tr key={e.rang} className="border-b border-ink-100 last:border-0">
                       <td className="px-4 py-3 font-medium text-ink-800">{e.date}</td>
                       <td className="px-4 py-3 text-xs text-ink-500">
-                        {e.rang === 1
-                          ? 'Avant-dernier exercice'
-                          : e.rang === 2
-                            ? 'Exercice précédent, avec régularisation'
-                            : 'Exercice précédent'}
+                        {e.passee ? (
+                          <span className="rounded bg-ink-100 px-1.5 py-0.5 font-medium text-ink-600">
+                            Déjà versé
+                          </span>
+                        ) : e.rang === 1 ? (
+                          'Avant-dernier exercice'
+                        ) : e.rang === 2 ? (
+                          'Exercice précédent, avec régularisation'
+                        ) : (
+                          'Exercice précédent'
+                        )}
                       </td>
                       <td className="tabular px-4 py-3 text-right text-ink-500">
                         {eur(e.parDefaut)}

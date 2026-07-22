@@ -21,6 +21,9 @@ import { calculerIS } from './simulation';
  *  - a company may reduce or stop its instalments once those already paid
  *    cover the tax it expects to owe, under its own responsibility
  *    (CGI art. 1668, 4 bis)
+ *
+ * Instalments already paid are inputs, not results: what matters in practice
+ * is how much is left to pay, given what has gone out already.
  */
 
 /** Tax on reference profits at or below which no instalment is due. */
@@ -31,6 +34,8 @@ export const MAJORATION_RETARD = 0.05;
 /** Monthly late-payment interest (CGI art. 1727, III). */
 export const INTERET_RETARD_MENSUEL = 0.002;
 
+export const NB_ECHEANCES = 4;
+
 export type Echeance = {
   /** 1 to 4. */
   rang: number;
@@ -38,8 +43,10 @@ export type Echeance = {
   date: string;
   /** Amount due under the standard rules, before any adjustment. */
   parDefaut: number;
-  /** Amount actually paid once the company adjusts its instalments. */
+  /** Amount paid, or to be paid: declared for past instalments, computed otherwise. */
   ajuste: number;
+  /** Whether the due date has passed and the amount is a declaration. */
+  passee: boolean;
 };
 
 export type HypothesesAcomptes = {
@@ -55,8 +62,15 @@ export type HypothesesAcomptes = {
   eligibleISReduit: boolean;
   /** First financial year of a newly created company: no instalment due. */
   premierExercice: boolean;
-  /** Whether the company adjusts its instalments down to what it expects to owe. */
+  /** Whether the remaining instalments are cut down to what is still owed. */
   moduler: boolean;
+  /** How many due dates have already passed, 0 to 4. */
+  echeancesPassees: number;
+  /**
+   * What was actually paid at each past due date. Only the first
+   * `echeancesPassees` entries are read; the rest is ignored.
+   */
+  versements: number[];
 };
 
 export type ResultatAcomptes = {
@@ -65,19 +79,37 @@ export type ResultatAcomptes = {
   isReference: number;
   /** Tax expected on the current year. */
   isPrevisionnel: number;
-  /** True when no instalment is due at all. */
   dispense: boolean;
   motifDispense: 'premier exercice' | 'seuil de 3 000 €' | null;
   echeances: Echeance[];
+  /** Sum of the instalments called for over the year. */
   totalParDefaut: number;
+  /** Sum of what is paid over the year, declarations included. */
   totalAjuste: number;
-  /** Cash freed over the year by adjusting the instalments. */
+  /** What has already gone out. */
+  dejaVerse: number;
+  /** What the remaining due dates would call for. */
+  resteParDefaut: number;
+  /** What is left to pay once the remaining instalments are adjusted. */
+  resteAVerser: number;
+  /** Cash kept from now on by adjusting the remaining instalments. */
   gainTresorerie: number;
+  /**
+   * Amount already overpaid, which no adjustment can recover before the
+   * balance: past instalments cannot be taken back.
+   */
+  excedentDejaVerse: number;
   /** Balance due on 15 May of the following year; negative means a refund. */
   solde: number;
   /**
-   * True when the adjustment leaves less paid than actually owed, exposing the
-   * company to the surcharge and interest.
+   * How much the profit could exceed the forecast before any shortfall
+   * appears. Past instalments that already overshot the expected tax build up
+   * this cushion.
+   */
+  matelasSecurite: number;
+  /**
+   * True when adjusting genuinely exposes the company: the remaining
+   * instalments are cut *and* nothing has been overpaid to absorb a surprise.
    */
   risqueMajoration: boolean;
 };
@@ -87,6 +119,47 @@ const DATES = ['15 mars', '15 juin', '15 septembre', '15 décembre'];
 /** Tax on a given profit, reusing the engine of the salary simulator. */
 export function isSur(benefice: number, eligibleTauxReduit: boolean): number {
   return calculerIS(Math.max(0, benefice), eligibleTauxReduit);
+}
+
+const borner = (v: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, Number.isFinite(v) ? v : min));
+
+/**
+ * Instalments called for over the year, before anything is declared or
+ * adjusted. Exported so the interface can prefill a past instalment with what
+ * was due at that date.
+ */
+export function echeancierParDefaut(h: {
+  beneficeAvantDernier: number;
+  beneficePrecedent: number;
+  eligibleISReduit: boolean;
+  premierExercice: boolean;
+}): number[] {
+  const isReference = isSur(h.beneficePrecedent, h.eligibleISReduit);
+  if (h.premierExercice || isReference <= SEUIL_DISPENSE) {
+    return Array(NB_ECHEANCES).fill(0);
+  }
+
+  const isAvantDernier = isSur(h.beneficeAvantDernier, h.eligibleISReduit);
+  // The first instalment rests on the year before last; the second one squares
+  // the account so that half the reference tax has been paid after two.
+  const bruts = [
+    isAvantDernier / 4,
+    isReference / 2 - isAvantDernier / 4,
+    isReference / 4,
+    isReference / 4,
+  ];
+
+  // A shrinking reference can make the second instalment negative. The excess
+  // is not refunded straight away: it is carried onto the following ones.
+  const parDefaut: number[] = [];
+  let report = 0;
+  for (const montant of bruts) {
+    const avecReport = montant + report;
+    parDefaut.push(Math.max(0, avecReport));
+    report = Math.min(0, avecReport);
+  }
+  return parDefaut;
 }
 
 export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
@@ -100,71 +173,54 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
       ? ('seuil de 3 000 €' as const)
       : null;
 
-  if (motifDispense !== null) {
-    return {
-      isAvantDernier,
-      isReference,
-      isPrevisionnel,
-      dispense: true,
-      motifDispense,
-      echeances: DATES.map((date, i) => ({
-        rang: i + 1,
-        date,
-        parDefaut: 0,
-        ajuste: 0,
-      })),
-      totalParDefaut: 0,
-      totalAjuste: 0,
-      gainTresorerie: 0,
-      solde: isPrevisionnel,
-      risqueMajoration: false,
-    };
-  }
+  const parDefaut = echeancierParDefaut(h);
+  const passees = Math.round(borner(h.echeancesPassees, 0, NB_ECHEANCES));
 
-  // The first instalment rests on the year before last; the second one squares
-  // the account so that half the reference tax has been paid after two.
-  const premier = isAvantDernier / 4;
-  const deuxieme = isReference / 2 - premier;
-
-  // A shrinking reference can make the second instalment negative. The excess
-  // is not refunded straight away: it is carried onto the following ones.
-  const bruts = [premier, deuxieme, isReference / 4, isReference / 4];
-  const parDefaut: number[] = [];
-  let report = 0;
-  for (const montant of bruts) {
-    const avecReport = montant + report;
-    const du = Math.max(0, avecReport);
-    report = Math.min(0, avecReport);
-    parDefaut.push(du);
-  }
-
-  // Adjustment: never pay more, in total, than the tax expected for the year.
+  // Past due dates are declarations; the rest is computed. Adjusting can only
+  // ever cut what is still to come.
   let cumule = 0;
   const echeances: Echeance[] = parDefaut.map((montant, i) => {
-    const ajuste = h.moduler
+    const passee = i < passees;
+    const declare = borner(h.versements[i] ?? montant, 0, Number.MAX_SAFE_INTEGER);
+    const aVenir = h.moduler
       ? Math.min(montant, Math.max(0, isPrevisionnel - cumule))
       : montant;
+    const ajuste = motifDispense !== null && !passee ? 0 : passee ? declare : aVenir;
     cumule += ajuste;
-    return { rang: i + 1, date: DATES[i], parDefaut: montant, ajuste };
+    return { rang: i + 1, date: DATES[i], parDefaut: montant, ajuste, passee };
   });
 
+  const somme = (f: (e: Echeance) => number, filtre: (e: Echeance) => boolean) =>
+    echeances.filter(filtre).reduce((s, e) => s + f(e), 0);
+
+  const dejaVerse = somme((e) => e.ajuste, (e) => e.passee);
+  const resteParDefaut = somme((e) => e.parDefaut, (e) => !e.passee);
+  const resteAVerser = somme((e) => e.ajuste, (e) => !e.passee);
   const totalParDefaut = parDefaut.reduce((s, v) => s + v, 0);
-  const totalAjuste = echeances.reduce((s, e) => s + e.ajuste, 0);
+  const totalAjuste = dejaVerse + resteAVerser;
 
   return {
     isAvantDernier,
     isReference,
     isPrevisionnel,
-    dispense: false,
-    motifDispense: null,
+    dispense: motifDispense !== null,
+    motifDispense,
     echeances,
     totalParDefaut,
     totalAjuste,
-    gainTresorerie: totalParDefaut - totalAjuste,
+    dejaVerse,
+    resteParDefaut,
+    resteAVerser,
+    gainTresorerie: resteParDefaut - resteAVerser,
+    // Past instalments cannot be taken back: only the balance settles them.
+    excedentDejaVerse: Math.max(0, dejaVerse - isPrevisionnel),
     solde: isPrevisionnel - totalAjuste,
-    // Adjusting is only safe while the forecast holds. Paying less than the
-    // tax finally due turns the shortfall into a late payment.
-    risqueMajoration: h.moduler && totalAjuste < totalParDefaut,
+    matelasSecurite: Math.max(0, totalAjuste - isPrevisionnel),
+    // Adjusting is only safe while the forecast holds. But a company that has
+    // already paid more than it expects to owe cannot fall short: warning it
+    // would be crying wolf.
+    risqueMajoration:
+      h.moduler && resteAVerser < resteParDefaut && totalAjuste <= isPrevisionnel,
   };
 }
 
@@ -189,4 +245,6 @@ export const DEFAUTS_ACOMPTES: HypothesesAcomptes = {
   eligibleISReduit: true,
   premierExercice: false,
   moduler: true,
+  echeancesPassees: 0,
+  versements: [],
 };
