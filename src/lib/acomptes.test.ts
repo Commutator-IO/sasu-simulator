@@ -312,6 +312,33 @@ describe('stratégies de versement', () => {
     });
   });
 
+  it('rend chaque stratégie ajustée représentable par un montant unique', () => {
+    // Le curseur affiche un montant par échéance restante : si une stratégie
+    // versait en escalier, il en donnerait une image fausse. Régression : la
+    // conservation payait l'appel plein puis s'arrêtait, ce qui affichait
+    // 5 563 € sur le curseur pendant que le bouton annonçait 1 500 €.
+    for (const cas of [enBaisse, enHausse]) {
+      for (const [strategie, attendu] of [
+        ['conserver', 'versementConserver'],
+        ['lisser', 'versementLisser'],
+      ] as const) {
+        const r = calc({ ...cas, strategie });
+        const aVenir = r.echeances.filter((e) => !e.passee);
+        for (const e of aVenir) {
+          expect(e.ajuste).toBeCloseTo(r[attendu], 6);
+        }
+      }
+    }
+  });
+
+  it('conserve mieux la trésorerie en étalant qu’en versant puis s’arrêtant', () => {
+    // Même total, mais réparti plus tard dans l'année.
+    const r = calc({ ...enBaisse, strategie: 'conserver' });
+    const aVenir = r.echeances.filter((e) => !e.passee);
+    expect(aVenir[0].ajuste).toBeLessThan(aVenir[0].parDefaut);
+    expect(r.totalAjuste).toBeCloseTo(r.isPrevisionnel, 6);
+  });
+
   describe('curseur manuel', () => {
     it('applique le montant choisi à chaque échéance restante', () => {
       const r = calc({ ...enHausse, strategie: 'manuel', versementManuel: 5_000 });
