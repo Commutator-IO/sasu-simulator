@@ -495,13 +495,33 @@ export function simuler(h: Hypotheses): Resultat {
       dividendesBruts * P.CSG_DEDUCTIBLE_DIVIDENDES;
     revenuImposable = baseHorsDividendes + Math.max(0, dividendesImposables);
     irFoyer = calculerIR(revenuImposable, h.parts, h.couple);
-    irDividendes = irFoyer - irHorsDividendes;
+
+    // Salary and dividends now share one progressive scale, so the tax they
+    // jointly cause has to be split between them. Charging the salary first
+    // would hand it the cheap brackets and leave the marginal ones to the
+    // dividends — the salary would look far cheaper than it is.
+    //
+    // Each side is therefore credited with the average of its two marginal
+    // contributions: entering the base first, and entering it last. This is
+    // the Shapley value for two contributors, and it adds up exactly to the
+    // tax they cause together.
+    const irDividendesDAbord = calculerIR(
+      baseSansRemuneration + Math.max(0, dividendesImposables),
+      h.parts,
+      h.couple,
+    );
+    irSurSalaire =
+      (irHorsDividendes - irSansRemuneration + (irFoyer - irDividendesDAbord)) / 2;
+    irDividendes =
+      (irDividendesDAbord - irSansRemuneration + (irFoyer - irHorsDividendes)) / 2;
   } else {
     revenuImposable = baseHorsDividendes;
+    // Under the flat tax, dividends stay out of the progressive scale: there
+    // is nothing to share, and the salary bears exactly its own tax.
     irDividendes = dividendesBruts * P.PFU_IR;
     irFoyer = irHorsDividendes + irDividendes;
+    irSurSalaire = irHorsDividendes - irSansRemuneration;
   }
-  irSurSalaire = irHorsDividendes - irSansRemuneration;
   const irTotal = irSurSalaire + irDividendes;
 
   const dividendesNets = dividendesBruts - prelevementsSociauxDividendes - irDividendes;

@@ -110,7 +110,7 @@ export function Detail({ r }: { r: Resultat }) {
           note={tauxPct(Number((r.tauxPAS * 100).toFixed(1)))}
         />
         <Ligne
-          label="Impôt définitif imputable à cette rémunération"
+          label="Impôt sur le revenu imputable à cette rémunération"
           montant={r.irSurSalaire}
           negatif
         />
