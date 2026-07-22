@@ -101,16 +101,16 @@ export default function PageAcomptes() {
 
                 <div className="mt-6 grid gap-5">
                   <Montant
-                    label="Bénéfice imposable de l'exercice précédent"
-                    valeur={h.beneficePrecedent}
-                    onChange={(v) => maj('beneficePrecedent', v)}
-                    hint="C'est lui qui fixe le montant des acomptes : chacun vaut un quart de l'impôt correspondant."
-                  />
-                  <Montant
-                    label="Bénéfice imposable de l'avant-dernier exercice"
+                    label="Bénéfice de l'avant-dernier exercice"
                     valeur={h.beneficeAvantDernier}
                     onChange={(v) => maj('beneficeAvantDernier', v)}
-                    hint="Il ne sert qu'au premier acompte : au 15 mars, les comptes de l'exercice précédent ne sont pas encore approuvés. La régularisation intervient au deuxième acompte."
+                    hint="Il ne pilote que l'acompte du 15 mars : à cette date, les comptes de l'exercice précédent ne sont pas encore approuvés. Le deuxième acompte régularise."
+                  />
+                  <Montant
+                    label="Bénéfice de l'exercice précédent"
+                    valeur={h.beneficePrecedent}
+                    onChange={(v) => maj('beneficePrecedent', v)}
+                    hint="C'est la référence des acomptes : leur total doit égaler l'impôt correspondant."
                   />
                   <Montant
                     label="Bénéfice prévisionnel de l'exercice en cours"
@@ -282,6 +282,21 @@ export default function PageAcomptes() {
                         </strong>{' '}
                         manquants. Vos versements couvrent exactement l'impôt prévu :
                         le moindre dépassement de bénéfice crée un manque.
+                      </p>
+                    )}
+
+                    {!r.dispense && r.echeances[0].parDefaut > r.isReference && (
+                      <p className="mt-4 rounded-xl bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
+                        <strong className="font-semibold text-ink-900">
+                          L'acompte du 15 mars ({eur(r.echeances[0].parDefaut)}) dépasse
+                          à lui seul l'impôt de référence.
+                        </strong>{' '}
+                        Il est assis sur l'avant-dernier exercice
+                        ({eur(h.beneficeAvantDernier)} de bénéfice, soit{' '}
+                        {eur(r.isAvantDernier)} d'impôt), les comptes de l'exercice
+                        précédent n'étant pas approuvés au 15 mars. Les acomptes
+                        suivants tombent à zéro pour absorber l'excédent, qui vous
+                        revient au solde.
                       </p>
                     )}
 

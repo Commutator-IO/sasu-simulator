@@ -104,6 +104,20 @@ describe('échéancier de droit commun', () => {
     expect(r.totalParDefaut).toBeGreaterThanOrEqual(r.echeances[0].parDefaut);
   });
 
+  it('laisse le premier acompte dépasser l’impôt de référence après un effondrement', () => {
+    // Cas signalé : 24 000 € de bénéfice l'an dernier, mais 106 000 € l'année
+    // d'avant. L'acompte du 15 mars vaut un quart de l'impôt sur 106 000 €,
+    // sans rapport apparent avec la référence — d'où l'impression d'erreur.
+    const r = calc({ beneficeAvantDernier: 106_000, beneficePrecedent: 24_000 });
+    expect(r.isReference).toBeCloseTo(24_000 * 0.15, 2);
+    expect(r.echeances[0].parDefaut).toBeCloseTo(r.isAvantDernier / 4, 6);
+    expect(r.echeances[0].parDefaut).toBeGreaterThan(r.isReference);
+
+    // Les acomptes suivants absorbent l'excédent en tombant à zéro.
+    for (const e of r.echeances.slice(1)) expect(e.parDefaut).toBe(0);
+    expect(r.totalParDefaut).toBeCloseTo(r.echeances[0].parDefaut, 6);
+  });
+
   it('ne verse jamais d’acompte négatif', () => {
     for (const avant of [0, 50_000, 400_000]) {
       for (const precedent of [25_000, 120_000, 400_000]) {
