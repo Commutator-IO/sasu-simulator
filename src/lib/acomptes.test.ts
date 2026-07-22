@@ -126,14 +126,13 @@ describe('échéancier de droit commun', () => {
     expect(deuxPremiers).toBeCloseTo(r.isReference / 2, 6);
   });
 
-  it('reporte l’excédent quand l’avant-dernier exercice était bien meilleur', () => {
-    // Le deuxième acompte serait négatif : il tombe à zéro et l'excédent
-    // s'impute sur les suivants, sans remboursement immédiat.
+  it('ramène à zéro le deuxième acompte quand l’avant-dernier exercice écrase la référence', () => {
     const r = calc({ beneficeAvantDernier: 600_000, beneficePrecedent: 60_000 });
     expect(r.echeances[1].parDefaut).toBe(0);
     for (const e of r.echeances) expect(e.parDefaut).toBeGreaterThanOrEqual(0);
-    // Le total versé ne peut pas descendre sous le premier acompte déjà payé.
-    expect(r.totalParDefaut).toBeGreaterThanOrEqual(r.echeances[0].parDefaut);
+    // Le total appelé dépasse alors l'impôt de référence : c'est un
+    // trop-versé, restitué au solde.
+    expect(r.totalParDefaut).toBeGreaterThan(r.isReference);
   });
 
   it('laisse le premier acompte dépasser l’impôt de référence après un effondrement', () => {
@@ -144,10 +143,30 @@ describe('échéancier de droit commun', () => {
     expect(r.isReference).toBeCloseTo(24_000 * 0.15, 2);
     expect(r.echeances[0].parDefaut).toBeCloseTo(r.isAvantDernier / 4, 6);
     expect(r.echeances[0].parDefaut).toBeGreaterThan(r.isReference);
+  });
 
-    // Les acomptes suivants absorbent l'excédent en tombant à zéro.
-    for (const e of r.echeances.slice(1)) expect(e.parDefaut).toBe(0);
-    expect(r.totalParDefaut).toBeCloseTo(r.echeances[0].parDefaut, 6);
+  it('n’annule que l’acompte de juin, jamais ceux de septembre et décembre', () => {
+    // Régression : l'excédent de la régularisation glissait sur les échéances
+    // suivantes et les mettait à zéro. Le texte ne l'ajuste qu'« à due
+    // concurrence » sur le deuxième acompte ; les suivants restent appelés
+    // pour leur quart, et le trop-versé revient au solde.
+    const r = calc({ beneficeAvantDernier: 106_000, beneficePrecedent: 24_000 });
+    const quart = r.isReference / 4;
+
+    expect(r.echeances[1].parDefaut).toBe(0);
+    expect(r.echeances[2].parDefaut).toBeCloseTo(quart, 6);
+    expect(r.echeances[3].parDefaut).toBeCloseTo(quart, 6);
+  });
+
+  it('ne laisse jamais une régularisation rendre un acompte négatif', () => {
+    for (const avant of [0, 60_000, 600_000]) {
+      const r = calc({ beneficeAvantDernier: avant, beneficePrecedent: 60_000 });
+      for (const e of r.echeances) expect(e.parDefaut).toBeGreaterThanOrEqual(0);
+      // La régularisation ne porte que sur juin.
+      expect(r.echeances.filter((e) => Math.abs(e.regularisation) > 0.01)).toHaveLength(
+        Math.abs(r.echeances[1].regularisation) > 0.01 ? 1 : 0,
+      );
+    }
   });
 
   it('ne verse jamais d’acompte négatif', () => {
