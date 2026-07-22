@@ -4,10 +4,10 @@ import { Courbe } from './components/Courbe';
 import { Cascade } from './components/Cascade';
 import { Detail } from './components/Detail';
 import { Sources } from './components/Sources';
+import { Entete, Pied } from './components/Cadre';
 import { eur, pct } from './lib/format';
 import { balayer, brutMaxPourBudget, simuler, type Hypotheses } from './lib/simulation';
 import { decoderEtat, encoderEtat, lienPartage, type EtatPartage } from './lib/url';
-import { DEPOT, LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
 const DEFAUTS: Omit<Hypotheses, 'brutAnnuel'> = {
@@ -102,7 +102,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <Entete />
+      <Entete chemin="/" />
 
       <main>
         {/* ---------------------------------------------------------- Hero */}
@@ -666,65 +666,5 @@ function Stat({
         {annexe && <span className="ml-1.5 font-normal text-ink-400">{annexe}</span>}
       </dd>
     </div>
-  );
-}
-
-function Entete() {
-  return (
-    <header className="sticky top-0 z-20 border-b border-ink-200/70 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-        <a href="#" className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
-            S
-          </span>
-          <span className="text-[15px] font-semibold tracking-tight text-ink-900">
-            SASU <span className="text-brand-600">simulator</span>
-          </span>
-        </a>
-        <nav className="flex items-center gap-6 text-sm text-ink-500">
-          <a href="#sources" className="transition hover:text-ink-900">
-            Méthode et sources
-          </a>
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-function Pied() {
-  return (
-    <footer className="border-t border-ink-200/70 bg-white">
-      <div className="mx-auto max-w-6xl px-5 py-10 text-sm text-ink-400">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
-          <p>
-            Simulateur d'optimisation salaire / dividendes pour SASU — barèmes{' '}
-            {P.ANNEE}.
-          </p>
-          <p className="flex flex-wrap gap-x-5 gap-y-1">
-            <a
-              href={LIEN_ISSUES}
-              target="_blank"
-              rel="noreferrer"
-              className="transition hover:text-ink-900"
-            >
-              Signaler une erreur
-            </a>
-            <a
-              href={DEPOT}
-              target="_blank"
-              rel="noreferrer"
-              className="transition hover:text-ink-900"
-            >
-              Code source
-            </a>
-          </p>
-        </div>
-        <p className="mt-4 max-w-3xl leading-relaxed">
-          Outil informatif. Les montants affichés sont des estimations : ils ne tiennent
-          pas compte de votre situation complète, des crédits et réductions d'impôt, ni
-          des spécificités de votre contrat de prévoyance.
-        </p>
-      </div>
-    </footer>
   );
 }
