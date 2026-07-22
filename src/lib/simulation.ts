@@ -21,7 +21,16 @@ export type Hypotheses = {
    * cumulatively from January.
    */
   moisRemuneration: number;
-  /** Share of after-tax profit paid out as dividends (0 → 1). */
+  /**
+   * Retained earnings and reserves carried over from previous years, still
+   * available for distribution.
+   *
+   * Corporate tax was already paid on them when they were earned, so they are
+   * added to the distributable amount without being taxed again at company
+   * level. They are taxed as ordinary dividends in the shareholder's hands.
+   */
+  reservesDistribuables: number;
+  /** Share of the distributable amount paid out as dividends (0 → 1). */
   tauxDistribution: number;
   /** Number of shares in the household for the family quotient. */
   parts: number;
@@ -66,7 +75,18 @@ export type Resultat = {
   resultatFiscal: number;
   is: number;
   resultatNet: number;
+  /** Reserves carried over from previous years and put into play. */
+  reservesAnterieures: number;
+  /** Total available for distribution: after-tax profit plus those reserves. */
+  distribuable: number;
+  /** What is left in the company once the dividend is paid. */
   reserves: number;
+  /**
+   * Whether the household is likely to cross the high-income levy threshold.
+   * The levy itself is not computed — this only flags that the simulation
+   * understates the tax due. See `CEHR_SEUIL_CELIBATAIRE`.
+   */
+  cehrPossible: boolean;
 
   // Salary side
   lignes: LigneCotisation[];
@@ -436,9 +456,14 @@ export function simuler(h: Hypotheses): Resultat {
   const is = calculerIS(resultatFiscal, h.eligibleISReduit);
   const resultatNet = resultatFiscal - is;
 
-  const distribuable = Math.max(0, resultatNet);
+  // Reserves from previous years join the distributable amount without going
+  // through corporate tax again: it was already paid when they were earned.
+  // A loss for the year still eats into equity, hence the max() on the
+  // distributable side but not on the reserves left behind.
+  const reservesAnterieures = Math.max(0, h.reservesDistribuables);
+  const distribuable = Math.max(0, resultatNet) + reservesAnterieures;
   const dividendesBruts = distribuable * h.tauxDistribution;
-  const reserves = resultatNet - dividendesBruts;
+  const reserves = resultatNet + reservesAnterieures - dividendesBruts;
 
   // --- Salary --------------------------------------------------------------
   const csgCrdsLignes = lignes.filter((l) => l.famille === 'CSG-CRDS');
@@ -583,7 +608,14 @@ export function simuler(h: Hypotheses): Resultat {
     resultatFiscal,
     is,
     resultatNet,
+    reservesAnterieures,
+    distribuable,
     reserves,
+    // The reference taxable income includes flat-taxed dividends at their
+    // gross amount, hence the sum below rather than `revenuImposable`.
+    cehrPossible:
+      salairesImposables + h.autresRevenus + dividendesBruts >
+      (h.couple ? P.CEHR_SEUIL_COUPLE : P.CEHR_SEUIL_CELIBATAIRE),
     lignes,
     cotisationsSalariales,
     csgCrds,

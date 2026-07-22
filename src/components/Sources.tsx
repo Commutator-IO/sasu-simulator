@@ -78,7 +78,8 @@ const HYPOTHESES = [
   "En cas d'option pour le barème, rémunération et dividendes partagent le même barème progressif : l'impôt qu'ils provoquent ensemble est réparti entre eux à parts égales de contribution marginale, chacun étant crédité de la moyenne entre « entrer le premier dans l'assiette » et « entrer le dernier ». Taxer la rémunération en premier lui attribuerait les tranches basses et ferait paraître le salaire artificiellement peu imposé. Ce partage ne change ni le net en poche ni l'optimum, qui ne dépendent que du total.",
   "Les plafonds de cotisation sont proratisés à la durée du mandat : sur six mois d'activité, la tranche 1 s'arrête à six plafonds mensuels. C'est bien la période d'emploi qui proratise le plafond, non le rythme des versements — un président en poste toute l'année conserve un plafond annuel entier, même s'il se rémunère irrégulièrement, grâce à la régularisation progressive.",
   "La rémunération est supposée versée en parts égales sur la période. La régularisation progressive mois par mois n'est pas reproduite : seul le résultat annuel est calculé.",
-  'Les dividendes sont réputés prélevés sur le résultat de l’exercice simulé, décidés en assemblée après approbation des comptes.',
+  "Les dividendes sont décidés en assemblée après approbation des comptes. Les réserves des exercices antérieurs s'ajoutent au distribuable sans repasser par l'impôt sur les sociétés, déjà acquitté lors des exercices d'origine ; la réserve légale, indisponible, n'est pas à saisir.",
+  "La contribution exceptionnelle sur les hauts revenus n'est pas calculée. Au-delà de 250 000 € de revenu fiscal de référence pour une personne seule, ou 500 000 € pour un couple, elle ajoute 3 % puis 4 %, y compris sur les dividendes soumis à la flat tax pour leur montant brut. Le simulateur signale le franchissement du seuil mais surestime alors le net en poche.",
 ];
 
 export function Sources({ lienSimulation }: { lienSimulation?: string }) {

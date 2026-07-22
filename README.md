@@ -12,7 +12,7 @@ Barèmes **2026**.
 ```bash
 npm install
 npm run dev      # serveur de développement
-npm test         # 36 tests sur le moteur de calcul
+npm test         # 119 tests sur le moteur de calcul
 npm run build    # build de production
 npm run lint
 ```
@@ -29,7 +29,9 @@ résultat avant rémunération
   = résultat fiscal
   − impôt sur les sociétés            →  15 % jusqu'à 42 500 €, 25 % au-delà
   = résultat net
-  → dividendes bruts (part distribuée) et réserves
+  + réserves des exercices antérieurs   →  IS déjà acquitté, pas réimposées
+  = distribuable
+  → dividendes bruts (part distribuée) et réserves conservées
 ```
 
 Puis, côté dirigeant :
@@ -126,10 +128,12 @@ réutilisable pour les prochains outils.
 Le test central vérifie que rien ne se perd en route :
 
 ```
-net en poche + réserves + prélèvements = résultat avant rémunération
+net en poche + réserves + prélèvements
+      = résultat avant rémunération + réserves antérieures apportées
 ```
 
-Toute erreur d'assiette ou de double comptage casse cette égalité.
+Toute erreur d'assiette ou de double comptage casse cette égalité. Elle est
+vérifiée sous flat tax comme au barème, avec et sans autres revenus.
 
 ## Paramètres 2026 retenus
 
@@ -164,6 +168,9 @@ commentaire dans `parametres2026.ts`.
 - La CSG déductible sur dividendes est imputée sur l'année simulée, alors
   qu'elle l'est en pratique l'année suivante.
 - Pas de crédits ni de réductions d'impôt, pas de PER, pas d'épargne salariale.
+- La contribution exceptionnelle sur les hauts revenus n'est pas calculée. Le
+  simulateur signale le franchissement du seuil de revenu fiscal de référence
+  et prévient qu'il surestime alors le net en poche.
 - Le taux de prélèvement à la source affiché est celui qui correspondrait à
   l'année simulée. Le taux réel est assis sur les dernières déclarations et
   actualisé en septembre : il est en décalage d'un à deux ans. La grille de

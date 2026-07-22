@@ -25,6 +25,7 @@ const BASE: Omit<Hypotheses, 'brutAnnuel'> = {
   couple: false,
   autresRevenus: 0,
   salaireExterneBrut: 0,
+  reservesDistribuables: 0,
   moisRemuneration: 12,
   tauxATMP: P.AT_MP_DEFAUT,
   eligibleISReduit: true,
@@ -191,7 +192,7 @@ describe('simulation complète', () => {
         for (const autresRevenus of [0, 35_000]) {
           const r = sim(brut, { dividendesAuBareme, autresRevenus });
           expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-            r.resultatAvantRemuneration,
+            r.resultatAvantRemuneration + r.reservesAnterieures,
             4,
           );
         }
@@ -558,7 +559,7 @@ describe('nombre de mois de rémunération', () => {
     for (const mois of [1, 3, 6, 9, 12]) {
       const r = sim(30_000, { moisRemuneration: mois });
       expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-        r.resultatAvantRemuneration,
+        r.resultatAvantRemuneration + r.reservesAnterieures,
         4,
       );
     }
@@ -604,7 +605,7 @@ describe('salaire perçu chez un autre employeur', () => {
     for (const brut of [0, 30_000, 60_000]) {
       const r = sim(brut, { salaireExterneBrut: 40_000 });
       expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
-        r.resultatAvantRemuneration,
+        r.resultatAvantRemuneration + r.reservesAnterieures,
         4,
       );
     }
@@ -662,6 +663,95 @@ describe('salaire perçu chez un autre employeur', () => {
     expect(d.net / 50_000).toBeGreaterThan(0.7);
     expect(d.net / 50_000).toBeLessThan(0.8);
     expect(d.netImposableAvantAbattement).toBeGreaterThan(d.net);
+  });
+});
+
+describe('réserves distribuables des exercices antérieurs', () => {
+  const AVEC = { resultatAvantRemuneration: 120_000, reservesDistribuables: 200_000 };
+
+  it('ne les soumet pas une seconde fois à l’impôt sur les sociétés', () => {
+    // L'IS a été payé lors des exercices d'origine.
+    const sans = sim(45_000, { resultatAvantRemuneration: 120_000 });
+    const avec = sim(45_000, AVEC);
+    expect(avec.is).toBeCloseTo(sans.is, 6);
+    expect(avec.resultatFiscal).toBeCloseTo(sans.resultatFiscal, 6);
+  });
+
+  it('les ajoute au distribuable', () => {
+    const r = sim(45_000, { ...AVEC, tauxDistribution: 0.4 });
+    expect(r.distribuable).toBeCloseTo(r.resultatNet + 200_000, 6);
+    expect(r.dividendesBruts).toBeCloseTo(r.distribuable * 0.4, 6);
+  });
+
+  it('augmente les dividendes à hauteur de la part distribuée', () => {
+    const sans = sim(45_000, { resultatAvantRemuneration: 120_000 });
+    const avec = sim(45_000, AVEC);
+    expect(avec.dividendesBruts - sans.dividendesBruts).toBeCloseTo(200_000, 6);
+  });
+
+  it('laisse en réserve ce qui n’est pas distribué', () => {
+    const r = sim(45_000, { ...AVEC, tauxDistribution: 0.25 });
+    expect(r.reserves).toBeCloseTo(r.resultatNet + 200_000 - r.dividendesBruts, 6);
+    expect(r.reserves).toBeGreaterThan(0);
+  });
+
+  it('conserve l’équilibre, réserves apportées comprises', () => {
+    for (const taux of [0, 0.4, 1]) {
+      const r = sim(45_000, { ...AVEC, tauxDistribution: taux });
+      expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(
+        r.resultatAvantRemuneration + r.reservesAnterieures,
+        4,
+      );
+    }
+  });
+
+  it('ne change pas l’impôt sur la rémunération sous flat tax', () => {
+    // Les dividendes restent hors barème : leur montant n'a aucun effet sur
+    // l'impôt du salaire, si gros soient-ils.
+    const sans = sim(45_000, { resultatAvantRemuneration: 120_000 });
+    const avec = sim(45_000, AVEC);
+    expect(avec.irSurSalaire).toBeCloseTo(sans.irSurSalaire, 6);
+    expect(avec.tauxPAS).toBeCloseTo(sans.tauxPAS, 10);
+  });
+
+  it('renchérit fortement la rémunération sous option barème', () => {
+    const sans = sim(45_000, {
+      resultatAvantRemuneration: 120_000,
+      dividendesAuBareme: true,
+    });
+    const avec = sim(45_000, { ...AVEC, dividendesAuBareme: true });
+    expect(avec.irSurSalaire).toBeGreaterThan(sans.irSurSalaire);
+    expect(avec.tmi).toBeGreaterThanOrEqual(sans.tmi);
+  });
+
+  it('laisse l’optimum intact sous flat tax, et quasi nul sous barème', () => {
+    // Sous flat tax, les dividendes sont hors barème : l'arbitrage de l'année
+    // ne dépend pas de ce qu'on distribue en plus.
+    const sansReserves = balayer({ ...BASE, resultatAvantRemuneration: 120_000 }).optimum;
+    const avecReserves = balayer({ ...BASE, ...AVEC }).optimum;
+    expect(avecReserves.brutAnnuel).toBeCloseTo(sansReserves.brutAnnuel, 0);
+    expect(avecReserves.brutAnnuel).toBeGreaterThan(10_000);
+
+    // Sous barème, la rémunération est taxée au marginal : l'optimum est
+    // écrasé, avec ou sans réserves.
+    const bareme = balayer({ ...BASE, ...AVEC, dividendesAuBareme: true }).optimum;
+    expect(bareme.brutAnnuel).toBeLessThan(5_000);
+  });
+
+  it('signale le franchissement probable du seuil des hauts revenus', () => {
+    expect(sim(45_000, { resultatAvantRemuneration: 120_000 }).cehrPossible).toBe(false);
+    expect(sim(45_000, AVEC).cehrPossible).toBe(true);
+    // Le seuil double pour un couple soumis à imposition commune.
+    expect(sim(45_000, { ...AVEC, couple: true, parts: 2 }).cehrPossible).toBe(false);
+  });
+
+  it('ignore une valeur négative', () => {
+    const r = sim(45_000, {
+      resultatAvantRemuneration: 120_000,
+      reservesDistribuables: -50_000,
+    });
+    expect(r.reservesAnterieures).toBe(0);
+    expect(r.distribuable).toBeCloseTo(Math.max(0, r.resultatNet), 6);
   });
 });
 

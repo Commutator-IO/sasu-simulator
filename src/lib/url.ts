@@ -28,6 +28,7 @@ const CLES = {
   couple: 'couple',
   salaireExterne: 'salaireExterne',
   autresRevenus: 'autresRevenus',
+  reserves: 'reserves',
   distribution: 'distribution',
   atmp: 'atmp',
   isReduit: 'isReduit',
@@ -88,6 +89,11 @@ export function encoderEtat(
   ajouter(CLES.couple, base.couple, d.couple);
   ajouter(CLES.salaireExterne, arrondi(base.salaireExterneBrut), d.salaireExterneBrut);
   ajouter(CLES.autresRevenus, arrondi(base.autresRevenus), d.autresRevenus);
+  ajouter(
+    CLES.reserves,
+    arrondi(base.reservesDistribuables),
+    d.reservesDistribuables,
+  );
   // The payout ratio travels as a whole percentage, which reads better.
   ajouter(
     CLES.distribution,
@@ -129,6 +135,12 @@ export function decoderEtat(recherche: string, defauts: EtatPartage): EtatPartag
         MAX_MONTANT,
       ),
       autresRevenus: nombre(p.get(CLES.autresRevenus), d.autresRevenus, 0, MAX_MONTANT),
+      reservesDistribuables: nombre(
+        p.get(CLES.reserves),
+        d.reservesDistribuables,
+        0,
+        MAX_MONTANT,
+      ),
       tauxDistribution:
         nombre(
           p.get(CLES.distribution),
