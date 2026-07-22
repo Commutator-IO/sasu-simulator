@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Montant, Segments } from './components/Champs';
 import { Entete, Pied } from './components/Cadre';
 import { eur } from './lib/format';
@@ -9,12 +9,38 @@ import {
   SEUIL_DISPENSE,
   type HypothesesAcomptes,
 } from './lib/acomptes';
+import { BoutonPartage } from './components/BoutonPartage';
+import {
+  decoderAcomptes,
+  encoderAcomptes,
+  lienPartageAcomptes,
+} from './lib/urlAcomptes';
 import { LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
 export default function PageAcomptes() {
-  const [h, setH] = useState<HypothesesAcomptes>(DEFAUTS_ACOMPTES);
+  // Initial state comes from the URL: a shared link must reopen exactly the
+  // same simulation.
+  const [h, setH] = useState<HypothesesAcomptes>(() =>
+    decoderAcomptes(
+      typeof window === 'undefined' ? '' : window.location.search,
+      DEFAUTS_ACOMPTES,
+    ),
+  );
   const r = useMemo(() => calculerAcomptes(h), [h]);
+
+  // The URL follows the state without pushing a history entry on every edit.
+  useEffect(() => {
+    const minuteur = setTimeout(() => {
+      const requete = encoderAcomptes(h, DEFAUTS_ACOMPTES);
+      window.history.replaceState(
+        null,
+        '',
+        `${window.location.pathname}${requete}${window.location.hash}`,
+      );
+    }, 250);
+    return () => clearTimeout(minuteur);
+  }, [h]);
 
   const maj = <K extends keyof HypothesesAcomptes>(
     cle: K,
@@ -202,6 +228,8 @@ export default function PageAcomptes() {
                     </dl>
                   </div>
                 </div>
+
+                <BoutonPartage lien={lienPartageAcomptes(h, DEFAUTS_ACOMPTES)} />
               </div>
             </div>
           </div>
