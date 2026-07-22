@@ -79,6 +79,33 @@ describe('échéancier de droit commun', () => {
     ]);
   });
 
+  it('fixe chaque acompte dû au quart de l’impôt de référence', () => {
+    // BOI-IS-DECLA-20-10-10 § 110 : « chacun des quatre acomptes dus au titre
+    // de l'exercice est égal au quart de ce montant ». C'est le principe, que
+    // l'appel provisoire de mars ne remet pas en cause.
+    const r = calc({ beneficeAvantDernier: 300_000, beneficePrecedent: 120_000 });
+    for (const e of r.echeances) {
+      expect(e.acompteDu).toBeCloseTo(r.isReference / 4, 6);
+    }
+    expect(r.echeances.reduce((s, e) => s + e.acompteDu, 0)).toBeCloseTo(
+      r.isReference,
+      6,
+    );
+  });
+
+  it('ne réclame aucun acompte dû sous dispense', () => {
+    for (const e of calc({ premierExercice: true }).echeances) {
+      expect(e.acompteDu).toBe(0);
+    }
+  });
+
+  it('fait coïncider l’appel et l’acompte dû quand les deux exercices se suivent', () => {
+    // Cas courant : rien ne distingue alors le provisoire du définitif.
+    for (const e of calc().echeances) {
+      expect(e.parDefaut).toBeCloseTo(e.acompteDu, 6);
+    }
+  });
+
   it('assoit le premier acompte sur l’avant-dernier exercice', () => {
     // C'est le cœur du dispositif : au 15 mars, les comptes de N-1 ne sont pas
     // encore approuvés.
