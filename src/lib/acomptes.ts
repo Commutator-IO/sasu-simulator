@@ -4,9 +4,9 @@ import { calculerIS } from './simulation';
 /**
  * Corporate tax instalments ("acomptes d'impôt sur les sociétés").
  *
- * Four quarterly instalments, not monthly ones. For a company closing its
- * books on 31 December they fall on 15 March, 15 June, 15 September and
- * 15 December, and the balance is due on 15 May of the following year.
+ * Four quarterly instalments. For a company closing its books on 31 December
+ * they fall on 15 March, 15 June, 15 September and 15 December, and the
+ * balance is due on 15 May of the following year.
  *
  * Rules implemented, with their sources:
  *  - each instalment is a quarter of the tax on the reference profit, i.e. the

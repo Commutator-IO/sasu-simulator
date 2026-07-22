@@ -389,8 +389,8 @@ export default function PageAcomptes() {
               Votre échéancier
             </h2>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-              Quatre acomptes trimestriels — et non des mensualités — puis le solde au
-              15 mai. Chaque échéance appelle <strong>un quart</strong> de l'impôt de
+              Quatre acomptes trimestriels, puis le solde au 15 mai. Chaque échéance
+              appelle <strong>un quart</strong> de l'impôt de
               référence ; celle de mars fait exception, son quart étant calculé sur
               l'avant-dernier exercice faute de comptes approuvés, et l'écart est repris
               sur celle de juin.
