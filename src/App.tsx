@@ -335,12 +335,22 @@ export default function App() {
                     </p>
                     <p className="tabular mt-1 text-4xl font-semibold tracking-tight sm:text-5xl">
                       {eur(r.netEnPoche)}
+                      <span className="ml-2 align-baseline text-base font-normal text-brand-200">
+                        par an
+                      </span>
                     </p>
                     <p className="mt-1.5 text-sm text-brand-100">
-                      soit {eur(r.netEnPoche / 12)} par mois
+                      soit {eur(r.netEnPoche / 12)} par mois, lissé sur l'année — les
+                      dividendes ne sont versés qu'une fois, après approbation des
+                      comptes.
                     </p>
 
-                    <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-brand-600">
+                    {/* The two figures below are annual. Without a period label
+                        they get read as monthly, the line above being monthly. */}
+                    <p className="mt-6 text-xs font-medium uppercase tracking-wide text-brand-200">
+                      Sur l'année
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-brand-600">
                       <div className="bg-brand-700 px-4 py-3">
                         <p className="text-xs text-brand-200">Salaire net après impôt</p>
                         <p className="tabular mt-0.5 font-semibold">
@@ -504,7 +514,7 @@ export default function App() {
       <div className="sticky bottom-0 z-20 border-t border-ink-200 bg-white/95 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-4 px-5 py-3">
           <div>
-            <p className="text-xs text-ink-400">Net en poche</p>
+            <p className="text-xs text-ink-400">Net en poche sur l'année</p>
             <p className="tabular text-xl font-semibold text-ink-900">
               {eur(r.netEnPoche)}
             </p>
