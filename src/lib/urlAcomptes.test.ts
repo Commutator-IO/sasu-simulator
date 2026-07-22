@@ -14,8 +14,13 @@ describe('encodage des acomptes', () => {
   });
 
   it('n’écrit que ce qui diffère', () => {
-    expect(encoderAcomptes(avec({ moduler: !D.moduler }), D)).toBe(
-      `?moduler=${D.moduler ? '0' : '1'}`,
+    expect(encoderAcomptes(avec({ strategie: 'lisser' }), D)).toBe('?strategie=lisser');
+  });
+
+  it('conserve le montant du curseur même sous une autre stratégie', () => {
+    // Revenir au curseur doit le retrouver là où on l'avait laissé.
+    expect(encoderAcomptes(avec({ versementManuel: 5_000 }), D)).toBe(
+      '?versement=5000',
     );
   });
 
@@ -34,7 +39,8 @@ describe('aller-retour', () => {
       beneficePrevisionnel: 40_000,
       eligibleISReduit: false,
       premierExercice: true,
-      moduler: false,
+      strategie: 'appele' as const,
+      versementManuel: 12_000,
     });
     expect(decoderAcomptes(encoderAcomptes(etat, D), D)).toEqual(etat);
   });
@@ -66,10 +72,10 @@ describe('robustesse face à une URL trafiquée', () => {
     expect(r.beneficeAvantDernier).toBeLessThanOrEqual(100_000_000);
   });
 
-  it('rejette un booléen incompréhensible', () => {
-    expect(decoderAcomptes('?moduler=peut-être', D).moduler).toBe(D.moduler);
-    expect(decoderAcomptes('?moduler=0', D).moduler).toBe(false);
-    expect(decoderAcomptes('?moduler=true', D).moduler).toBe(true);
+  it('rejette une stratégie inconnue', () => {
+    expect(decoderAcomptes('?strategie=magique', D).strategie).toBe(D.strategie);
+    expect(decoderAcomptes('?strategie=lisser', D).strategie).toBe('lisser');
+    expect(decoderAcomptes('?strategie=appele', D).strategie).toBe('appele');
   });
 
   it('ignore les paramètres inconnus', () => {

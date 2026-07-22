@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Montant, Segments } from './components/Champs';
+import { Curseur, Montant, Segments } from './components/Champs';
 import { Entete, Pied } from './components/Cadre';
 import { HistogrammeAcomptes } from './components/HistogrammeAcomptes';
 import { eur } from './lib/format';
@@ -143,16 +143,74 @@ export default function PageAcomptes() {
                 </div>
 
                 <div className="mt-6">
-                  <Segments
-                    label="Vos acomptes"
-                    valeur={h.moduler}
-                    options={[
-                      { valeur: false, label: 'Verser le montant appelé' },
-                      { valeur: true, label: 'Ajuster au prévisionnel' },
-                    ]}
-                    onChange={(v) => maj('moduler', v)}
-                    hint="Ajusté, le reste dû est réparti également sur les échéances à venir : rien ne reste à payer au 15 mai. La loi permet de réduire un acompte sous sa responsabilité, et rien n'interdit d'en verser davantage."
-                  />
+                  <span className="field-label">Votre stratégie</span>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {(
+                      [
+                        ['appele', 'Verser l’appel', "Ce que le fisc réclame, sans plus"],
+                        ['conserver', 'Conserver la trésorerie', 'Le minimum légal, le plus tard possible'],
+                        ['lisser', 'Lisser sur deux ans', 'Échéances et solde de même hauteur'],
+                      ] as const
+                    ).map(([cle, titre, detail]) => {
+                      const actif = h.strategie === cle;
+                      return (
+                        <button
+                          key={cle}
+                          type="button"
+                          aria-pressed={actif}
+                          onClick={() => maj('strategie', cle)}
+                          className={[
+                            'rounded-xl border p-3 text-left transition',
+                            actif
+                              ? 'border-brand-500 bg-brand-50'
+                              : 'border-ink-200 hover:border-ink-300',
+                          ].join(' ')}
+                        >
+                          <span
+                            className={[
+                              'block text-sm font-medium',
+                              actif ? 'text-brand-700' : 'text-ink-800',
+                            ].join(' ')}
+                          >
+                            {titre}
+                          </span>
+                          <span className="mt-0.5 block text-xs leading-snug text-ink-500">
+                            {detail}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {r.versementPlafond > 0 && (
+                    <div className="mt-5 rounded-2xl bg-ink-50 p-5 sm:p-6">
+                      <Curseur
+                        label="Versement à chaque échéance restante"
+                        valeur={Math.round(
+                          h.strategie === 'manuel'
+                            ? h.versementManuel
+                            : (r.echeances.find((e) => !e.passee)?.ajuste ?? 0),
+                        )}
+                        min={0}
+                        max={Math.ceil(r.versementPlafond / 100) * 100}
+                        pas={100}
+                        onChange={(v) =>
+                          setH((etat) => ({
+                            ...etat,
+                            strategie: 'manuel',
+                            versementManuel: v,
+                          }))
+                        }
+                        rendu={eur}
+                        reperes={[
+                          { valeur: Math.round(r.versementConserver), label: 'Conserver' },
+                          { valeur: Math.round(r.versementLisser), label: 'Lisser' },
+                          { valeur: Math.round(r.versementPlafond), label: 'Solde nul' },
+                        ].filter((x) => x.valeur > 0)}
+                        hint={`Déplacez-le pour arbitrer entre trésorerie conservée et pic évité. Le pic actuel, d'ici juin prochain, est de ${eur(r.picTresorerie)}.`}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-8 rounded-2xl bg-ink-50 p-5 sm:p-6">
@@ -214,17 +272,21 @@ export default function PageAcomptes() {
                     <p className="text-sm text-brand-100">
                       {r.dispense
                         ? "Aucun acompte n'est dû"
-                        : h.moduler
-                          ? 'Trésorerie que vous gardez'
-                          : 'Total des acomptes appelés'}
+                        : r.tresorerieAvancee > 0
+                          ? 'Trésorerie avancée'
+                          : r.gainTresorerie > 0
+                            ? 'Trésorerie que vous gardez'
+                            : 'Total des acomptes appelés'}
                     </p>
                     <p className="tabular mt-1 text-4xl font-semibold tracking-tight sm:text-5xl">
                       {eur(
                         r.dispense
                           ? 0
-                          : h.moduler
-                            ? r.gainTresorerie
-                            : r.totalParDefaut,
+                          : r.tresorerieAvancee > 0
+                            ? r.tresorerieAvancee
+                            : r.gainTresorerie > 0
+                              ? r.gainTresorerie
+                              : r.totalParDefaut,
                       )}
                     </p>
                     <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-brand-600">
@@ -253,7 +315,16 @@ export default function PageAcomptes() {
                           ? "Aucun acompte durant le premier exercice : l'impôt se règle en une fois au solde."
                           : `L'impôt de l'exercice de référence ne dépasse pas ${eur(SEUIL_DISPENSE)}, la dispense est automatique.`}
                       </div>
-                    ) : h.moduler && r.gainTresorerie > 0 ? (
+                    ) : r.tresorerieAvancee > 0 ? (
+                      <div className="rounded-xl bg-ink-50 p-4 text-sm leading-relaxed text-ink-700">
+                        <span className="font-semibold text-ink-900">
+                          {eur(r.tresorerieAvancee)} versés d'avance
+                        </span>{' '}
+                        par rapport à ce qui est appelé. Vous n'y êtes pas tenu : c'est
+                        un choix d'étalement, qui prête cette somme à l'État sans
+                        intérêt jusqu'au solde.
+                      </div>
+                    ) : r.gainTresorerie > 0 ? (
                       <div className="rounded-xl bg-brand-50 p-4 text-sm leading-relaxed text-ink-700">
                         <span className="font-semibold text-ink-900">
                           {eur(r.gainTresorerie)} conservés dans l'entreprise
@@ -299,7 +370,9 @@ export default function PageAcomptes() {
                       </p>
                     )}
 
-                    {!r.risqueMajoration && r.matelasSecurite > 0 && h.moduler && (
+                    {!r.risqueMajoration &&
+                      r.matelasSecurite > 0 &&
+                      h.strategie !== 'appele' && (
                       <p className="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
                         Vos versements dépassent déjà l'impôt prévu de{' '}
                         <strong className="font-semibold text-ink-900">
@@ -307,8 +380,8 @@ export default function PageAcomptes() {
                         </strong>
                         . Tant que le bénéfice réel reste sous cette marge, aucune
                         majoration n'est encourue.
-                      </p>
-                    )}
+                        </p>
+                      )}
 
                     {r.excedentDejaVerse > 0 && (
                       <p className="mt-4 rounded-xl bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-600">

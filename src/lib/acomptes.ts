@@ -36,6 +36,8 @@ export const INTERET_RETARD_MENSUEL = 0.002;
 
 export const NB_ECHEANCES = 4;
 
+export type Strategie = 'appele' | 'conserver' | 'lisser' | 'manuel';
+
 export type Echeance = {
   /** 1 to 4. */
   rang: number;
@@ -71,8 +73,19 @@ export type HypothesesAcomptes = {
   eligibleISReduit: boolean;
   /** First financial year of a newly created company: no instalment due. */
   premierExercice: boolean;
-  /** Whether the remaining instalments are cut down to what is still owed. */
-  moduler: boolean;
+  /**
+   * How the remaining instalments are sized.
+   *  - `appele`    : pay exactly what is called for
+   *  - `conserver` : never pay more than called, and stop once the expected
+   *                  tax is covered — keeps cash as long as the law allows
+   *  - `lisser`    : spread what is still owed over the remaining dates *and*
+   *                  the May balance, so no single date spikes across the two
+   *                  years
+   *  - `manuel`    : whatever `versementManuel` says, per remaining date
+   */
+  strategie: Strategie;
+  /** Amount paid at each remaining date under the `manuel` strategy. */
+  versementManuel: number;
   /** How many due dates have already passed, 0 to 4. */
   echeancesPassees: number;
   /**
@@ -102,10 +115,20 @@ export type ResultatAcomptes = {
   /** What is left to pay once the remaining instalments are adjusted. */
   resteAVerser: number;
   /**
-   * Cash kept from now on by adjusting the remaining instalments. Negative
-   * when the adjustment tops them up instead, to clear the balance.
+   * Cash kept from now on, compared with paying what is called. Zero when the
+   * strategy pays ahead instead — see `tresorerieAvancee`.
    */
   gainTresorerie: number;
+  /** Cash paid ahead of the call, which the previous field would show negative. */
+  tresorerieAvancee: number;
+  /** Per-date amount that keeps cash longest without ever exceeding the call. */
+  versementConserver: number;
+  /** Per-date amount that levels the remaining dates with the May balance. */
+  versementLisser: number;
+  /** Highest per-date amount worth paying: beyond it the balance turns into a refund. */
+  versementPlafond: number;
+  /** Largest single outflow between now and 15 June of next year. */
+  picTresorerie: number;
   /**
    * Amount already overpaid, which no adjustment can recover before the
    * balance: past instalments cannot be taken back.
@@ -209,23 +232,40 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
   );
   const dejaVerse = dejaVerseParEcheance.reduce((s, v) => s + v, 0);
 
-  // Remaining due dates are spread so that nothing is left for the balance:
-  // what is still owed, split evenly over the dates left. This both cuts them
-  // when the profit falls and tops them up when it rises — paying more than
-  // called for is always allowed, and it avoids a lump sum in May.
   const restantes = NB_ECHEANCES - passees;
   const besoin = Math.max(0, isPrevisionnel - dejaVerse);
-  const parEcheanceRestante = restantes > 0 ? besoin / restantes : 0;
+  const appeleRestant = parDefaut
+    .filter((_, i) => i >= passees)
+    .reduce((s, v) => s + v, 0);
+
+  // Paying more than the balance requires would only earn a refund, so this is
+  // the highest per-date amount worth considering.
+  const versementPlafond = restantes > 0 ? besoin / restantes : 0;
+  // Keeping cash: never above the call, and nothing once the tax is covered.
+  const versementConserver =
+    restantes > 0 ? Math.min(appeleRestant / restantes, versementPlafond) : 0;
+  // Levelling: the May balance counts as one more date, so the remaining
+  // instalments and the balance all come out equal.
+  const versementLisser = restantes > 0 ? besoin / (restantes + 1) : 0;
 
   const acompteDu = motifDispense !== null ? 0 : isReference / NB_ECHEANCES;
 
+  let restantAPayer = besoin;
   const echeances: Echeance[] = parDefaut.map((montant, i) => {
     const passee = i < passees;
-    const aVenir = motifDispense !== null
-      ? 0
-      : h.moduler
-        ? parEcheanceRestante
-        : montant;
+    let aVenir: number;
+    if (motifDispense !== null) {
+      aVenir = 0;
+    } else if (h.strategie === 'appele') {
+      aVenir = montant;
+    } else if (h.strategie === 'conserver') {
+      aVenir = Math.min(montant, Math.max(0, restantAPayer));
+    } else if (h.strategie === 'lisser') {
+      aVenir = versementLisser;
+    } else {
+      aVenir = borner(h.versementManuel, 0, Number.MAX_SAFE_INTEGER);
+    }
+    if (!passee) restantAPayer -= aVenir;
     return {
       rang: i + 1,
       date: DATES[i],
@@ -244,6 +284,31 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
   const totalParDefaut = parDefaut.reduce((s, v) => s + v, 0);
   const totalAjuste = dejaVerse + resteAVerser;
 
+  const solde = isPrevisionnel - totalAjuste;
+  // Next year the roles shift by one: this year's profit becomes the
+  // reference, and the previous year drives the first instalment.
+  const suivantes = echeancierParDefaut({
+    beneficeAvantDernier: h.beneficePrecedent,
+    beneficePrecedent: h.beneficePrevisionnel,
+    eligibleISReduit: h.eligibleISReduit,
+    premierExercice: false,
+  });
+  const suite = {
+    acompte1: suivantes[0],
+    acompte2: suivantes[1],
+    cumulMaiJuin: Math.max(0, solde) + suivantes[1],
+  };
+
+  // Every outflow from now to 15 June next year. Levelling aims at bringing
+  // this peak down.
+  const picTresorerie = Math.max(
+    0,
+    ...echeances.filter((e) => !e.passee).map((e) => e.ajuste),
+    Math.max(0, solde),
+    suite.acompte1,
+    suite.acompte2,
+  );
+
   return {
     isAvantDernier,
     isReference,
@@ -256,32 +321,24 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
     dejaVerse,
     resteParDefaut,
     resteAVerser,
-    gainTresorerie: resteParDefaut - resteAVerser,
+    gainTresorerie: Math.max(0, resteParDefaut - resteAVerser),
+    tresorerieAvancee: Math.max(0, resteAVerser - resteParDefaut),
+    versementConserver,
+    versementLisser,
+    versementPlafond,
     // Past instalments cannot be taken back: only the balance settles them.
     excedentDejaVerse: Math.max(0, dejaVerse - isPrevisionnel),
-    solde: isPrevisionnel - totalAjuste,
+    solde,
     matelasSecurite: Math.max(0, totalAjuste - isPrevisionnel),
-    // Next year the roles shift by one: this year's profit becomes the
-    // reference, and the previous year drives the first instalment.
-    suite: (() => {
-      const suivantes = echeancierParDefaut({
-        beneficeAvantDernier: h.beneficePrecedent,
-        beneficePrecedent: h.beneficePrevisionnel,
-        eligibleISReduit: h.eligibleISReduit,
-        premierExercice: false,
-      });
-      const solde = isPrevisionnel - totalAjuste;
-      return {
-        acompte1: suivantes[0],
-        acompte2: suivantes[1],
-        cumulMaiJuin: Math.max(0, solde) + suivantes[1],
-      };
-    })(),
+    suite,
+    picTresorerie,
     // Adjusting is only safe while the forecast holds. But a company that has
     // already paid more than it expects to owe cannot fall short: warning it
     // would be crying wolf.
     risqueMajoration:
-      h.moduler && resteAVerser < resteParDefaut && totalAjuste <= isPrevisionnel,
+      h.strategie !== 'appele' &&
+      resteAVerser < resteParDefaut &&
+      totalAjuste <= isPrevisionnel,
   };
 }
 
@@ -305,7 +362,8 @@ export const DEFAUTS_ACOMPTES: HypothesesAcomptes = {
   beneficePrevisionnel: Math.round(P.RESULTAT_PAR_DEFAUT / 2),
   eligibleISReduit: true,
   premierExercice: false,
-  moduler: true,
+  strategie: 'conserver',
+  versementManuel: 0,
   echeancesPassees: 0,
   versements: [],
 };

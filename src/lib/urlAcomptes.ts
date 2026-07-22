@@ -1,4 +1,4 @@
-import { NB_ECHEANCES, type HypothesesAcomptes } from './acomptes';
+import { NB_ECHEANCES, type HypothesesAcomptes, type Strategie } from './acomptes';
 import { arrondi, booleen, MAX_MONTANT, nombre } from './url';
 
 /**
@@ -15,10 +15,17 @@ const CLES = {
   previsionnel: 'previsionnel',
   isReduit: 'isReduit',
   premierExercice: 'premierExercice',
-  moduler: 'moduler',
+  strategie: 'strategie',
+  versement: 'versement',
   passees: 'passees',
   verses: 'verses',
 } as const;
+
+const STRATEGIES: Strategie[] = ['appele', 'conserver', 'lisser', 'manuel'];
+
+function lireStrategie(brut: string | null, defaut: Strategie): Strategie {
+  return STRATEGIES.includes(brut as Strategie) ? (brut as Strategie) : defaut;
+}
 
 /** Amounts paid travel as a comma-separated list, e.g. "11437,3000". */
 function encoderVersements(versements: number[], passees: number): string {
@@ -59,7 +66,10 @@ export function encoderAcomptes(
   );
   ajouter(CLES.isReduit, h.eligibleISReduit, defauts.eligibleISReduit);
   ajouter(CLES.premierExercice, h.premierExercice, defauts.premierExercice);
-  ajouter(CLES.moduler, h.moduler, defauts.moduler);
+  if (h.strategie !== defauts.strategie) params.set(CLES.strategie, h.strategie);
+  // Written whenever it differs, even under another strategy: switching back
+  // to the slider should find its position again.
+  ajouter(CLES.versement, arrondi(h.versementManuel), defauts.versementManuel);
   ajouter(
     CLES.passees,
     arrondi(h.echeancesPassees),
@@ -100,7 +110,13 @@ export function decoderAcomptes(
     ),
     eligibleISReduit: booleen(p.get(CLES.isReduit), defauts.eligibleISReduit),
     premierExercice: booleen(p.get(CLES.premierExercice), defauts.premierExercice),
-    moduler: booleen(p.get(CLES.moduler), defauts.moduler),
+    strategie: lireStrategie(p.get(CLES.strategie), defauts.strategie),
+    versementManuel: nombre(
+      p.get(CLES.versement),
+      defauts.versementManuel,
+      0,
+      MAX_MONTANT,
+    ),
     echeancesPassees: nombre(p.get(CLES.passees), defauts.echeancesPassees, 0, NB_ECHEANCES),
     versements: decoderVersements(p.get(CLES.verses)),
   };
