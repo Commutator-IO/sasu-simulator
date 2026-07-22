@@ -382,6 +382,11 @@ describe('invariants, quelle que soit la situation', () => {
     }
   }
 
+  /** Un balayage qui échoue doit dire pour quel cas. */
+  const nom = (h: HypothesesAcomptes) =>
+    `avantDernier=${h.beneficeAvantDernier} precedent=${h.beneficePrecedent}` +
+    ` previsionnel=${h.beneficePrevisionnel} ${h.strategie} passees=${h.echeancesPassees}`;
+
   it('couvre un éventail représentatif', () => {
     expect(cas.length).toBeGreaterThan(300);
   });
@@ -389,8 +394,8 @@ describe('invariants, quelle que soit la situation', () => {
   it('ne verse jamais de montant négatif', () => {
     for (const h of cas) {
       for (const e of calculerAcomptes(h).echeances) {
-        expect(e.parDefaut).toBeGreaterThanOrEqual(0);
-        expect(e.ajuste).toBeGreaterThanOrEqual(0);
+        expect.soft(e.parDefaut, `${nom(h)} ${e.date}`).toBeGreaterThanOrEqual(0);
+        expect.soft(e.ajuste, `${nom(h)} ${e.date}`).toBeGreaterThanOrEqual(0);
       }
     }
   });
@@ -400,15 +405,15 @@ describe('invariants, quelle que soit la situation', () => {
       const autres = calculerAcomptes(h).echeances.filter(
         (e) => e.rang !== 2 && Math.abs(e.regularisation) > 0.01,
       );
-      expect(autres).toHaveLength(0);
+      expect.soft(autres, nom(h)).toHaveLength(0);
     }
   });
 
   it('boucle le compte : versé plus solde égalent l’impôt dû', () => {
     for (const h of cas) {
       const r = calculerAcomptes(h);
-      expect(r.dejaVerse + r.resteAVerser).toBeCloseTo(r.totalAjuste, 6);
-      expect(r.totalAjuste + r.solde).toBeCloseTo(r.isPrevisionnel, 4);
+      expect.soft(r.dejaVerse + r.resteAVerser, nom(h)).toBeCloseTo(r.totalAjuste, 6);
+      expect.soft(r.totalAjuste + r.solde, nom(h)).toBeCloseTo(r.isPrevisionnel, 4);
     }
   });
 });
