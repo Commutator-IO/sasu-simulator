@@ -281,6 +281,55 @@ describe('prélèvement à la source', () => {
     );
   });
 
+  it('fait toujours coïncider la retenue avec le taux et l’assiette affichés', () => {
+    // Régression : la ligne « Prélèvement à la source » montrait l'impôt
+    // imputable au salaire tout en l'annotant du taux de PAS. Multiplier le
+    // taux affiché par l'assiette affichée ne retombait pas sur le montant,
+    // avec des écarts allant jusqu'à 4 000 € dès que le foyer avait d'autres
+    // ressources.
+    for (const sur of [
+      {},
+      { autresRevenus: 40_000 },
+      { salaireExterneBrut: 40_000 },
+      { dividendesAuBareme: true },
+      { couple: true, parts: 3, salaireExterneBrut: 30_000 },
+    ]) {
+      const r = sim(45_000, { resultatAvantRemuneration: 180_000, ...sur });
+      expect(r.prelevementAnnuelPAS).toBeCloseTo(r.tauxPAS * r.assiettePAS, 6);
+      expect(r.prelevementMensuelPAS * r.moisRemuneration).toBeCloseTo(
+        r.prelevementAnnuelPAS,
+        6,
+      );
+    }
+  });
+
+  it('distingue la retenue de l’impôt définitif quand le foyer a d’autres ressources', () => {
+    // Les deux ne coïncident que si la rémunération est le seul revenu, et
+    // seulement à l'arrondi du taux près.
+    const seul = sim(45_000, { resultatAvantRemuneration: 180_000 });
+    expect(Math.abs(seul.prelevementAnnuelPAS - seul.irSurSalaire)).toBeLessThanOrEqual(
+      seul.assiettePAS * (P.PAS_ARRONDI / 2),
+    );
+
+    const avecAutres = sim(45_000, {
+      resultatAvantRemuneration: 180_000,
+      autresRevenus: 40_000,
+    });
+    // L'acompte est calculé au taux du foyer et sous-estime ici l'impôt
+    // réellement imputable à la rémunération.
+    expect(avecAutres.prelevementAnnuelPAS).toBeLessThan(avecAutres.irSurSalaire);
+  });
+
+  it('n’impute jamais un impôt négatif à la rémunération', () => {
+    for (const brut of [0, 5_000, 20_000, 60_000]) {
+      for (const autres of [0, 30_000, 90_000]) {
+        expect(sim(brut, { autresRevenus: autres }).irSurSalaire).toBeGreaterThanOrEqual(
+          0,
+        );
+      }
+    }
+  });
+
   it('arrondit le taux à la décimale la plus proche', () => {
     for (const brut of [30_000, 45_000, 60_000, 90_000, 150_000]) {
       const taux = sim(brut).tauxPAS * 100;

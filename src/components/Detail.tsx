@@ -104,12 +104,30 @@ export function Detail({ r }: { r: Resultat }) {
           note="avant abattement"
         />
         <Ligne
-          label="Prélèvement à la source"
-          montant={r.irSurSalaire}
+          label="Prélèvement à la source retenu"
+          montant={r.prelevementAnnuelPAS}
           negatif
           note={tauxPct(Number((r.tauxPAS * 100).toFixed(1)))}
         />
+        <Ligne
+          label="Impôt définitif imputable à cette rémunération"
+          montant={r.irSurSalaire}
+          negatif
+        />
         <Ligne label="Salaire net après impôt" montant={r.salaireNet - r.irSurSalaire} fort />
+
+        {Math.abs(r.prelevementAnnuelPAS - r.irSurSalaire) > 20 && (
+          <p className="mt-3 rounded-lg bg-ink-50 px-3 py-2 text-xs leading-relaxed text-ink-500">
+            Les deux montants diffèrent de{' '}
+            {eur(Math.abs(r.prelevementAnnuelPAS - r.irSurSalaire))} : le prélèvement à
+            la source est un acompte calculé au taux du foyer, alors que l'impôt
+            imputable à cette rémunération tient compte de vos autres ressources, qui
+            occupent déjà le bas du barème.{' '}
+            {r.prelevementAnnuelPAS < r.irSurSalaire
+              ? "La déclaration de revenus réclamera le complément."
+              : "La déclaration de revenus vous en restituera l'excédent."}
+          </p>
+        )}
 
         <div className="mt-4 rounded-xl bg-ink-50 p-4">
           <div className="flex items-baseline justify-between gap-4">
