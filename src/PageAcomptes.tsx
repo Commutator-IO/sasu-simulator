@@ -11,6 +11,7 @@ import {
   NB_ECHEANCES,
   SEUIL_DISPENSE,
   type HypothesesAcomptes,
+  type ResultatAcomptes,
 } from './lib/acomptes';
 import { BoutonPartage } from './components/BoutonPartage';
 import {
@@ -268,27 +269,20 @@ export default function PageAcomptes() {
             <div className="lg:col-span-5">
               <div className="lg:sticky lg:top-24">
                 <div className="card overflow-hidden">
+                  {/* One stable headline. It used to change meaning between
+                      cash kept, cash advanced and total called, which made the
+                      same slot say three different things. */}
                   <div className="bg-brand-700 px-6 py-7 text-white sm:px-8">
-                    <p className="text-sm text-brand-100">
-                      {r.dispense
-                        ? "Aucun acompte n'est dû"
-                        : r.tresorerieAvancee > 0
-                          ? 'Trésorerie avancée'
-                          : r.gainTresorerie > 0
-                            ? 'Trésorerie que vous gardez'
-                            : 'Total des acomptes appelés'}
-                    </p>
+                    <p className="text-sm text-brand-100">Reste à verser cette année</p>
                     <p className="tabular mt-1 text-4xl font-semibold tracking-tight sm:text-5xl">
-                      {eur(
-                        r.dispense
-                          ? 0
-                          : r.tresorerieAvancee > 0
-                            ? r.tresorerieAvancee
-                            : r.gainTresorerie > 0
-                              ? r.gainTresorerie
-                              : r.totalParDefaut,
-                      )}
+                      {eur(r.resteAVerser)}
                     </p>
+                    <p className="mt-1.5 text-sm text-brand-100">
+                      {r.dispense
+                        ? "Aucun acompte n'est dû : tout se règle au solde"
+                        : `sur ${eur(r.totalParDefaut)} appelés au total`}
+                    </p>
+
                     <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-brand-600">
                       <div className="bg-brand-700 px-4 py-3">
                         <p className="text-xs text-brand-200">Impôt de référence</p>
@@ -306,106 +300,22 @@ export default function PageAcomptes() {
                   </div>
 
                   <div className="px-6 py-6 sm:px-8">
-                    {r.dispense ? (
-                      <div className="rounded-xl bg-brand-50 p-4 text-sm leading-relaxed text-ink-700">
-                        <span className="font-semibold text-ink-900">
-                          Dispense — {r.motifDispense}.
-                        </span>{' '}
-                        {r.motifDispense === 'premier exercice'
-                          ? "Aucun acompte durant le premier exercice : l'impôt se règle en une fois au solde."
-                          : `L'impôt de l'exercice de référence ne dépasse pas ${eur(SEUIL_DISPENSE)}, la dispense est automatique.`}
-                      </div>
-                    ) : r.tresorerieAvancee > 0 ? (
-                      <div className="rounded-xl bg-ink-50 p-4 text-sm leading-relaxed text-ink-700">
-                        <span className="font-semibold text-ink-900">
-                          {eur(r.tresorerieAvancee)} versés d'avance
-                        </span>{' '}
-                        par rapport à ce qui est appelé. Vous n'y êtes pas tenu : c'est
-                        un choix d'étalement, qui prête cette somme à l'État sans
-                        intérêt jusqu'au solde.
-                      </div>
-                    ) : r.gainTresorerie > 0 ? (
-                      <div className="rounded-xl bg-brand-50 p-4 text-sm leading-relaxed text-ink-700">
-                        <span className="font-semibold text-ink-900">
-                          {eur(r.gainTresorerie)} conservés dans l'entreprise
-                        </span>{' '}
-                        au lieu d'être avancés puis restitués. Vous versez{' '}
-                        {eur(r.totalAjuste)} au lieu de {eur(r.totalParDefaut)}.
-                      </div>
-                    ) : (
-                      <div className="rounded-xl bg-ink-50 p-4 text-sm leading-relaxed text-ink-600">
-                        Votre bénéfice prévisionnel ne descend pas sous celui de
-                        l'exercice de référence : il n'y a rien à moduler.
-                      </div>
-                    )}
-
-                    {r.risqueMajoration && (
-                      <p className="mt-4 rounded-xl border border-gold-300 bg-gold-100 px-4 py-3 text-xs leading-relaxed text-ink-700">
-                        <strong className="font-semibold text-ink-900">
-                          La modulation engage votre responsabilité.
-                        </strong>{' '}
-                        Si le bénéfice dépasse finalement votre prévision, le manque est
-                        traité comme un retard de paiement : majoration de 5 % et
-                        intérêt de 0,20 % par mois, soit de l'ordre de{' '}
-                        <strong className="font-semibold text-ink-900">
-                          {eur(coutSousEstimation(1_000))} pour 1 000 €
-                        </strong>{' '}
-                        manquants. Vos versements couvrent exactement l'impôt prévu :
-                        le moindre dépassement de bénéfice crée un manque.
-                      </p>
-                    )}
-
-                    {!r.dispense && r.echeances[0].parDefaut > r.isReference && (
-                      <p className="mt-4 rounded-xl bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
-                        <strong className="font-semibold text-ink-900">
-                          L'acompte du 15 mars ({eur(r.echeances[0].parDefaut)}) dépasse
-                          à lui seul l'impôt de référence.
-                        </strong>{' '}
-                        Il est assis sur l'avant-dernier exercice
-                        ({eur(h.beneficeAvantDernier)} de bénéfice, soit{' '}
-                        {eur(r.isAvantDernier)} d'impôt), les comptes de l'exercice
-                        précédent n'étant pas approuvés au 15 mars. Les acomptes
-                        suivants tombent à zéro pour absorber l'excédent, qui vous
-                        revient au solde.
-                      </p>
-                    )}
-
-                    {!r.risqueMajoration &&
-                      r.matelasSecurite > 0 &&
-                      h.strategie !== 'appele' && (
-                      <p className="mt-4 rounded-xl bg-brand-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
-                        Vos versements dépassent déjà l'impôt prévu de{' '}
-                        <strong className="font-semibold text-ink-900">
-                          {eur(r.matelasSecurite)}
-                        </strong>
-                        . Tant que le bénéfice réel reste sous cette marge, aucune
-                        majoration n'est encourue.
-                        </p>
-                      )}
-
-                    {r.excedentDejaVerse > 0 && (
-                      <p className="mt-4 rounded-xl bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-600">
-                        <strong className="font-semibold text-ink-900">
-                          {eur(r.excedentDejaVerse)} déjà versés en trop.
-                        </strong>{' '}
-                        Un acompte payé ne se reprend pas : cet excédent ne vous
-                        reviendra qu'au solde, le 15 mai de l'année suivante. Seules les
-                        échéances à venir peuvent encore être réduites.
-                      </p>
-                    )}
+                    {/* At most one message: the notes used to stack up to five
+                        deep. Ordered by what the reader can still act on. */}
+                    <Message r={r} strategie={h.strategie} />
 
                     <dl className="mt-6 space-y-3">
                       {h.echeancesPassees > 0 && (
                         <Stat label="Déjà versé" valeur={eur(r.dejaVerse)} />
                       )}
-                      <Stat label="Reste à verser cette année" valeur={eur(r.resteAVerser)} />
-                      <Stat
-                        label="Total versé sur l'année"
-                        valeur={eur(r.totalAjuste)}
-                      />
+                      <Stat label="Total sur l'année" valeur={eur(r.totalAjuste)} />
                       <Stat
                         label={r.solde >= 0 ? 'Solde au 15 mai' : 'Restitution au 15 mai'}
                         valeur={eur(Math.abs(r.solde))}
+                      />
+                      <Stat
+                        label="Plus grosse échéance d'ici juin prochain"
+                        valeur={eur(r.picTresorerie)}
                       />
                     </dl>
                   </div>
@@ -424,23 +334,17 @@ export default function PageAcomptes() {
               Votre échéancier
             </h2>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-              Quatre acomptes trimestriels — et non des mensualités — pour une clôture
-              au 31 décembre, puis le solde au 15 mai de l'année suivante. Les échéances
-              déjà passées reprennent ce que vous avez déclaré ; les suivantes sont
-              calculées sur votre bénéfice prévisionnel.
+              Quatre acomptes trimestriels — et non des mensualités — puis le solde au
+              15 mai. Chaque échéance appelle <strong>un quart</strong> de l'impôt de
+              référence ; celle de mars fait exception, son quart étant calculé sur
+              l'avant-dernier exercice faute de comptes approuvés, et l'écart est repris
+              sur celle de juin.
             </p>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
-              Chaque échéance appelle <strong>un quart</strong> de l'impôt de
-              référence. Celui du 15 mars fait exception&nbsp;: faute de comptes
-              approuvés à cette date, son quart se calcule sur l'avant-dernier
-              exercice, et l'écart est régularisé sur l'échéance du 15 juin.
-            </p>
-            <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
-              Le graphique déborde sur l'année suivante, car c'est là que se joue
-              l'essentiel&nbsp;: le solde du 15 mai tombe entre les deux premiers
-              acomptes de l'année d'après, et celui du 15 juin est justement celui qui
-              régularise sur l'exercice que vous simulez. Un bénéfice qui progresse se
-              paie donc deux fois en un mois.
+              Le graphique déborde sur l'année suivante&nbsp;: le solde du 15 mai tombe
+              entre les deux premiers acomptes de l'année d'après, et celui du 15 juin
+              rattrape d'un coup tout ce que l'exercice simulé n'a pas encore payé. Un
+              bénéfice qui progresse se paie donc deux fois en un mois.
             </p>
 
             <div className="card mt-8 p-5 sm:p-8">
@@ -452,7 +356,6 @@ export default function PageAcomptes() {
                 <thead>
                   <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wide text-ink-400">
                     <th className="px-4 py-3 font-medium">Échéance</th>
-                    <th className="px-4 py-3 font-medium">Assise sur</th>
                     <th className="px-4 py-3 text-right font-medium">Quart</th>
                     <th className="px-4 py-3 text-right font-medium">Régularisation</th>
                     <th className="px-4 py-3 text-right font-medium">Appelé</th>
@@ -462,18 +365,12 @@ export default function PageAcomptes() {
                 <tbody>
                   {r.echeances.map((e) => (
                     <tr key={e.rang} className="border-b border-ink-100 last:border-0">
-                      <td className="px-4 py-3 font-medium text-ink-800">{e.date}</td>
-                      <td className="px-4 py-3 text-xs text-ink-500">
-                        {e.passee ? (
-                          <span className="rounded bg-ink-100 px-1.5 py-0.5 font-medium text-ink-600">
-                            Déjà versé
+                      <td className="px-4 py-3 font-medium text-ink-800">
+                        {e.date}
+                        {e.passee && (
+                          <span className="ml-2 rounded bg-ink-100 px-1.5 py-0.5 text-[11px] font-normal text-ink-500">
+                            versé
                           </span>
-                        ) : e.rang === 1 ? (
-                          'Avant-dernier exercice'
-                        ) : e.rang === 2 ? (
-                          'Exercice précédent, avec régularisation'
-                        ) : (
-                          'Exercice précédent'
                         )}
                       </td>
                       <td className="tabular px-4 py-3 text-right text-ink-500">
@@ -508,7 +405,6 @@ export default function PageAcomptes() {
                   ))}
                   <tr className="bg-ink-50 font-semibold">
                     <td className="px-4 py-3 text-ink-900">Total</td>
-                    <td />
                     <td className="tabular px-4 py-3 text-right text-ink-500">
                       {eur(r.isReference)}
                     </td>
@@ -522,10 +418,7 @@ export default function PageAcomptes() {
                   </tr>
                   <tr>
                     <td className="px-4 py-3 text-ink-800">
-                      15 mai de l'année suivante
-                    </td>
-                    <td className="px-4 py-3 text-xs text-ink-500">
-                      {r.solde >= 0 ? 'Solde restant dû' : 'Excédent restitué'}
+                      15 mai — {r.solde >= 0 ? 'solde' : 'restitution'}
                     </td>
                     <td />
                     <td />
@@ -545,6 +438,121 @@ export default function PageAcomptes() {
 
       <Pied />
     </div>
+  );
+}
+
+/**
+ * The one thing worth saying about this simulation, chosen by what the reader
+ * can still act on. Showing every applicable note at once buried the useful
+ * one under four others.
+ */
+function Message({
+  r,
+  strategie,
+}: {
+  r: ResultatAcomptes;
+  strategie: HypothesesAcomptes['strategie'];
+}) {
+  const encadre = (ton: 'neutre' | 'bon' | 'alerte', enfants: React.ReactNode) => (
+    <div
+      className={[
+        'rounded-xl p-4 text-sm leading-relaxed',
+        ton === 'bon'
+          ? 'bg-brand-50 text-ink-700'
+          : ton === 'alerte'
+            ? 'border border-gold-300 bg-gold-100 text-ink-700'
+            : 'bg-ink-50 text-ink-600',
+      ].join(' ')}
+    >
+      {enfants}
+    </div>
+  );
+
+  if (r.dispense) {
+    return encadre(
+      'bon',
+      <>
+        <strong className="font-semibold text-ink-900">
+          Dispense — {r.motifDispense}.
+        </strong>{' '}
+        {r.motifDispense === 'premier exercice'
+          ? "Aucun acompte durant le premier exercice : l'impôt se règle en une fois au solde."
+          : `L'impôt de l'exercice de référence ne dépasse pas ${eur(SEUIL_DISPENSE)}, la dispense est automatique.`}
+      </>,
+    );
+  }
+
+  if (r.risqueMajoration) {
+    return encadre(
+      'alerte',
+      <>
+        <strong className="font-semibold text-ink-900">
+          Vos versements couvrent tout juste l'impôt prévu.
+        </strong>{' '}
+        Si le bénéfice le dépasse, le manque est traité comme un retard :
+        majoration de 5 % et intérêt de 0,20 % par mois, soit environ{' '}
+        {eur(coutSousEstimation(1_000))} pour 1 000 € manquants.
+      </>,
+    );
+  }
+
+  if (r.excedentDejaVerse > 0) {
+    return encadre(
+      'neutre',
+      <>
+        <strong className="font-semibold text-ink-900">
+          {eur(r.excedentDejaVerse)} déjà versés en trop.
+        </strong>{' '}
+        Un acompte payé ne se reprend pas : cet excédent ne revient qu'au solde.
+        Seules les échéances à venir peuvent encore être réduites.
+      </>,
+    );
+  }
+
+  if (r.tresorerieAvancee > 0) {
+    return encadre(
+      'neutre',
+      <>
+        <strong className="font-semibold text-ink-900">
+          {eur(r.tresorerieAvancee)} versés d'avance.
+        </strong>{' '}
+        Vous n'y êtes pas tenu : c'est un choix d'étalement, qui prête cette somme
+        à l'État sans intérêt jusqu'au solde.
+      </>,
+    );
+  }
+
+  if (r.gainTresorerie > 0) {
+    return encadre(
+      'bon',
+      <>
+        <strong className="font-semibold text-ink-900">
+          {eur(r.gainTresorerie)} conservés dans l'entreprise
+        </strong>{' '}
+        au lieu d'être avancés puis restitués.
+      </>,
+    );
+  }
+
+  if (r.isPrevisionnel > r.isReference) {
+    return encadre(
+      'neutre',
+      <>
+        <strong className="font-semibold text-ink-900">
+          Rien à réduire : votre bénéfice dépasse la référence.
+        </strong>{' '}
+        Les acomptes restent calculés sur l'exercice passé, plus faible, et le
+        complément partira au solde. « Lisser sur deux ans » permet de le payer
+        d'avance plutôt que d'un bloc en mai.
+      </>,
+    );
+  }
+
+  return encadre(
+    'neutre',
+    strategie === 'appele'
+      ? "Vous versez ce qui est appelé. Les autres stratégies montrent ce qu'il serait possible de garder ou d'étaler."
+      : "Votre bénéfice prévisionnel est trop proche de la référence pour qu'un ajustement change quelque chose.",
   );
 }
 
