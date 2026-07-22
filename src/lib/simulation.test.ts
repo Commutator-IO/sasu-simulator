@@ -199,6 +199,25 @@ describe('simulation complète', () => {
     }
   });
 
+  it('recompose le net en poche à partir des deux chiffres affichés', () => {
+    // Le panneau de résultat affiche le net en poche, puis le salaire net
+    // après impôt et les dividendes nets. Les deux doivent en faire la somme
+    // exacte, sans quoi le lecteur soupçonne à raison une incohérence.
+    for (const brut of [0, 9_500, 45_000, 90_000]) {
+      for (const sur of [
+        {},
+        { salaireExterneBrut: 13_800, moisRemuneration: 6 },
+        { dividendesAuBareme: true, autresRevenus: 20_000 },
+      ]) {
+        const r = sim(brut, { resultatAvantRemuneration: 110_000, ...sur });
+        expect(r.salaireNet - r.irSurSalaire + r.dividendesNets).toBeCloseTo(
+          r.netEnPoche,
+          6,
+        );
+      }
+    }
+  });
+
   it('conserve l’équilibre lorsque le résultat est mis en réserve', () => {
     const r = sim(50_000, { tauxDistribution: 0.4 });
     expect(r.netEnPoche + r.reserves + r.totalPrelevements).toBeCloseTo(150_000, 4);
