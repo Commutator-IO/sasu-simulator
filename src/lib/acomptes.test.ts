@@ -156,19 +156,39 @@ describe('modulation des acomptes', () => {
     expect(r.gainTresorerie).toBeGreaterThan(0);
   });
 
-  it('interrompt les échéances une fois l’impôt attendu couvert', () => {
+  it('répartit également le reste dû sur les échéances à venir', () => {
     const r = calc({ ...enBaisse, moduler: true });
-    const derniere = r.echeances.filter((e) => e.ajuste > 0).length;
-    expect(derniere).toBeLessThan(4);
-    // Les échéances suivantes sont à zéro, pas négatives.
-    for (const e of r.echeances.slice(derniere)) expect(e.ajuste).toBe(0);
+    const aVenir = r.echeances.filter((e) => !e.passee);
+    for (const e of aVenir) {
+      expect(e.ajuste).toBeCloseTo(r.isPrevisionnel / aVenir.length, 6);
+    }
   });
 
-  it('n’a aucun effet si le bénéfice ne baisse pas', () => {
+  it('ne laisse rien à payer au solde', () => {
+    // Objectif de l'ajustement : ne pas découvrir une somme à régler en mai.
+    for (const previsionnel of [0, 20_000, 40_000, 120_000, 400_000]) {
+      for (let passees = 0; passees < 4; passees++) {
+        const r = calc({ ...enBaisse, beneficePrevisionnel: previsionnel, moduler: true, echeancesPassees: passees });
+        expect(r.solde).toBeLessThanOrEqual(0.01);
+      }
+    }
+  });
+
+  it('complète les échéances quand le bénéfice monte au lieu de baisser', () => {
+    // Verser plus que l'appel est permis : cela évite un solde à régler en mai.
     const r = calc({ beneficePrevisionnel: 200_000, moduler: true });
+    expect(r.isPrevisionnel).toBeGreaterThan(r.isReference);
+    expect(r.totalAjuste).toBeGreaterThan(r.totalParDefaut);
+    expect(r.totalAjuste).toBeCloseTo(r.isPrevisionnel, 6);
+    // La trésorerie n'est pas gardée : elle est avancée.
+    expect(r.gainTresorerie).toBeLessThan(0);
+    expect(r.solde).toBeCloseTo(0, 6);
+  });
+
+  it('ne complète pas quand l’ajustement est désactivé', () => {
+    const r = calc({ beneficePrevisionnel: 200_000, moduler: false });
     expect(r.totalAjuste).toBeCloseTo(r.totalParDefaut, 6);
-    expect(r.gainTresorerie).toBeCloseTo(0, 6);
-    expect(r.risqueMajoration).toBe(false);
+    expect(r.solde).toBeGreaterThan(0);
   });
 
   it('signale le risque de majoration dès qu’elle réduit les versements', () => {
