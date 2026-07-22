@@ -96,9 +96,10 @@ export default function PageAcomptes() {
               Vos acomptes d'impôt sur les sociétés sont-ils trop élevés&nbsp;?
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
-              Ils sont calculés sur l'exercice passé. Si votre bénéfice baisse, vous
-              avancez à l'État de la trésorerie qu'il vous rendra un an plus tard. Voici
-              de combien vous pouvez légalement les réduire.
+              Ils sont calculés sur votre exercice passé, pas sur celui en cours. Si
+              votre bénéfice baisse, vous avancez à l'État une trésorerie qu'il ne vous
+              rendra qu'un an plus tard ; s'il monte, tout le rattrapage vous attend en
+              mai. Voici comment caler vos échéances sur votre année réelle.
             </p>
           </div>
         </section>
@@ -115,13 +116,13 @@ export default function PageAcomptes() {
                     label="Bénéfice de l'avant-dernier exercice"
                     valeur={h.beneficeAvantDernier}
                     onChange={(v) => maj('beneficeAvantDernier', v)}
-                    hint="Il ne pilote que l'acompte du 15 mars : à cette date, les comptes de l'exercice précédent ne sont pas encore approuvés. Le deuxième acompte régularise."
+                    hint="Il ne pilote que l'acompte du 15 mars, faute de comptes approuvés à cette date. Celui de juin rattrape ensuite l'écart."
                   />
                   <Montant
                     label="Bénéfice de l'exercice précédent"
                     valeur={h.beneficePrecedent}
                     onChange={(v) => maj('beneficePrecedent', v)}
-                    hint="C'est la référence des acomptes : leur total doit égaler l'impôt correspondant."
+                    hint="C'est la référence des acomptes : leur total sur l'année doit égaler l'impôt de cet exercice."
                   />
                   <Montant
                     label="Bénéfice prévisionnel de l'exercice en cours"
@@ -178,8 +179,8 @@ export default function PageAcomptes() {
                     }
                     hint={
                       h.strategie === 'appele'
-                        ? "Le montant réclamé, sans plus. C'est l'option par défaut si vous ne faites rien."
-                        : "La loi permet de réduire un acompte sous votre responsabilité, et rien n'interdit d'en verser davantage."
+                        ? "Exactement le montant réclamé, ni plus ni moins. C'est ce qui se passe si vous ne faites rien."
+                        : "Vous pouvez réduire un acompte sous votre responsabilité, et rien ne vous interdit d'en verser davantage."
                     }
                   />
 
@@ -201,8 +202,8 @@ export default function PageAcomptes() {
                         rendu={eur}
                         hint={
                           reductionPossible
-                            ? "Sous le montant appelé, vous modulez sous votre responsabilité. Au-dessus, vous payez d'avance — toujours permis."
-                            : "Votre bénéfice ne baisse pas : il n'y a rien à réduire. Verser davantage étale l'impôt et évite un solde en mai."
+                            ? "En dessous de l'appel, vous engagez votre responsabilité si le bénéfice dépasse vos prévisions. Au-dessus, vous payez d'avance : rien ne l'interdit."
+                            : "Votre bénéfice ne baisse pas : il n'y a rien à réduire ici. Verser davantage étale l'impôt au lieu de le concentrer sur le solde de mai."
                         }
                       />
 
@@ -259,7 +260,9 @@ export default function PageAcomptes() {
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-ink-400">Plus grosse sortie</dt>
+                          <dt className="text-ink-400">
+                            Plus grosse échéance, d'ici juin prochain
+                          </dt>
                           <dd className="tabular font-semibold text-ink-800">
                             {eur(r.picTresorerie)}
                           </dd>
@@ -275,7 +278,8 @@ export default function PageAcomptes() {
                   </h3>
                   <p className="mt-1 text-xs leading-relaxed text-ink-500">
                     Déclarez les échéances déjà passées et ce que vous avez réellement
-                    versé. Les suivantes s'ajustent au bénéfice prévisionnel.
+                    versé : un acompte payé ne se rattrape plus, seules les suivantes
+                    restent à décider.
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-1.5">
@@ -369,7 +373,7 @@ export default function PageAcomptes() {
                         valeur={eur(Math.abs(r.solde))}
                       />
                       <Stat
-                        label="Plus grosse échéance d'ici juin prochain"
+                        label="Plus grosse échéance, d'ici juin prochain"
                         valeur={eur(r.picTresorerie)}
                       />
                     </dl>
@@ -390,10 +394,10 @@ export default function PageAcomptes() {
             </h2>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
               Quatre acomptes trimestriels, puis le solde au 15 mai. Chaque échéance
-              appelle <strong>un quart</strong> de l'impôt de
-              référence ; celle de mars fait exception, son quart étant calculé sur
-              l'avant-dernier exercice faute de comptes approuvés, et l'écart est repris
-              sur celle de juin.
+              appelle <strong>un quart</strong> de l'impôt de référence. Celle de mars
+              fait exception&nbsp;: à cette date vos comptes ne sont pas encore
+              approuvés, elle se calcule donc sur l'avant-dernier exercice. Celle de
+              juin rattrape l'écart.
             </p>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
               Le graphique déborde sur l'année suivante&nbsp;: le solde du 15 mai tombe
@@ -606,8 +610,8 @@ function Message({
   return encadre(
     'neutre',
     strategie === 'appele'
-      ? "Vous versez ce qui est appelé. Les autres stratégies montrent ce qu'il serait possible de garder ou d'étaler."
-      : "Votre bénéfice prévisionnel est trop proche de la référence pour qu'un ajustement change quelque chose.",
+      ? "Vous versez ce qui est appelé. Passez sur « Ajuster » pour voir ce que vous pourriez garder ou étaler."
+      : "Votre bénéfice prévisionnel est trop proche de la référence pour qu'un ajustement change grand-chose.",
   );
 }
 
