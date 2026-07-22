@@ -85,6 +85,16 @@ export function Detail({ r }: { r: Resultat }) {
           }
         />
         <Ligne label="Résultat net" montant={r.resultatNet} fort />
+        {r.reservesAnterieures > 0 && (
+          <>
+            <Ligne
+              label="Réserves des exercices antérieurs"
+              montant={r.reservesAnterieures}
+              note="IS déjà acquitté"
+            />
+            <Ligne label="Distribuable" montant={r.distribuable} fort />
+          </>
+        )}
         <Ligne label="Mis en réserve" montant={r.reserves} negatif />
         <Ligne label="Dividendes bruts distribués" montant={r.dividendesBruts} fort />
       </Bloc>

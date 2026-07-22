@@ -232,6 +232,19 @@ export const PAS_ARRONDI = 0.001;
 export const DISPENSE_PFNL_CELIBATAIRE = 50_000;
 export const DISPENSE_PFNL_COUPLE = 75_000;
 
+/**
+ * Thresholds of the exceptional levy on high incomes (tax code art. 223
+ * sexies): 3% above these, 4% above twice these.
+ *
+ * The levy is **not** modelled — it applies to the reference taxable income,
+ * which includes flat-taxed dividends at their gross amount, and it comes
+ * with a smoothing mechanism for exceptional years. These constants only
+ * drive a warning: a large one-off distribution can cross the threshold
+ * while the flat tax makes the burden look capped at 12.8%.
+ */
+export const CEHR_SEUIL_CELIBATAIRE = 250_000;
+export const CEHR_SEUIL_COUPLE = 500_000;
+
 // ---------------------------------------------------------------------------
 // Dividends
 // ---------------------------------------------------------------------------

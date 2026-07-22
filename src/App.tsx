@@ -17,6 +17,7 @@ const DEFAUTS: Omit<Hypotheses, 'brutAnnuel'> = {
   couple: false,
   autresRevenus: 0,
   salaireExterneBrut: 0,
+  reservesDistribuables: 0,
   moisRemuneration: 12,
   tauxATMP: P.AT_MP_DEFAUT,
   eligibleISReduit: true,
@@ -39,6 +40,7 @@ export default function App() {
   const [avanceOuvert, setAvanceOuvert] = useState(
     () =>
       initial.base.tauxDistribution !== DEFAUTS.tauxDistribution ||
+      initial.base.reservesDistribuables !== DEFAUTS.reservesDistribuables ||
       initial.base.tauxATMP !== DEFAUTS.tauxATMP ||
       initial.base.eligibleISReduit !== DEFAUTS.eligibleISReduit,
   );
@@ -289,15 +291,27 @@ export default function App() {
                 {avanceOuvert && (
                   <div className="mt-5 grid gap-5 border-t border-ink-200 pt-6 sm:grid-cols-2">
                     <div className="sm:col-span-2">
+                      <Montant
+                        label="Réserves distribuables des exercices antérieurs"
+                        valeur={base.reservesDistribuables}
+                        onChange={(v) => maj('reservesDistribuables', v)}
+                        hint="Report à nouveau et réserves accumulées, hors réserve légale. L'impôt sur les sociétés a déjà été payé dessus : elles ne sont pas réimposées au niveau de la société, mais elles s'ajoutent au distribuable."
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
                       <Curseur
-                        label="Part du résultat net distribuée en dividendes"
+                        label="Part du distribuable versée en dividendes"
                         valeur={Math.round(base.tauxDistribution * 100)}
                         min={0}
                         max={100}
                         pas={5}
                         onChange={(v) => maj('tauxDistribution', v / 100)}
                         rendu={(v) => `${v} %`}
-                        hint="Le reste est mis en réserve : non imposé chez vous cette année, mais indisponible."
+                        hint={
+                          base.reservesDistribuables > 0
+                            ? `Porte sur ${eur(r.distribuable)} : le résultat net de l'exercice plus les réserves antérieures. Le reste demeure dans la société.`
+                            : 'Le reste est mis en réserve : non imposé chez vous cette année, mais indisponible.'
+                        }
                       />
                     </div>
                     <Montant
@@ -417,6 +431,25 @@ export default function App() {
                           Appliquer cette rémunération →
                         </span>
                       </button>
+                    )}
+
+                    {r.cehrPossible && (
+                      <p className="mt-4 rounded-xl border border-gold-300 bg-gold-100 px-4 py-3 text-xs leading-relaxed text-ink-700">
+                        <strong className="font-semibold text-ink-900">
+                          Attention, seuil des hauts revenus franchi.
+                        </strong>{' '}
+                        Au-delà de{' '}
+                        {eur(base.couple ? P.CEHR_SEUIL_COUPLE : P.CEHR_SEUIL_CELIBATAIRE)}{' '}
+                        de revenu fiscal de référence, la contribution exceptionnelle sur
+                        les hauts revenus s'ajoute à 3 %, puis 4 % au-delà du double. Elle
+                        porte aussi sur les dividendes soumis à la flat tax, pour leur
+                        montant brut.{' '}
+                        <strong className="font-semibold text-ink-900">
+                          Ce simulateur ne la calcule pas
+                        </strong>{' '}
+                        : le montant affiché est donc surestimé. Un mécanisme de lissage
+                        existe pour les revenus exceptionnels — à faire chiffrer.
+                      </p>
                     )}
 
                     {/* Placed outside the optimum block, which switches between
