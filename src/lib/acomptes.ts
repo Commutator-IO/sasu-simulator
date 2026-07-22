@@ -92,7 +92,10 @@ export type ResultatAcomptes = {
   resteParDefaut: number;
   /** What is left to pay once the remaining instalments are adjusted. */
   resteAVerser: number;
-  /** Cash kept from now on by adjusting the remaining instalments. */
+  /**
+   * Cash kept from now on by adjusting the remaining instalments. Negative
+   * when the adjustment tops them up instead, to clear the balance.
+   */
   gainTresorerie: number;
   /**
    * Amount already overpaid, which no adjustment can recover before the
@@ -176,24 +179,39 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
   const parDefaut = echeancierParDefaut(h);
   const passees = Math.round(borner(h.echeancesPassees, 0, NB_ECHEANCES));
 
-  // Past due dates are declarations; the rest is computed. Adjusting can only
-  // ever cut what is still to come.
-  let cumule = 0;
+  // Past due dates are declarations, and cannot be changed after the fact.
+  const dejaVerseParEcheance = parDefaut.map((montant, i) =>
+    i < passees ? borner(h.versements[i] ?? montant, 0, Number.MAX_SAFE_INTEGER) : 0,
+  );
+  const dejaVerse = dejaVerseParEcheance.reduce((s, v) => s + v, 0);
+
+  // Remaining due dates are spread so that nothing is left for the balance:
+  // what is still owed, split evenly over the dates left. This both cuts them
+  // when the profit falls and tops them up when it rises — paying more than
+  // called for is always allowed, and it avoids a lump sum in May.
+  const restantes = NB_ECHEANCES - passees;
+  const besoin = Math.max(0, isPrevisionnel - dejaVerse);
+  const parEcheanceRestante = restantes > 0 ? besoin / restantes : 0;
+
   const echeances: Echeance[] = parDefaut.map((montant, i) => {
     const passee = i < passees;
-    const declare = borner(h.versements[i] ?? montant, 0, Number.MAX_SAFE_INTEGER);
-    const aVenir = h.moduler
-      ? Math.min(montant, Math.max(0, isPrevisionnel - cumule))
-      : montant;
-    const ajuste = motifDispense !== null && !passee ? 0 : passee ? declare : aVenir;
-    cumule += ajuste;
-    return { rang: i + 1, date: DATES[i], parDefaut: montant, ajuste, passee };
+    const aVenir = motifDispense !== null
+      ? 0
+      : h.moduler
+        ? parEcheanceRestante
+        : montant;
+    return {
+      rang: i + 1,
+      date: DATES[i],
+      parDefaut: montant,
+      ajuste: passee ? dejaVerseParEcheance[i] : aVenir,
+      passee,
+    };
   });
 
   const somme = (f: (e: Echeance) => number, filtre: (e: Echeance) => boolean) =>
     echeances.filter(filtre).reduce((s, e) => s + f(e), 0);
 
-  const dejaVerse = somme((e) => e.ajuste, (e) => e.passee);
   const resteParDefaut = somme((e) => e.parDefaut, (e) => !e.passee);
   const resteAVerser = somme((e) => e.ajuste, (e) => !e.passee);
   const totalParDefaut = parDefaut.reduce((s, v) => s + v, 0);

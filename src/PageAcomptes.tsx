@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Montant, Segments } from './components/Champs';
 import { Entete, Pied } from './components/Cadre';
+import { HistogrammeAcomptes } from './components/HistogrammeAcomptes';
 import { eur } from './lib/format';
 import {
   calculerAcomptes,
@@ -145,14 +146,14 @@ export default function PageAcomptes() {
 
                 <div className="mt-6">
                   <Segments
-                    label="Moduler vos acomptes"
+                    label="Vos acomptes"
                     valeur={h.moduler}
                     options={[
                       { valeur: false, label: 'Verser le montant appelé' },
-                      { valeur: true, label: 'Réduire au prévisionnel' },
+                      { valeur: true, label: 'Ajuster au prévisionnel' },
                     ]}
                     onChange={(v) => maj('moduler', v)}
-                    hint="La loi vous autorise à réduire ou suspendre vos acomptes dès lors que ceux déjà versés couvrent l'impôt que vous estimez devoir — sous votre responsabilité."
+                    hint="Ajusté, le reste dû est réparti également sur les échéances à venir : rien ne reste à payer au 15 mai. La loi permet de réduire un acompte sous sa responsabilité, et rien n'interdit d'en verser davantage."
                   />
                 </div>
 
@@ -358,7 +359,11 @@ export default function PageAcomptes() {
               calculées sur votre bénéfice prévisionnel.
             </p>
 
-            <div className="card mt-8 overflow-x-auto p-1">
+            <div className="card mt-8 p-5 sm:p-8">
+              <HistogrammeAcomptes r={r} />
+            </div>
+
+            <div className="card mt-6 overflow-x-auto p-1">
               <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wide text-ink-400">
