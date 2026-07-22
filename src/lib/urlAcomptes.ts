@@ -1,4 +1,4 @@
-import type { HypothesesAcomptes } from './acomptes';
+import { NB_ECHEANCES, type HypothesesAcomptes } from './acomptes';
 import { arrondi, booleen, MAX_MONTANT, nombre } from './url';
 
 /**
@@ -16,7 +16,25 @@ const CLES = {
   isReduit: 'isReduit',
   premierExercice: 'premierExercice',
   moduler: 'moduler',
+  passees: 'passees',
+  verses: 'verses',
 } as const;
+
+/** Amounts paid travel as a comma-separated list, e.g. "11437,3000". */
+function encoderVersements(versements: number[], passees: number): string {
+  return versements
+    .slice(0, passees)
+    .map((v) => String(arrondi(v)))
+    .join(',');
+}
+
+function decoderVersements(brut: string | null): number[] {
+  if (brut === null || brut.trim() === '') return [];
+  return brut
+    .split(',')
+    .slice(0, NB_ECHEANCES)
+    .map((v) => nombre(v, 0, 0, MAX_MONTANT));
+}
 
 export function encoderAcomptes(
   h: HypothesesAcomptes,
@@ -42,6 +60,15 @@ export function encoderAcomptes(
   ajouter(CLES.isReduit, h.eligibleISReduit, defauts.eligibleISReduit);
   ajouter(CLES.premierExercice, h.premierExercice, defauts.premierExercice);
   ajouter(CLES.moduler, h.moduler, defauts.moduler);
+  ajouter(
+    CLES.passees,
+    arrondi(h.echeancesPassees),
+    defauts.echeancesPassees,
+  );
+  const verses = encoderVersements(h.versements, h.echeancesPassees);
+  if (verses !== encoderVersements(defauts.versements, defauts.echeancesPassees)) {
+    params.set(CLES.verses, verses);
+  }
 
   const chaine = params.toString();
   return chaine === '' ? '' : `?${chaine}`;
@@ -74,6 +101,8 @@ export function decoderAcomptes(
     eligibleISReduit: booleen(p.get(CLES.isReduit), defauts.eligibleISReduit),
     premierExercice: booleen(p.get(CLES.premierExercice), defauts.premierExercice),
     moduler: booleen(p.get(CLES.moduler), defauts.moduler),
+    echeancesPassees: nombre(p.get(CLES.passees), defauts.echeancesPassees, 0, NB_ECHEANCES),
+    versements: decoderVersements(p.get(CLES.verses)),
   };
 }
 

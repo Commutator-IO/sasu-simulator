@@ -15,6 +15,8 @@ const BASE: HypothesesAcomptes = {
   eligibleISReduit: true,
   premierExercice: false,
   moduler: false,
+  echeancesPassees: 0,
+  versements: [],
 };
 
 const calc = (sur: Partial<HypothesesAcomptes> = {}) =>
@@ -158,6 +160,130 @@ describe('modulation des acomptes', () => {
   it('signale le risque de majoration dès qu’elle réduit les versements', () => {
     expect(calc({ ...enBaisse, moduler: true }).risqueMajoration).toBe(true);
     expect(calc(enBaisse).risqueMajoration).toBe(false);
+  });
+});
+
+describe('échéances déjà passées', () => {
+  const enBaisse = {
+    beneficeAvantDernier: 200_000,
+    beneficePrecedent: 200_000,
+    beneficePrevisionnel: 40_000,
+    moduler: true,
+  };
+
+  it('marque les échéances passées et laisse les autres à venir', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 2 });
+    expect(r.echeances.map((e) => e.passee)).toEqual([true, true, false, false]);
+  });
+
+  it('retient par défaut le montant appelé pour une échéance passée', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 2, versements: [] });
+    expect(r.dejaVerse).toBeCloseTo(
+      r.echeances[0].parDefaut + r.echeances[1].parDefaut,
+      6,
+    );
+  });
+
+  it('retient le montant déclaré quand il diffère de l’appel', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 2, versements: [9_000, 1_000] });
+    expect(r.dejaVerse).toBeCloseTo(10_000, 6);
+    expect(r.echeances[0].ajuste).toBeCloseTo(9_000, 6);
+    expect(r.echeances[1].ajuste).toBeCloseTo(1_000, 6);
+  });
+
+  it('ignore les déclarations au-delà des échéances passées', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 1, versements: [5_000, 99_999] });
+    expect(r.dejaVerse).toBeCloseTo(5_000, 6);
+    expect(r.echeances[1].passee).toBe(false);
+  });
+
+  it('déduit le déjà-versé de ce qui reste à payer', () => {
+    // 8 000 € d'impôt attendu, 3 000 € déjà versés : il reste 5 000 €.
+    const r = calc({
+      ...enBaisse,
+      beneficePrevisionnel: 40_000,
+      echeancesPassees: 1,
+      versements: [3_000],
+    });
+    expect(r.resteAVerser).toBeCloseTo(r.isPrevisionnel - 3_000, 6);
+    expect(r.dejaVerse + r.resteAVerser).toBeCloseTo(r.isPrevisionnel, 6);
+  });
+
+  it('n’appelle plus rien quand le déjà-versé couvre l’impôt attendu', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 2 });
+    expect(r.dejaVerse).toBeGreaterThan(r.isPrevisionnel);
+    expect(r.resteAVerser).toBeCloseTo(0, 6);
+    for (const e of r.echeances.filter((x) => !x.passee)) expect(e.ajuste).toBe(0);
+  });
+
+  it('ne réduit jamais rétroactivement une échéance passée', () => {
+    // Le trop-versé ne peut pas être repris : il ne revient qu'au solde.
+    const r = calc({ ...enBaisse, echeancesPassees: 3 });
+    expect(r.dejaVerse).toBeGreaterThan(r.isPrevisionnel);
+    expect(r.excedentDejaVerse).toBeCloseTo(r.dejaVerse - r.isPrevisionnel, 6);
+    expect(r.solde).toBeCloseTo(-r.excedentDejaVerse, 6);
+  });
+
+  it('ne signale aucun excédent tant que le déjà-versé reste sous l’impôt dû', () => {
+    // Il faut un versement déclaré inférieur à l'appel : avec cette référence,
+    // un seul acompte de droit commun dépasse déjà l'impôt attendu.
+    const r = calc({ ...enBaisse, echeancesPassees: 1, versements: [3_000] });
+    expect(r.dejaVerse).toBeLessThan(r.isPrevisionnel);
+    expect(r.excedentDejaVerse).toBe(0);
+    expect(r.solde).toBeCloseTo(0, 6);
+  });
+
+  it('un seul acompte suffit à dépasser l’impôt attendu quand le bénéfice s’effondre', () => {
+    // C'est exactement le cas que l'outil sert à repérer.
+    const r = calc({ ...enBaisse, echeancesPassees: 1 });
+    expect(r.echeances[0].parDefaut).toBeGreaterThan(r.isPrevisionnel);
+    expect(r.excedentDejaVerse).toBeGreaterThan(0);
+  });
+
+  it('ne compte comme gain que ce qui reste à échoir', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 2 });
+    expect(r.gainTresorerie).toBeCloseTo(r.resteParDefaut, 6);
+    // Les deux premières échéances, déjà payées, n'y comptent pas.
+    expect(r.gainTresorerie).toBeLessThan(r.totalParDefaut);
+  });
+
+  it('boucle le compte quel que soit le nombre d’échéances passées', () => {
+    for (let passees = 0; passees <= 4; passees++) {
+      for (const moduler of [false, true]) {
+        const r = calc({ ...enBaisse, moduler, echeancesPassees: passees });
+        expect(r.dejaVerse + r.resteAVerser).toBeCloseTo(r.totalAjuste, 6);
+        expect(r.totalAjuste + r.solde).toBeCloseTo(r.isPrevisionnel, 4);
+      }
+    }
+  });
+
+  it('borne un nombre d’échéances aberrant', () => {
+    expect(calc({ echeancesPassees: -3 }).echeances.every((e) => !e.passee)).toBe(true);
+    expect(calc({ echeancesPassees: 99 }).echeances.every((e) => e.passee)).toBe(true);
+  });
+
+  it('ne crie pas au risque quand le déjà-versé dépasse l’impôt attendu', () => {
+    // Régression : l'avertissement de majoration s'affichait dès qu'on
+    // réduisait les échéances à venir, y compris quand deux acomptes déjà
+    // versés couvraient largement l'impôt prévu. Aucun manque n'est possible
+    // dans ce cas.
+    const r = calc({ ...enBaisse, echeancesPassees: 2 });
+    expect(r.dejaVerse).toBeGreaterThan(r.isPrevisionnel);
+    expect(r.resteAVerser).toBeLessThan(r.resteParDefaut);
+    expect(r.risqueMajoration).toBe(false);
+    expect(r.matelasSecurite).toBeCloseTo(r.dejaVerse - r.isPrevisionnel, 6);
+  });
+
+  it('signale le risque quand les versements collent à l’impôt prévu', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 0 });
+    expect(r.totalAjuste).toBeCloseTo(r.isPrevisionnel, 6);
+    expect(r.matelasSecurite).toBeCloseTo(0, 6);
+    expect(r.risqueMajoration).toBe(true);
+  });
+
+  it('borne un versement négatif', () => {
+    const r = calc({ ...enBaisse, echeancesPassees: 1, versements: [-5_000] });
+    expect(r.dejaVerse).toBe(0);
   });
 });
 
