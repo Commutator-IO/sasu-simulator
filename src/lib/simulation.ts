@@ -103,6 +103,17 @@ export type Resultat = {
   /** Household withholding base, outside salary included. */
   assiettePASFoyer: number;
   tauxPAS: number;
+  /**
+   * Amount actually withheld over the year on the company payslips, i.e.
+   * `tauxPAS × assiettePAS`.
+   *
+   * This is deliberately distinct from `irSurSalaire`: withholding is a
+   * provisional payment computed from a household rate, whereas
+   * `irSurSalaire` is the definitive extra tax the salary causes. They only
+   * coincide when the salary is the household's sole income; the tax return
+   * settles the difference.
+   */
+  prelevementAnnuelPAS: number;
   /** Monthly amount withheld on the company payslip alone. */
   prelevementMensuelPAS: number;
 
@@ -508,9 +519,10 @@ export function simuler(h: Hypotheses): Resultat {
     salairesImposables,
     assiettePASFoyer,
   );
-  // What the company withholds on each of its own payslips; the other
-  // employer withholds its share separately at the same rate.
-  const prelevementMensuelPAS = (assiettePAS * tauxPAS) / mois;
+  // What the company withholds on its own payslips; the other employer
+  // withholds its share separately at the same rate.
+  const prelevementAnnuelPAS = assiettePAS * tauxPAS;
+  const prelevementMensuelPAS = prelevementAnnuelPAS / mois;
 
   // --- Summary -------------------------------------------------------------
   const netEnPoche = salaireNet + dividendesNets - irSurSalaire;
@@ -573,6 +585,7 @@ export function simuler(h: Hypotheses): Resultat {
     assiettePAS,
     assiettePASFoyer,
     tauxPAS,
+    prelevementAnnuelPAS,
     prelevementMensuelPAS,
     netEnPoche,
     totalPrelevements,
