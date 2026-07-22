@@ -56,8 +56,8 @@ export type Echeance = {
   /**
    * Adjustment carried by this date. Only the June instalment bears one: it
    * settles the provisional March call, "majoré ou réduit à due concurrence"
-   * (BOI-IS-DECLA-20-10-10 § 120). A leftover credit rolls on to the next
-   * dates rather than turning an instalment negative.
+   * (BOI-IS-DECLA-20-10-10 § 120). It can bring that instalment to zero but
+   * never below, and never touches the later ones.
    */
   regularisation: number;
   /** What is actually asked for: the quarter plus any adjustment, never below zero. */
@@ -263,15 +263,14 @@ export function echeancierParDefaut(h: {
   // June settles March's provisional call.
   const regularisations = [0, isReference / NB_ECHEANCES - isAvantDernier / NB_ECHEANCES, 0, 0];
 
-  // A credit larger than the June instalment rolls on: an instalment is never
-  // negative, and the leftover comes back at the balance.
-  const parDefaut: number[] = [];
-  let report = 0;
-  for (let i = 0; i < NB_ECHEANCES; i++) {
-    const avecReport = quarts[i] + regularisations[i] + report;
-    parDefaut.push(Math.max(0, avecReport));
-    report = Math.min(0, avecReport);
-  }
+  // The adjustment lands on the June instalment and nowhere else, "à due
+  // concurrence" (BOI-IS-DECLA-20-10-10 § 120). A credit larger than that
+  // instalment simply brings it to zero: it does not cancel the September and
+  // December calls, which stay due for their quarter. Whatever was overpaid
+  // comes back at the balance, or is avoided by adjusting the instalments.
+  const parDefaut = quarts.map((quart, i) =>
+    Math.max(0, quart + regularisations[i]),
+  );
   return { quarts, regularisations, parDefaut };
 }
 
