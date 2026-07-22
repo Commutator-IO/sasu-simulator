@@ -54,7 +54,7 @@ export default function PageAcomptes() {
   // paying what was asked is the usual case, editing it the exception.
   const majEcheancesPassees = (n: number) =>
     setH((v) => {
-      const appele = echeancierParDefaut(v);
+      const { parDefaut: appele } = echeancierParDefaut(v);
       const versements = Array.from(
         { length: NB_ECHEANCES },
         (_, i) => v.versements[i] ?? appele[i],
@@ -430,10 +430,10 @@ export default function PageAcomptes() {
               calculées sur votre bénéfice prévisionnel.
             </p>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
-              Chaque acompte dû vaut un quart de l'impôt de référence. Celui du
-              15 mars est toutefois <em>appelé</em> sur la base de l'avant-dernier
-              exercice, faute de comptes approuvés, et l'écart est repris sur celui du
-              15 juin&nbsp;: c'est pourquoi les deux colonnes peuvent différer.
+              Chaque échéance appelle <strong>un quart</strong> de l'impôt de
+              référence. Celui du 15 mars fait exception&nbsp;: faute de comptes
+              approuvés à cette date, son quart se calcule sur l'avant-dernier
+              exercice, et l'écart est régularisé sur l'échéance du 15 juin.
             </p>
             <p className="mt-3 max-w-2xl leading-relaxed text-ink-500">
               Le graphique déborde sur l'année suivante, car c'est là que se joue
@@ -453,7 +453,8 @@ export default function PageAcomptes() {
                   <tr className="border-b border-ink-200 text-left text-xs uppercase tracking-wide text-ink-400">
                     <th className="px-4 py-3 font-medium">Échéance</th>
                     <th className="px-4 py-3 font-medium">Assise sur</th>
-                    <th className="px-4 py-3 text-right font-medium">Acompte dû</th>
+                    <th className="px-4 py-3 text-right font-medium">Quart</th>
+                    <th className="px-4 py-3 text-right font-medium">Régularisation</th>
                     <th className="px-4 py-3 text-right font-medium">Appelé</th>
                     <th className="px-4 py-3 text-right font-medium">Versé</th>
                   </tr>
@@ -476,16 +477,23 @@ export default function PageAcomptes() {
                         )}
                       </td>
                       <td className="tabular px-4 py-3 text-right text-ink-500">
-                        {eur(e.acompteDu)}
+                        {eur(e.quart)}
                       </td>
                       <td
                         className={[
                           'tabular px-4 py-3 text-right',
-                          Math.abs(e.parDefaut - e.acompteDu) > 1
+                          Math.abs(e.regularisation) > 1
                             ? 'font-medium text-gold-600'
-                            : 'text-ink-500',
+                            : 'text-ink-300',
                         ].join(' ')}
                       >
+                        {Math.abs(e.regularisation) < 1
+                          ? '—'
+                          : e.regularisation > 0
+                            ? `+ ${eur(e.regularisation)}`
+                            : `− ${eur(-e.regularisation)}`}
+                      </td>
+                      <td className="tabular px-4 py-3 text-right font-medium text-ink-700">
                         {eur(e.parDefaut)}
                       </td>
                       <td
@@ -504,6 +512,7 @@ export default function PageAcomptes() {
                     <td className="tabular px-4 py-3 text-right text-ink-500">
                       {eur(r.isReference)}
                     </td>
+                    <td />
                     <td className="tabular px-4 py-3 text-right text-ink-500">
                       {eur(r.totalParDefaut)}
                     </td>
@@ -518,6 +527,7 @@ export default function PageAcomptes() {
                     <td className="px-4 py-3 text-xs text-ink-500">
                       {r.solde >= 0 ? 'Solde restant dû' : 'Excédent restitué'}
                     </td>
+                    <td />
                     <td />
                     <td />
                     <td className="tabular px-4 py-3 text-right font-semibold text-ink-900">

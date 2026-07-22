@@ -49,10 +49,18 @@ export type Echeance = {
    */
   acompteDu: number;
   /**
-   * Amount actually called at this date. It equals `acompteDu` except at the
-   * first two: the March one is provisionally computed on the year before
-   * last, and the June one is increased or reduced accordingly (§ 120).
+   * The quarter called at this date: a quarter of the reference tax, except in
+   * March where the year before last serves as a provisional base.
    */
+  quart: number;
+  /**
+   * Adjustment carried by this date. Only the June instalment bears one: it
+   * settles the provisional March call, "majoré ou réduit à due concurrence"
+   * (BOI-IS-DECLA-20-10-10 § 120). A leftover credit rolls on to the next
+   * dates rather than turning an instalment negative.
+   */
+  regularisation: number;
+  /** What is actually asked for: the quarter plus any adjustment, never below zero. */
   parDefaut: number;
   /** Amount paid, or to be paid: declared for past instalments, computed otherwise. */
   ajuste: number;
@@ -66,8 +74,13 @@ export type HypothesesAcomptes = {
    * which falls due before the previous year's accounts are approved.
    */
   beneficeAvantDernier: number;
+  /** Length in months of that exercise; 12 unless the company was created
+   * mid-year or changed its closing date. */
+  moisAvantDernier: number;
   /** Taxable profit of the previous year: the reference for the instalments. */
   beneficePrecedent: number;
+  /** Length in months of the reference exercise. */
+  moisPrecedent: number;
   /** Expected taxable profit of the current year: what will really be owed. */
   beneficePrevisionnel: number;
   eligibleISReduit: boolean;
@@ -97,8 +110,13 @@ export type HypothesesAcomptes = {
 
 export type ResultatAcomptes = {
   isAvantDernier: number;
-  /** Tax on the reference profit, which sets the instalments. */
+  /**
+   * Tax on the reference profit brought back to twelve months: the figure
+   * that sets the instalments (CGI annexe III, art. 360).
+   */
   isReference: number;
+  /** Tax actually owed on the reference exercise, at its real length. */
+  isReferenceReel: number;
   /** Tax expected on the current year. */
   isPrevisionnel: number;
   dispense: boolean;
@@ -171,6 +189,39 @@ export function isSur(benefice: number, eligibleTauxReduit: boolean): number {
   return calculerIS(Math.max(0, benefice), eligibleTauxReduit);
 }
 
+/**
+ * Reference profit brought back to a twelve-month period
+ * (CGI annexe III, art. 360).
+ *
+ * An exercise that ran fifteen months carries fifteen months of profit; using
+ * it as it stands would inflate every instalment by a quarter. The rule bites
+ * whenever a company was created mid-year or moved its closing date — exactly
+ * when the instalments matter most.
+ */
+export function ramenerADouzeMois(benefice: number, mois: number): number {
+  const duree = Number.isFinite(mois) && mois > 0 ? Math.min(mois, 24) : 12;
+  return (benefice * 12) / duree;
+}
+
+/**
+ * Tax on an exercise whose reduced-rate band is prorated to its length: the
+ * €42,500 ceiling covers twelve months, no more (CGI art. 219, I-b).
+ */
+export function isExercice(
+  benefice: number,
+  mois: number,
+  eligibleTauxReduit: boolean,
+): number {
+  const b = Math.max(0, benefice);
+  if (!eligibleTauxReduit) return b * P.IS_TAUX_NORMAL;
+  const duree = Number.isFinite(mois) && mois > 0 ? Math.min(mois, 24) : 12;
+  const plafond = (P.IS_SEUIL_TAUX_REDUIT * duree) / 12;
+  return (
+    Math.min(b, plafond) * P.IS_TAUX_REDUIT +
+    Math.max(0, b - plafond) * P.IS_TAUX_NORMAL
+  );
+}
+
 const borner = (v: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Number.isFinite(v) ? v : min));
 
@@ -181,40 +232,67 @@ const borner = (v: number, min: number, max: number) =>
  */
 export function echeancierParDefaut(h: {
   beneficeAvantDernier: number;
+  moisAvantDernier?: number;
   beneficePrecedent: number;
+  moisPrecedent?: number;
   eligibleISReduit: boolean;
   premierExercice: boolean;
-}): number[] {
-  const isReference = isSur(h.beneficePrecedent, h.eligibleISReduit);
+}): { quarts: number[]; regularisations: number[]; parDefaut: number[] } {
+  const isReference = isSur(
+    ramenerADouzeMois(h.beneficePrecedent, h.moisPrecedent ?? 12),
+    h.eligibleISReduit,
+  );
   if (h.premierExercice || isReference <= SEUIL_DISPENSE) {
-    return Array(NB_ECHEANCES).fill(0);
+    const zeros = () => Array(NB_ECHEANCES).fill(0) as number[];
+    return { quarts: zeros(), regularisations: zeros(), parDefaut: zeros() };
   }
 
-  const isAvantDernier = isSur(h.beneficeAvantDernier, h.eligibleISReduit);
-  // The first instalment rests on the year before last; the second one squares
-  // the account so that half the reference tax has been paid after two.
-  const bruts = [
-    isAvantDernier / 4,
-    isReference / 2 - isAvantDernier / 4,
-    isReference / 4,
-    isReference / 4,
-  ];
+  const isAvantDernier = isSur(
+    ramenerADouzeMois(h.beneficeAvantDernier, h.moisAvantDernier ?? 12),
+    h.eligibleISReduit,
+  );
 
-  // A shrinking reference can make the second instalment negative. The excess
-  // is not refunded straight away: it is carried onto the following ones.
+  // Every date carries a quarter. March uses the year before last as its base,
+  // the previous year's accounts not being approved yet.
+  const quarts = [
+    isAvantDernier / NB_ECHEANCES,
+    isReference / NB_ECHEANCES,
+    isReference / NB_ECHEANCES,
+    isReference / NB_ECHEANCES,
+  ];
+  // June settles March's provisional call.
+  const regularisations = [0, isReference / NB_ECHEANCES - isAvantDernier / NB_ECHEANCES, 0, 0];
+
+  // A credit larger than the June instalment rolls on: an instalment is never
+  // negative, and the leftover comes back at the balance.
   const parDefaut: number[] = [];
   let report = 0;
-  for (const montant of bruts) {
-    const avecReport = montant + report;
+  for (let i = 0; i < NB_ECHEANCES; i++) {
+    const avecReport = quarts[i] + regularisations[i] + report;
     parDefaut.push(Math.max(0, avecReport));
     report = Math.min(0, avecReport);
   }
-  return parDefaut;
+  return { quarts, regularisations, parDefaut };
 }
 
 export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
-  const isAvantDernier = isSur(h.beneficeAvantDernier, h.eligibleISReduit);
-  const isReference = isSur(h.beneficePrecedent, h.eligibleISReduit);
+  // Instalment bases: profits brought back to twelve months (art. 360).
+  const isAvantDernier = isSur(
+    ramenerADouzeMois(h.beneficeAvantDernier, h.moisAvantDernier),
+    h.eligibleISReduit,
+  );
+  const isReference = isSur(
+    ramenerADouzeMois(h.beneficePrecedent, h.moisPrecedent),
+    h.eligibleISReduit,
+  );
+  // Tax actually owed on the reference exercise, ceiling prorated to its
+  // length. It differs from `isReference` as soon as that exercise was not
+  // twelve months, and it is what the balance settles.
+  const isReferenceReel = isExercice(
+    h.beneficePrecedent,
+    h.moisPrecedent,
+    h.eligibleISReduit,
+  );
   const isPrevisionnel = isSur(h.beneficePrevisionnel, h.eligibleISReduit);
 
   const motifDispense = h.premierExercice
@@ -223,7 +301,7 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
       ? ('seuil de 3 000 €' as const)
       : null;
 
-  const parDefaut = echeancierParDefaut(h);
+  const { quarts, regularisations, parDefaut } = echeancierParDefaut(h);
   const passees = Math.round(borner(h.echeancesPassees, 0, NB_ECHEANCES));
 
   // Past due dates are declarations, and cannot be changed after the fact.
@@ -270,6 +348,8 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
       rang: i + 1,
       date: DATES[i],
       acompteDu,
+      quart: quarts[i],
+      regularisation: regularisations[i],
       parDefaut: montant,
       ajuste: passee ? dejaVerseParEcheance[i] : aVenir,
       passee,
@@ -287,8 +367,9 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
   const solde = isPrevisionnel - totalAjuste;
   // Next year the roles shift by one: this year's profit becomes the
   // reference, and the previous year drives the first instalment.
-  const suivantes = echeancierParDefaut({
+  const { parDefaut: suivantes } = echeancierParDefaut({
     beneficeAvantDernier: h.beneficePrecedent,
+    moisAvantDernier: h.moisPrecedent,
     beneficePrecedent: h.beneficePrevisionnel,
     eligibleISReduit: h.eligibleISReduit,
     premierExercice: false,
@@ -312,6 +393,7 @@ export function calculerAcomptes(h: HypothesesAcomptes): ResultatAcomptes {
   return {
     isAvantDernier,
     isReference,
+    isReferenceReel,
     isPrevisionnel,
     dispense: motifDispense !== null,
     motifDispense,
@@ -358,7 +440,9 @@ export function coutSousEstimation(manque: number, moisDeRetard = 9): number {
 /** Default assumptions, aligned with the salary simulator. */
 export const DEFAUTS_ACOMPTES: HypothesesAcomptes = {
   beneficeAvantDernier: P.RESULTAT_PAR_DEFAUT,
+  moisAvantDernier: 12,
   beneficePrecedent: P.RESULTAT_PAR_DEFAUT,
+  moisPrecedent: 12,
   beneficePrevisionnel: Math.round(P.RESULTAT_PAR_DEFAUT / 2),
   eligibleISReduit: true,
   premierExercice: false,
