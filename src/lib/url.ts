@@ -35,9 +35,9 @@ const CLES = {
   bareme: 'bareme',
 } as const;
 
-const MAX_MONTANT = 100_000_000;
+export const MAX_MONTANT = 100_000_000;
 
-function nombre(
+export function nombre(
   brut: string | null,
   defaut: number,
   min: number,
@@ -52,7 +52,7 @@ function nombre(
   return Math.round(borne * facteur) / facteur;
 }
 
-function booleen(brut: string | null, defaut: boolean): boolean {
+export function booleen(brut: string | null, defaut: boolean): boolean {
   if (brut === null) return defaut;
   if (brut === '1' || brut === 'true') return true;
   if (brut === '0' || brut === 'false') return false;
@@ -60,7 +60,7 @@ function booleen(brut: string | null, defaut: boolean): boolean {
 }
 
 /** Display rounding, to keep stray decimals out of the URL. */
-const arrondi = (v: number, decimales = 0) => {
+export const arrondi = (v: number, decimales = 0) => {
   const facteur = 10 ** decimales;
   return Math.round(v * facteur) / facteur;
 };

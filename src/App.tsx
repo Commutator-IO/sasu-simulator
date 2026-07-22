@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Curseur, Montant, Segments } from './components/Champs';
 import { Courbe } from './components/Courbe';
 import { Cascade } from './components/Cascade';
 import { Detail } from './components/Detail';
 import { Sources } from './components/Sources';
 import { Entete, Pied } from './components/Cadre';
+import { BoutonPartage } from './components/BoutonPartage';
 import { eur, pct } from './lib/format';
 import { balayer, brutMaxPourBudget, simuler, type Hypotheses } from './lib/simulation';
 import { decoderEtat, encoderEtat, lienPartage, type EtatPartage } from './lib/url';
@@ -484,7 +485,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <BoutonPartage etat={{ base, brut }} />
+                <BoutonPartage lien={lienPartage({ base, brut }, ETAT_PAR_DEFAUT)} />
 
                 <p className="mt-4 px-2 text-xs leading-relaxed text-ink-400">
                   Simulation indicative, hors CFE, mutuelle et prévoyance. Elle ne
@@ -583,62 +584,6 @@ export default function App() {
 }
 
 // ---------------------------------------------------------------------------
-
-function BoutonPartage({ etat }: { etat: EtatPartage }) {
-  const [etatCopie, setEtatCopie] = useState<'repos' | 'copie' | 'manuel'>('repos');
-  const champ = useRef<HTMLInputElement>(null);
-
-  const lien = lienPartage(etat, ETAT_PAR_DEFAUT);
-
-  const copier = async () => {
-    try {
-      // Unavailable outside a secure context, or if the user denies clipboard
-      // access.
-      await navigator.clipboard.writeText(lien);
-      setEtatCopie('copie');
-      setTimeout(() => setEtatCopie('repos'), 2500);
-    } catch {
-      // Surface the link for manual copying rather than failing silently.
-      setEtatCopie('manuel');
-      requestAnimationFrame(() => champ.current?.select());
-    }
-  };
-
-  return (
-    <div className="mt-4">
-      <button
-        type="button"
-        onClick={copier}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm font-medium text-ink-800 transition hover:border-brand-400 hover:text-brand-700"
-      >
-        {etatCopie === 'copie' ? (
-          <>
-            <span className="text-brand-600">✓</span> Lien copié
-          </>
-        ) : (
-          <>Copier le lien de cette simulation</>
-        )}
-      </button>
-
-      {etatCopie === 'manuel' && (
-        <input
-          ref={champ}
-          readOnly
-          value={lien}
-          onFocus={(e) => e.currentTarget.select()}
-          aria-label="Lien de la simulation, à copier"
-          className="tabular mt-2 w-full rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-xs text-ink-600 outline-none focus:border-brand-500"
-        />
-      )}
-
-      <p className="mt-2 px-2 text-xs leading-relaxed text-ink-400">
-        {etatCopie === 'manuel'
-          ? 'Copie automatique indisponible : sélectionnez le lien ci-dessus.'
-          : 'Le lien rouvre la simulation avec tous vos paramètres. Rien n’est enregistré : tout tient dans l’adresse.'}
-      </p>
-    </div>
-  );
-}
 
 function Mini({ label, valeur }: { label: string; valeur: string }) {
   return (
