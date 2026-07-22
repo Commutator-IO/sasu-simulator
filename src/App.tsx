@@ -340,9 +340,7 @@ export default function App() {
                       </span>
                     </p>
                     <p className="mt-1.5 text-sm text-brand-100">
-                      soit {eur(r.netEnPoche / 12)} par mois, lissé sur l'année — les
-                      dividendes ne sont versés qu'une fois, après approbation des
-                      comptes.
+                      soit {eur(r.netEnPoche / 12)} par mois
                     </p>
 
                     {/* The two figures below are annual. Without a period label
@@ -420,6 +418,15 @@ export default function App() {
                         </span>
                       </button>
                     )}
+
+                    {/* Placed outside the optimum block, which switches between
+                        two states: the caveat holds either way. */}
+                    <p className="mt-4 rounded-xl bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-500">
+                      Le montant mensuel est un lissage sur douze mois. Dans les faits,
+                      la rémunération tombe chaque mois mais les dividendes ne sont
+                      versés qu'une fois, après approbation des comptes — et l'année
+                      suivant la création, ils ne viennent qu'au premier exercice clos.
+                    </p>
 
                     <dl className="mt-6 space-y-3">
                       <Stat
