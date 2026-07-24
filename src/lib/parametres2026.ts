@@ -308,6 +308,23 @@ export const RESULTAT_PAR_DEFAUT =
   ) * 1_000;
 
 /**
+ * Projection tool default: the average Malt day-rate revenue spread evenly
+ * over twelve months. A neutral starting point the user overwrites with their
+ * own figures.
+ */
+export const CA_MENSUEL_PAR_DEFAUT = Math.round(
+  (TJM_MOYEN_MALT * JOURS_FACTURES_MALT) / 12,
+);
+
+/**
+ * Projection tool default fixed costs: the 10% reference cost rate applied to
+ * the default monthly revenue, so the default result matches the other tools.
+ */
+export const FRAIS_MENSUELS_PAR_DEFAUT = Math.round(
+  CA_MENSUEL_PAR_DEFAUT * TAUX_FRAIS_REFERENCE,
+);
+
+/**
  * Yearly take-home difference below which two salary levels are treated as
  * equivalent.
  *

@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         main: resolve(import.meta.dirname, 'index.html'),
         acomptes: resolve(import.meta.dirname, 'acomptes/index.html'),
+        projection: resolve(import.meta.dirname, 'projection/index.html'),
       },
     },
   },
