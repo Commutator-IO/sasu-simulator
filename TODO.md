@@ -250,6 +250,78 @@ partout, et sont déjà les nôtres :
 La ligne directrice à tenir : peu d'outils, mais chacun sourcé, décidable et
 partageable.
 
+## Le cycle de vie du CA : les maillons manquants
+
+Une manière de cadrer la suite : suivre **un euro de chiffre d'affaires depuis
+la facture jusqu'à la poche du dirigeant**, et repérer les étapes qu'aucun des
+trois outils ne modélise. Les trois onglets couvrent bien le segment
+*résultat → poche* ; ce qui manque est **avant** (encaissement, TVA) et **au
+milieu** (résultat comptable → résultat fiscal).
+
+La cascade complète, avec ce qui est couvert (✅) et ce qui manque (⭕) :
+
+1. Facture émise, CA HT — ✅ projection
+2. **Encaissement** : délai de paiement client, impayés. CA facturé ≠ CA
+   encaissé — ⭕
+3. − Charges déductibles : frais courants ✅ · **amortissements** des
+   investissements — partiel
+4. = Résultat comptable
+5. **± Retraitements fiscaux** : charges non déductibles réintégrées
+   (quote-part véhicule, amendes, cadeaux…) — ⭕
+6. − Rémunération du dirigeant et cotisations patronales — ✅ arbitrage
+7. **− Report des déficits antérieurs** — ⭕
+8. = **Résultat fiscal / bénéfice imposable** — ⭕ *maillon jamais calculé de
+   bout en bout*
+9. − IS : montant ✅, échéancier ✅ (arbitrage + acomptes)
+10. = Résultat net
+11. **− Réserve légale** (5 % jusqu'à 10 % du capital, obligatoire avant
+    distribution) — ⭕
+12. Réserves distribuables et report à nouveau — partiel ✅
+13. Dividendes : flat tax / barème / PS ✅ · **CEHR** (seulement un
+    avertissement)
+14. = Poche du dirigeant — ✅
+
+### La colonne vertébrale : du résultat comptable au bénéfice fiscal
+
+**Priorité.** Les étapes 5 à 8 forment le trou le plus coûteux : c'est le
+chiffre sur lequel l'IS et les acomptes tournent réellement, et il n'est
+calculé nulle part.
+
+C'est aussi le point faible du pont projection → acomptes. Aujourd'hui la
+projection transmet le **résultat avant rémunération** comme « bénéfice
+prévisionnel » ; le vrai bénéfice imposable, c'est ce résultat **moins** la
+rémunération et les cotisations patronales déductibles, **plus** les
+réintégrations, **moins** les déficits reportés. Le pont n'est donc exact que
+pour une année sans salaire ; dès qu'on se verse une rémunération, il surestime
+la base taxable. Fermer ce maillon relierait vraiment les trois onglets en une
+seule chaîne.
+
+À modéliser, dans l'ordre :
+
+- **Le vrai bénéfice fiscal** : rémunération déduite, réintégrations de charges
+  non déductibles, report des déficits antérieurs. Rend le pont exact.
+- **Amortissements et investissements** : dès un achat de matériel, le résultat
+  fiscal décroche du résultat de trésorerie.
+- **Réserve légale et affectation du résultat** : les 5 % obligatoires avant
+  toute distribution, aujourd'hui absents.
+
+### Les angles trésorerie : le cycle du cash
+
+Distinct du résultat, mais c'est ce qui décide si le compte tient :
+
+- **Facturé vs encaissé** : délais de paiement, impayés, affacturage. La
+  projection porte sur la facturation, pas sur l'encaissement.
+- **TVA** : collectée − déductible = à reverser. Hors résultat, mais rythme la
+  trésorerie. Déjà notée plus bas comme calculateur (régime et seuils) ; il
+  manque le versant *flux de trésorerie*.
+- **Calendrier de trésorerie consolidé** : encaissements face aux sorties (TVA,
+  cotisations mensuelles, acomptes d'IS, solde du 15 mai) sur un même axe. Les
+  acomptes en font déjà une partie pour l'IS seul.
+
+**CFE**, **TVA** et **CEHR** figurent déjà ailleurs dans cette feuille de
+route ; **réserve légale**, **réintégrations fiscales**, **report déficitaire**
+et **encaissement / trésorerie** n'y étaient pas.
+
 ## Autres calculateurs envisageables
 
 Classés par intérêt pour un freelance en SASU, en réutilisant le moteur
