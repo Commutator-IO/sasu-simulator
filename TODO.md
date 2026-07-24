@@ -322,6 +322,51 @@ Distinct du résultat, mais c'est ce qui décide si le compte tient :
 route ; **réserve légale**, **réintégrations fiscales**, **report déficitaire**
 et **encaissement / trésorerie** n'y étaient pas.
 
+## Distribution : exposer le moteur en serveur MCP
+
+Le moteur est déjà des fonctions pures, déterministes et sourcées
+([simulation.ts](src/lib/simulation.ts), [acomptes.ts](src/lib/acomptes.ts),
+[projection.ts](src/lib/projection.ts), [synthese.ts](src/lib/synthese.ts)) —
+exactement ce qu'on veut derrière des outils MCP (Model Context Protocol).
+L'exposer comme serveur MCP ouvrirait un second canal de distribution, sur une
+case aujourd'hui vide.
+
+**L'état de l'art laisse un creux.** Deux familles existent :
+
+- les **connecteurs de logiciels comptables** (Moneybird, QuickBooks, Zoho
+  Books, AgenticBooks, Maesn) donnent à une IA l'accès au grand livre — lire le
+  P&L, créer des factures — mais ne *décident* rien : ni arbitrage, ni
+  modulation d'acomptes ;
+- les **calculateurs socio-fiscaux français** (MCP OpenFisca, French Admin MCP)
+  calculent l'IR, l'URSSAF, les aides — pour un particulier, pas pour
+  l'arbitrage du dirigeant de SASU.
+
+Personne n'expose l'arbitrage rémunération / dividendes **+** la modulation des
+acomptes d'IS **+** la projection de CA. C'est le creux.
+
+**Ce que le serveur exposerait.** `simuler`, `balayer`, `calculerAcomptes`,
+`calculerProjection`, `calculerSynthese`, chaque paramètre sourcé.
+
+**Deux usages inédits.**
+
+1. L'arbitrage dans la conversation : « quel salaire pour 140 k€ de résultat ? »
+   → réponse chiffrée et sourcée, sans ouvrir le site.
+2. Le chaînage avec un connecteur de la première famille : lire le vrai P&L
+   depuis Pennylane / QuickBooks → le passer à la projection → arbitrer. La
+   donnée réelle rencontre la décision, ce qu'aucune famille ne fait seule.
+
+**Garde-fous.** Même discipline de veille qu'aujourd'hui — un MCP qui débite un
+barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
+*calcule*, il ne délivre pas de *conseil financier personnalisé*.
+
+**Modèle envisagé.** Accès payant (3 mois / 10 €, 5 ans / 1 000 €), précédé
+d'une page de pré-inscription pour prévenir de la sortie (onglet « Serveur
+MCP »). Le site restant statique, le formulaire passe pour l'instant par un
+`mailto` : un vrai backend de collecte (Formspree, Buttondown…) ou une fonction
+serverless, ainsi qu'un encaissement (Stripe Payment Link, Lemon Squeezy…),
+restent à choisir avant le lancement. Rien n'est encaissé ni stocké tant que ce
+choix n'est pas fait.
+
 ## Autres calculateurs envisageables
 
 Classés par intérêt pour un freelance en SASU, en réutilisant le moteur

@@ -14,6 +14,7 @@ const OUTILS = [
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
   { chemin: '/synthese/', libelle: 'Synthèse' },
+  { chemin: '/mcp/', libelle: 'Serveur MCP' },
 ] as const;
 
 /**

@@ -12,6 +12,14 @@ export const DEPOT = 'https://github.com/Commutator-IO/sasu-simulator';
 export const LIEN_ISSUES = `${DEPOT}/issues`;
 
 /**
+ * Contact address for the MCP waitlist. The site is static, so the sign-up form
+ * opens a prefilled email here rather than posting to a backend that does not
+ * exist yet. Change this single constant to a role address if spam becomes a
+ * problem.
+ */
+export const CONTACT = 'michel@commutator.io';
+
+/**
  * URL of a new issue, prefilled with a template. `lienSimulation` is the
  * shareable link of the simulation being viewed, so the report reproduces
  * without the reporter having to describe their inputs.
