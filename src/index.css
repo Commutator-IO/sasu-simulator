@@ -129,3 +129,13 @@ input[type='range'].brand-range:focus-visible::-webkit-slider-thumb {
 input[type='range'].brand-range:focus-visible {
   outline: none;
 }
+
+/* Print: the synthesis deck prints one slide per landscape page. The page
+   layout uses Tailwind's `print:` utilities; only the sheet geometry needs
+   raw CSS here. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+}

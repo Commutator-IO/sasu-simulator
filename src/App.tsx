@@ -7,25 +7,13 @@ import { Sources } from './components/Sources';
 import { Entete, Pied } from './components/Cadre';
 import { BoutonPartage } from './components/BoutonPartage';
 import { eur, pct } from './lib/format';
-import { balayer, brutMaxPourBudget, simuler, type Hypotheses } from './lib/simulation';
-import { decoderEtat, encoderEtat, lienPartage, type EtatPartage } from './lib/url';
+import { balayer, brutMaxPourBudget, simuler } from './lib/simulation';
+import { decoderEtat, encoderEtat, lienPartage } from './lib/url';
+import {
+  DEFAUTS_ARBITRAGE as DEFAUTS,
+  ETAT_ARBITRAGE_PAR_DEFAUT as ETAT_PAR_DEFAUT,
+} from './lib/arbitrage';
 import * as P from './lib/parametres2026';
-
-const DEFAUTS: Omit<Hypotheses, 'brutAnnuel'> = {
-  resultatAvantRemuneration: P.RESULTAT_PAR_DEFAUT,
-  tauxDistribution: 1,
-  parts: 1,
-  couple: false,
-  autresRevenus: 0,
-  salaireExterneBrut: 0,
-  reservesDistribuables: 0,
-  moisRemuneration: 12,
-  tauxATMP: P.AT_MP_DEFAUT,
-  eligibleISReduit: true,
-  dividendesAuBareme: false,
-};
-
-const ETAT_PAR_DEFAUT: EtatPartage = { base: DEFAUTS, brut: 45_000 };
 
 export default function App() {
   // Initial state comes from the URL: a shared link must reopen exactly the

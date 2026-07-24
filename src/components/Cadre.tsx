@@ -13,7 +13,20 @@ const OUTILS = [
   { chemin: '/projection/', libelle: 'Projection de CA' },
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
+  { chemin: '/synthese/', libelle: 'Synthèse' },
 ] as const;
+
+/**
+ * The synthesis reads every tool's parameters from one URL, so opening it from
+ * a tool carries the work in progress: the current query string is forwarded.
+ * The plain tool links stay bare — switching tools should not drag along
+ * another tool's parameters.
+ */
+function href(chemin: string, courant: string): string {
+  if (chemin !== '/synthese/' || estActif(chemin, courant)) return chemin;
+  const recherche = typeof window === 'undefined' ? '' : window.location.search;
+  return `${chemin}${recherche}`;
+}
 
 function estActif(chemin: string, courant: string): boolean {
   // The current path may or may not carry a trailing slash depending on how
@@ -41,7 +54,7 @@ export function Entete({ chemin }: { chemin: string }) {
             return (
               <a
                 key={o.chemin}
-                href={o.chemin}
+                href={href(o.chemin, chemin)}
                 aria-current={actif ? 'page' : undefined}
                 className={[
                   'rounded-lg px-3 py-1.5 text-sm font-medium transition',
