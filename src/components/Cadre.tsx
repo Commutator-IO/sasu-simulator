@@ -10,6 +10,7 @@ import * as P from '../lib/parametres2026';
  */
 
 const OUTILS = [
+  { chemin: '/projection/', libelle: 'Projection de CA' },
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
 ] as const;
