@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Entete, Pied } from './components/Cadre';
-import { CONTACT } from './lib/depot';
 import * as P from './lib/parametres2026';
 
 /**
  * Waitlist page for the planned MCP server.
  *
  * The site is static, so nothing is charged or stored here: the pricing tiers
- * are informational, and the only action is to be notified at release. The
- * form composes a prefilled email to the owner — no backend, no third party.
+ * are informational. The sign-up form is intentionally inert for now — the way
+ * people will register is still to be decided — so it collects and sends
+ * nothing, and no contact address is exposed.
  */
 
 const OUTILS_EXPOSES = [
@@ -42,13 +42,13 @@ const FORMULES = [
     vedette: false,
   },
   {
-    cle: '5 ans',
-    prix: '1 000 €',
-    periode: '5 ans',
+    cle: '1 an',
+    prix: '100 €',
+    periode: '1 an',
     accroche: 'Pour s’y appuyer durablement',
     points: [
       'Tout ce qui précède',
-      'Cinq ans de mises à jour des barèmes',
+      'Un an de mises à jour des barèmes',
       'Le meilleur coût annuel',
     ],
     vedette: true,
@@ -58,28 +58,9 @@ const FORMULES = [
 export default function PageMcp() {
   const [email, setEmail] = useState('');
   const [formule, setFormule] = useState<string>('3 mois');
-  const [erreur, setErreur] = useState(false);
-
-  const sInscrire = () => {
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setErreur(true);
-      return;
-    }
-    setErreur(false);
-    const sujet = 'Pré-inscription au serveur MCP — SASU simulator';
-    const corps = [
-      'Bonjour,',
-      '',
-      'Je souhaite être prévenu(e) de la sortie du serveur MCP.',
-      `Adresse : ${email.trim()}`,
-      `Formule qui m’intéresse : ${formule}`,
-      '',
-      'Merci.',
-    ].join('\n');
-    window.location.href = `mailto:${CONTACT}?subject=${encodeURIComponent(
-      sujet,
-    )}&body=${encodeURIComponent(corps)}`;
-  };
+  // The form does nothing yet: the sign-up channel is still to be decided, so
+  // submitting only shows a note and sends nothing anywhere.
+  const [note, setNote] = useState(false);
 
   return (
     <div className="min-h-screen">
@@ -200,7 +181,7 @@ export default function PageMcp() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  sInscrire();
+                  setNote(true);
                 }}
               >
                 <label htmlFor="email-mcp" className="field-label">
@@ -212,18 +193,10 @@ export default function PageMcp() {
                   inputMode="email"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (erreur) setErreur(false);
-                  }}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="vous@exemple.fr"
                   className="mt-1 w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-base text-ink-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 />
-                {erreur && (
-                  <p className="mt-2 text-sm text-gold-700">
-                    Cette adresse ne semble pas valide.
-                  </p>
-                )}
 
                 <fieldset className="mt-5">
                   <legend className="field-label">Formule qui vous intéresse</legend>
@@ -251,23 +224,22 @@ export default function PageMcp() {
                   type="submit"
                   className="mt-6 w-full rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
                 >
-                  Me prévenir par email
+                  Être prévenu
                 </button>
               </form>
 
-              <p className="mt-4 text-xs leading-relaxed text-ink-400">
-                Le bouton ouvre un message pré-rempli vers l'équipe depuis votre
-                logiciel de messagerie&nbsp;: rien n'est stocké sur le site, et
-                aucun paiement n'est demandé à ce stade. Vous pouvez aussi écrire
-                directement à{' '}
-                <a
-                  href={`mailto:${CONTACT}`}
-                  className="font-medium text-brand-700 underline underline-offset-4 hover:text-brand-800"
-                >
-                  {CONTACT}
-                </a>
-                .
-              </p>
+              {note ? (
+                <p className="mt-4 rounded-xl bg-brand-50 p-4 text-sm leading-relaxed text-ink-700">
+                  Les inscriptions ne sont pas encore ouvertes. Cette page évoluera
+                  dès que le serveur approchera de sa sortie — repassez d'ici là.
+                </p>
+              ) : (
+                <p className="mt-4 text-xs leading-relaxed text-ink-400">
+                  Le formulaire n'est pas encore actif&nbsp;: rien n'est envoyé ni
+                  stocké, et aucun paiement n'est demandé. Le moyen d'inscription
+                  sera précisé ici à l'approche de la sortie.
+                </p>
+              )}
             </div>
           </div>
         </section>

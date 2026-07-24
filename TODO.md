@@ -359,13 +359,13 @@ acomptes d'IS **+** la projection de CA. C'est le creux.
 barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
 *calcule*, il ne délivre pas de *conseil financier personnalisé*.
 
-**Modèle envisagé.** Accès payant (3 mois / 10 €, 5 ans / 1 000 €), précédé
-d'une page de pré-inscription pour prévenir de la sortie (onglet « Serveur
-MCP »). Le site restant statique, le formulaire passe pour l'instant par un
-`mailto` : un vrai backend de collecte (Formspree, Buttondown…) ou une fonction
-serverless, ainsi qu'un encaissement (Stripe Payment Link, Lemon Squeezy…),
-restent à choisir avant le lancement. Rien n'est encaissé ni stocké tant que ce
-choix n'est pas fait.
+**Modèle envisagé.** Accès payant (3 mois / 10 €, 1 an / 100 €), précédé d'une
+page de pré-inscription pour prévenir de la sortie (onglet « Serveur MCP »). Le
+formulaire est pour l'instant inerte — le moyen d'inscription reste à décider —
+et n'expose aucune adresse. Un backend de collecte (Formspree, Buttondown…) ou
+une fonction serverless, ainsi qu'un encaissement (Stripe Payment Link, Lemon
+Squeezy…), restent à choisir avant le lancement. Rien n'est encaissé ni stocké
+tant que ce choix n'est pas fait.
 
 ## Autres calculateurs envisageables
 
