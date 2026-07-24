@@ -22,7 +22,11 @@ const OUTILS = [
  * The plain tool links stay bare — switching tools should not drag along
  * another tool's parameters.
  */
-function href(chemin: string, courant: string): string {
+function href(chemin: string, courant: string, liens?: Record<string, string>): string {
+  // A page can hand a tab its own destination — the projection sends the other
+  // tools its computed result, so the top tabs carry the funnel just like its
+  // buttons do.
+  if (liens && liens[chemin]) return liens[chemin];
   if (chemin !== '/synthese/' || estActif(chemin, courant)) return chemin;
   const recherche = typeof window === 'undefined' ? '' : window.location.search;
   return `${chemin}${recherche}`;
@@ -35,7 +39,14 @@ function estActif(chemin: string, courant: string): boolean {
   return normalise(courant) === normalise(chemin);
 }
 
-export function Entete({ chemin }: { chemin: string }) {
+export function Entete({
+  chemin,
+  liens,
+}: {
+  chemin: string;
+  /** Optional per-tab href overrides, keyed by tool path. */
+  liens?: Record<string, string>;
+}) {
   return (
     <header className="sticky top-0 z-20 border-b border-ink-200/70 bg-white/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-5 py-4">
@@ -54,7 +65,7 @@ export function Entete({ chemin }: { chemin: string }) {
             return (
               <a
                 key={o.chemin}
-                href={href(o.chemin, chemin)}
+                href={href(o.chemin, chemin, liens)}
                 aria-current={actif ? 'page' : undefined}
                 className={[
                   'rounded-lg px-3 py-1.5 text-sm font-medium transition',

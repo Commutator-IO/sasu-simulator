@@ -138,4 +138,12 @@ input[type='range'].brand-range:focus-visible {
     size: A4 landscape;
     margin: 12mm;
   }
+  /* One slide per page, and no trailing blank page: the break falls between
+     slides, never after the last one. */
+  .slide {
+    break-inside: avoid;
+  }
+  .slide:not(:last-child) {
+    break-after: page;
+  }
 }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Entete, Pied } from './components/Cadre';
 import { Courbe } from './components/Courbe';
 import { HistogrammeProjection } from './components/HistogrammeProjection';
@@ -16,21 +16,50 @@ export default function PageSynthese() {
 
   const total = arbitrage.resultatAvantRemuneration + arbitrage.reservesAnterieures;
 
+  // On screen the deck is a carousel: one slide at a time, arrow keys or the
+  // controls below to move. In print every slide is shown, one per page.
+  const slides = [
+    <SlideCouverture
+      key="couverture"
+      caTotal={projection.caTotal}
+      resultat={arbitrage.resultatAvantRemuneration}
+      brut={brutChoisi}
+      net={arbitrage.netEnPoche}
+    />,
+    <SlideProjection key="projection" projection={projection} arbitrage={arbitrage} aProjection={scenario.aProjection} />,
+    <SlideArbitrage key="arbitrage" arbitrage={arbitrage} balayage={balayage} brutChoisi={brutChoisi} />,
+    <SlideAcomptes key="acomptes" acomptes={acomptes} />,
+    <SlideCascade key="cascade" arbitrage={arbitrage} repartition={repartition} total={total} />,
+  ];
+
+  const [index, setIndex] = useState(0);
+  const nb = slides.length;
+  const aller = (n: number) => setIndex(Math.min(nb - 1, Math.max(0, n)));
+
+  useEffect(() => {
+    const clavier = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') setIndex((i) => Math.min(nb - 1, i + 1));
+      if (e.key === 'ArrowLeft') setIndex((i) => Math.max(0, i - 1));
+    };
+    window.addEventListener('keydown', clavier);
+    return () => window.removeEventListener('keydown', clavier);
+  }, [nb]);
+
   return (
     <div className="min-h-screen bg-ink-50 print:bg-white">
       <div className="print:hidden">
         <Entete chemin="/synthese/" />
       </div>
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12 print:max-w-none print:p-0">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 print:max-w-none print:p-0">
         {/* Toolbar — never printed */}
-        <div className="print:hidden mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div className="print:hidden mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
               Synthèse pour votre comptable
             </h1>
             <p className="mt-1 text-sm text-ink-500">
-              Les cinq volets de l'analyse, prêts à imprimer ou exporter en PDF.
+              Cinq volets à faire défiler, prêts à imprimer ou exporter en PDF.
             </p>
           </div>
           <button
@@ -42,164 +71,56 @@ export default function PageSynthese() {
           </button>
         </div>
 
-        <div className="space-y-8 print:space-y-0">
-          {/* ------------------------------------------------ Slide 1 — Cover */}
-          <Slide numero={1} total={5}>
-            <div className="flex h-full flex-col justify-center">
-              <p className="text-sm font-medium uppercase tracking-[0.15em] text-brand-600">
-                SASU à l'impôt sur les sociétés · Barèmes {P.ANNEE}
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-4xl">
-                Synthèse fiscale et de trésorerie
-              </h2>
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-500">
-                Une lecture d'ensemble en cinq volets : projection du chiffre
-                d'affaires, arbitrage rémunération / dividendes, acomptes
-                d'impôt sur les sociétés, et la répartition de chaque euro de
-                résultat.
-              </p>
-
-              <dl className="mt-10 grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-                <Chiffre label="Chiffre d'affaires" valeur={eur(projection.caTotal)} />
-                <Chiffre
-                  label="Résultat avant rémunération"
-                  valeur={eur(arbitrage.resultatAvantRemuneration)}
-                />
-                <Chiffre label="Rémunération retenue" valeur={eur(brutChoisi)} />
-                <Chiffre label="Net en poche" valeur={eur(arbitrage.netEnPoche)} accent />
-              </dl>
+        {/* The deck. On screen only the active slide shows; print reveals all. */}
+        <div className="print:space-y-0">
+          {slides.map((slide, i) => (
+            <div key={i} className={i === index ? 'block' : 'hidden print:block'}>
+              <SlideCadre numero={i + 1} total={nb} actif={i === index}>
+                {slide}
+              </SlideCadre>
             </div>
-          </Slide>
-
-          {/* -------------------------------------------- Slide 2 — Projection */}
-          <Slide numero={2} total={5} titre="Projection du chiffre d'affaires">
-            {scenario.aProjection ? (
-              <>
-                <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-                  <Chiffre label="CA facturé" valeur={eur(projection.caFacture)} />
-                  <Chiffre label="CA projeté" valeur={eur(projection.caProjete)} />
-                  <Chiffre label="Total annuel" valeur={eur(projection.caTotal)} accent />
-                  <Chiffre
-                    label="Résultat avant rémunération"
-                    valeur={eur(projection.resultatAvantRemuneration)}
-                  />
-                </dl>
-                <div className="mt-6">
-                  <HistogrammeProjection r={projection} />
-                </div>
-              </>
-            ) : (
-              <div className="flex h-full flex-col justify-center">
-                <p className="max-w-2xl text-base leading-relaxed text-ink-500">
-                  La projection mensuelle n'a pas été renseignée. Le résultat
-                  avant rémunération utilisé dans cette synthèse est{' '}
-                  <strong className="text-ink-900">
-                    {eur(arbitrage.resultatAvantRemuneration)}
-                  </strong>
-                  , tel que saisi dans l'arbitrage.
-                </p>
-                <p className="mt-3 text-sm text-ink-400">
-                  Pour détailler mois par mois, renseignez l'onglet « Projection
-                  de CA », puis rouvrez cette synthèse.
-                </p>
-              </div>
-            )}
-          </Slide>
-
-          {/* --------------------------------------------- Slide 3 — Arbitrage */}
-          <Slide numero={3} total={5} titre="Arbitrage rémunération / dividendes">
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-              <Chiffre label="Rémunération brute" valeur={eur(brutChoisi)} />
-              <Chiffre
-                label="Salaire net après impôt"
-                valeur={eur(arbitrage.salaireNet - arbitrage.irSurSalaire)}
-              />
-              <Chiffre label="Dividendes nets" valeur={eur(arbitrage.dividendesNets)} />
-              <Chiffre label="Net en poche" valeur={eur(arbitrage.netEnPoche)} accent />
-            </dl>
-
-            <p className="mt-4 text-sm leading-relaxed text-ink-500">
-              Optimum de rémunération autour de{' '}
-              <strong className="text-ink-900">
-                {eur(balayage.optimum.brutAnnuel)}
-              </strong>{' '}
-              de brut (plage équivalente de {eur(balayage.plateau.min)} à{' '}
-              {eur(balayage.plateau.max)}). Taux de prélèvement global :{' '}
-              {pct(arbitrage.tauxPrelevementGlobal)}.
-            </p>
-
-            <div className="mt-4">
-              <Courbe
-                points={balayage.points}
-                brutCourant={brutChoisi}
-                brutOptimal={balayage.optimum.brutAnnuel}
-                plateau={balayage.plateau}
-              />
-            </div>
-          </Slide>
-
-          {/* ---------------------------------------------- Slide 4 — Acomptes */}
-          <Slide numero={4} total={5} titre="Acomptes d'impôt sur les sociétés">
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-              <Chiffre label="Impôt de référence" valeur={eur(acomptes.isReference)} />
-              <Chiffre label="Impôt prévisionnel" valeur={eur(acomptes.isPrevisionnel)} />
-              <Chiffre label="Reste à verser" valeur={eur(acomptes.resteAVerser)} accent />
-              <Chiffre
-                label={acomptes.solde >= 0 ? 'Solde au 15 mai' : 'Restitution au 15 mai'}
-                valeur={eur(Math.abs(acomptes.solde))}
-              />
-            </dl>
-            <div className="mt-6">
-              <HistogrammeAcomptes r={acomptes} />
-            </div>
-          </Slide>
-
-          {/* --------------------------------------------- Slide 5 — Cascade */}
-          <Slide numero={5} total={5} titre="Où va chaque euro de résultat">
-            <p className="text-sm leading-relaxed text-ink-500">
-              Décomposition du résultat avant rémunération
-              {arbitrage.reservesAnterieures > 0 && ', réserves antérieures comprises,'}{' '}
-              en {eur(total)}.
-            </p>
-
-            <div className="mt-6 space-y-3">
-              {repartition
-                .filter((part) => part.montant > 0.5)
-                .map((part) => {
-                  const p = total > 0 ? part.montant / total : 0;
-                  const poche = part.label === 'Net en poche';
-                  return (
-                    <div key={part.label}>
-                      <div className="flex items-baseline justify-between gap-4 text-sm">
-                        <span className={poche ? 'font-semibold text-ink-900' : 'text-ink-600'}>
-                          {part.label}
-                        </span>
-                        <span className="tabular shrink-0 font-semibold text-ink-900">
-                          {eur(part.montant)}{' '}
-                          <span className="font-normal text-ink-400">({pct(p)})</span>
-                        </span>
-                      </div>
-                      <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-ink-100">
-                        <div
-                          className={poche ? 'h-full bg-brand-500' : 'h-full bg-ink-300'}
-                          style={{ width: `${Math.min(100, p * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            <p className="mt-6 text-xs leading-relaxed text-ink-400">
-              Sur {eur(total)} de résultat avant rémunération, vous conservez{' '}
-              {eur(arbitrage.netEnPoche)} nets en poche, soit{' '}
-              {pct(total > 0 ? arbitrage.netEnPoche / total : 0)}. Le reste couvre
-              cotisations, impôts et mise en réserve.
-            </p>
-          </Slide>
+          ))}
         </div>
 
-        <div className="print:hidden mt-8">
+        {/* Carousel controls — never printed */}
+        <div className="print:hidden mt-6 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => aller(index - 1)}
+            disabled={index === 0}
+            className="rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-700 transition enabled:hover:border-brand-400 enabled:hover:text-brand-700 disabled:opacity-40"
+          >
+            ← Précédent
+          </button>
+
+          <div className="flex items-center gap-2" role="tablist" aria-label="Volets de la synthèse">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={i === index}
+                aria-label={`Volet ${i + 1}`}
+                onClick={() => setIndex(i)}
+                className={[
+                  'h-2.5 rounded-full transition-all',
+                  i === index ? 'w-6 bg-brand-600' : 'w-2.5 bg-ink-300 hover:bg-ink-400',
+                ].join(' ')}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => aller(index + 1)}
+            disabled={index === nb - 1}
+            className="rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-700 transition enabled:hover:border-brand-400 enabled:hover:text-brand-700 disabled:opacity-40"
+          >
+            Suivant →
+          </button>
+        </div>
+
+        <div className="print:hidden mt-6">
           <BoutonPartage lien={lienPartageSynthese(scenario)} />
         </div>
       </main>
@@ -211,31 +132,263 @@ export default function PageSynthese() {
   );
 }
 
-function Slide({
+/** Uniform slide frame: a running header, and a body that fills the height. */
+function SlideCadre({
   numero,
   total,
-  titre,
+  actif,
   children,
 }: {
   numero: number;
   total: number;
-  titre?: string;
+  actif?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <section className="slide card break-inside-avoid p-6 sm:p-10 print:min-h-[170mm] print:break-after-page print:shadow-none">
+    <section
+      className="slide card flex min-h-[68vh] flex-col p-6 sm:p-10 print:min-h-[172mm]"
+      aria-hidden={actif === false}
+    >
       <div className="flex items-center justify-between border-b border-ink-100 pb-3">
-        {titre ? (
-          <h2 className="text-lg font-semibold tracking-tight text-ink-900">{titre}</h2>
-        ) : (
-          <span className="text-sm font-medium text-brand-600">SASU simulator</span>
-        )}
+        <span className="text-sm font-semibold text-brand-600">SASU simulator</span>
         <span className="tabular text-xs text-ink-400">
           {numero} / {total}
         </span>
       </div>
-      <div className="mt-6 h-[calc(100%-3rem)]">{children}</div>
+      <div className="mt-6 flex flex-1 flex-col justify-center">{children}</div>
     </section>
+  );
+}
+
+function Titre({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="mb-5 text-xl font-semibold tracking-tight text-ink-900">{children}</h3>
+  );
+}
+
+function SlideCouverture({
+  caTotal,
+  resultat,
+  brut,
+  net,
+}: {
+  caTotal: number;
+  resultat: number;
+  brut: number;
+  net: number;
+}) {
+  return (
+    <div className="flex h-full flex-col justify-center">
+      <p className="text-sm font-medium uppercase tracking-[0.15em] text-brand-600">
+        SASU à l'impôt sur les sociétés · Barèmes {P.ANNEE}
+      </p>
+      <h2 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-ink-900 sm:text-5xl">
+        Synthèse fiscale
+        <br />
+        et de trésorerie
+      </h2>
+      <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
+        Ce document suit un même exercice de bout en bout : du chiffre d'affaires
+        facturé jusqu'à ce qui reste réellement en poche. Il réunit en cinq
+        volets les décisions qui, d'ordinaire, sont examinées séparément.
+      </p>
+      <ul className="mt-5 grid max-w-2xl gap-x-8 gap-y-2 text-sm leading-relaxed text-ink-500 sm:grid-cols-2">
+        <li className="flex gap-2">
+          <span className="text-brand-500">1.</span> La projection du chiffre
+          d'affaires et du résultat de fin d'année.
+        </li>
+        <li className="flex gap-2">
+          <span className="text-brand-500">2.</span> L'arbitrage entre
+          rémunération et dividendes, et son optimum.
+        </li>
+        <li className="flex gap-2">
+          <span className="text-brand-500">3.</span> Les acomptes d'impôt sur les
+          sociétés et le solde de mai.
+        </li>
+        <li className="flex gap-2">
+          <span className="text-brand-500">4.</span> La répartition de chaque euro
+          de résultat entre poche, charges et impôts.
+        </li>
+      </ul>
+      <p className="mt-5 max-w-2xl text-sm leading-relaxed text-ink-400">
+        Les chiffres se recoupent d'un volet à l'autre : le résultat projeté
+        alimente l'arbitrage, dont découle le bénéfice imposable qui fonde les
+        acomptes. Barèmes {P.ANNEE}, à valider avec votre expert-comptable.
+      </p>
+
+      <dl className="mt-auto grid grid-cols-2 gap-x-8 gap-y-5 border-t border-ink-100 pt-8 sm:grid-cols-4">
+        <Chiffre label="Chiffre d'affaires" valeur={eur(caTotal)} />
+        <Chiffre label="Résultat avant rémunération" valeur={eur(resultat)} />
+        <Chiffre label="Rémunération retenue" valeur={eur(brut)} />
+        <Chiffre label="Net en poche" valeur={eur(net)} accent />
+      </dl>
+    </div>
+  );
+}
+
+function SlideProjection({
+  projection,
+  arbitrage,
+  aProjection,
+}: {
+  projection: ReturnType<typeof calculerSynthese>['projection'];
+  arbitrage: ReturnType<typeof calculerSynthese>['arbitrage'];
+  aProjection: boolean;
+}) {
+  if (!aProjection) {
+    return (
+      <div className="flex h-full flex-col justify-center">
+        <Titre>Projection du chiffre d'affaires</Titre>
+        <p className="max-w-2xl text-base leading-relaxed text-ink-500">
+          La projection mensuelle n'a pas été renseignée. Le résultat avant
+          rémunération utilisé dans cette synthèse est{' '}
+          <strong className="text-ink-900">
+            {eur(arbitrage.resultatAvantRemuneration)}
+          </strong>
+          , tel que saisi dans l'arbitrage.
+        </p>
+        <p className="mt-3 text-sm text-ink-400">
+          Pour détailler mois par mois, renseignez l'onglet « Projection de CA »,
+          puis rouvrez cette synthèse.
+        </p>
+      </div>
+    );
+  }
+  return (
+    <div className="flex h-full flex-col">
+      <Titre>Projection du chiffre d'affaires</Titre>
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+        <Chiffre label="CA facturé" valeur={eur(projection.caFacture)} />
+        <Chiffre label="CA projeté" valeur={eur(projection.caProjete)} />
+        <Chiffre label="Total annuel" valeur={eur(projection.caTotal)} accent />
+        <Chiffre
+          label="Résultat avant rémunération"
+          valeur={eur(projection.resultatAvantRemuneration)}
+        />
+      </dl>
+      <div className="mt-auto pt-6">
+        <HistogrammeProjection r={projection} />
+      </div>
+    </div>
+  );
+}
+
+function SlideArbitrage({
+  arbitrage,
+  balayage,
+  brutChoisi,
+}: {
+  arbitrage: ReturnType<typeof calculerSynthese>['arbitrage'];
+  balayage: ReturnType<typeof calculerSynthese>['balayage'];
+  brutChoisi: number;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <Titre>Arbitrage rémunération / dividendes</Titre>
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+        <Chiffre label="Rémunération brute" valeur={eur(brutChoisi)} />
+        <Chiffre
+          label="Salaire net après impôt"
+          valeur={eur(arbitrage.salaireNet - arbitrage.irSurSalaire)}
+        />
+        <Chiffre label="Dividendes nets" valeur={eur(arbitrage.dividendesNets)} />
+        <Chiffre label="Net en poche" valeur={eur(arbitrage.netEnPoche)} accent />
+      </dl>
+      <p className="mt-4 text-sm leading-relaxed text-ink-500">
+        Optimum autour de{' '}
+        <strong className="text-ink-900">{eur(balayage.optimum.brutAnnuel)}</strong> de
+        brut (plage équivalente de {eur(balayage.plateau.min)} à {eur(balayage.plateau.max)}).
+        Taux de prélèvement global : {pct(arbitrage.tauxPrelevementGlobal)}.
+      </p>
+      <div className="mt-auto pt-4">
+        <Courbe
+          points={balayage.points}
+          brutCourant={brutChoisi}
+          brutOptimal={balayage.optimum.brutAnnuel}
+          plateau={balayage.plateau}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SlideAcomptes({
+  acomptes,
+}: {
+  acomptes: ReturnType<typeof calculerSynthese>['acomptes'];
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <Titre>Acomptes d'impôt sur les sociétés</Titre>
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+        <Chiffre label="Impôt de référence" valeur={eur(acomptes.isReference)} />
+        <Chiffre label="Impôt prévisionnel" valeur={eur(acomptes.isPrevisionnel)} />
+        <Chiffre label="Reste à verser" valeur={eur(acomptes.resteAVerser)} accent />
+        <Chiffre
+          label={acomptes.solde >= 0 ? 'Solde au 15 mai' : 'Restitution au 15 mai'}
+          valeur={eur(Math.abs(acomptes.solde))}
+        />
+      </dl>
+      <div className="mt-auto pt-6">
+        <HistogrammeAcomptes r={acomptes} />
+      </div>
+    </div>
+  );
+}
+
+function SlideCascade({
+  arbitrage,
+  repartition,
+  total,
+}: {
+  arbitrage: ReturnType<typeof calculerSynthese>['arbitrage'];
+  repartition: ReturnType<typeof calculerSynthese>['repartition'];
+  total: number;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <Titre>Où va chaque euro de résultat</Titre>
+      <p className="text-sm leading-relaxed text-ink-500">
+        Décomposition du résultat avant rémunération
+        {arbitrage.reservesAnterieures > 0 && ', réserves antérieures comprises,'} en{' '}
+        {eur(total)}.
+      </p>
+
+      <div className="mt-6 flex-1 space-y-4">
+        {repartition
+          .filter((part) => part.montant > 0.5)
+          .map((part) => {
+            const p = total > 0 ? part.montant / total : 0;
+            const poche = part.label === 'Net en poche';
+            return (
+              <div key={part.label}>
+                <div className="flex items-baseline justify-between gap-4 text-sm">
+                  <span className={poche ? 'font-semibold text-ink-900' : 'text-ink-600'}>
+                    {part.label}
+                  </span>
+                  <span className="tabular shrink-0 font-semibold text-ink-900">
+                    {eur(part.montant)}{' '}
+                    <span className="font-normal text-ink-400">({pct(p)})</span>
+                  </span>
+                </div>
+                <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-ink-100">
+                  <div
+                    className={poche ? 'h-full bg-brand-500' : 'h-full bg-ink-300'}
+                    style={{ width: `${Math.min(100, p * 100)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+      </div>
+
+      <p className="mt-6 text-xs leading-relaxed text-ink-400">
+        Sur {eur(total)} de résultat avant rémunération, vous conservez{' '}
+        {eur(arbitrage.netEnPoche)} nets en poche, soit{' '}
+        {pct(total > 0 ? arbitrage.netEnPoche / total : 0)}. Le reste couvre cotisations,
+        impôts et mise en réserve.
+      </p>
+    </div>
   );
 }
 

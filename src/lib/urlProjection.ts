@@ -17,6 +17,9 @@ const CLES = {
   isReduit: 'isReduit',
 } as const;
 
+/** Query-string keys this tool owns, for state persistence. */
+export const CLES_PROJECTION: string[] = Object.values(CLES);
+
 /** Monthly turnover travels as a comma-separated list of twelve amounts. */
 function encoderFacturation(facturation: number[]): string {
   return Array.from({ length: NB_MOIS }, (_, i) => String(arrondi(facturation[i] ?? 0))).join(

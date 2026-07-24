@@ -6,23 +6,26 @@ import { Detail } from './components/Detail';
 import { Sources } from './components/Sources';
 import { Entete, Pied } from './components/Cadre';
 import { BoutonPartage } from './components/BoutonPartage';
+import { BoutonReset } from './components/BoutonReset';
 import { eur, pct } from './lib/format';
 import { balayer, brutMaxPourBudget, simuler } from './lib/simulation';
-import { decoderEtat, encoderEtat, lienPartage } from './lib/url';
+import { CLES_ARBITRAGE, decoderEtat, encoderEtat, lienPartage } from './lib/url';
 import {
   DEFAUTS_ARBITRAGE as DEFAUTS,
   ETAT_ARBITRAGE_PAR_DEFAUT as ETAT_PAR_DEFAUT,
 } from './lib/arbitrage';
+import {
+  chargerRecherche,
+  sauvegarderRecherche,
+  CLE_ARBITRAGE,
+} from './lib/persistance';
 import * as P from './lib/parametres2026';
 
 export default function App() {
   // Initial state comes from the URL: a shared link must reopen exactly the
   // same simulation.
   const [initial] = useState(() =>
-    decoderEtat(
-      typeof window === 'undefined' ? '' : window.location.search,
-      ETAT_PAR_DEFAUT,
-    ),
+    decoderEtat(chargerRecherche(CLES_ARBITRAGE, CLE_ARBITRAGE), ETAT_PAR_DEFAUT),
   );
   const [base, setBase] = useState(initial.base);
   const [brut, setBrut] = useState(initial.brut);
@@ -72,9 +75,16 @@ export default function App() {
         '',
         `${window.location.pathname}${requete}${window.location.hash}`,
       );
+      sauvegarderRecherche(CLE_ARBITRAGE, requete);
     }, 250);
     return () => clearTimeout(minuteur);
   }, [base, brut]);
+
+  const reinitialiser = () => {
+    setBase(DEFAUTS);
+    setBrut(ETAT_PAR_DEFAUT.brut);
+    setAvanceOuvert(false);
+  };
 
   const reperes = [
     { valeur: 0, label: '0 €' },
@@ -474,6 +484,7 @@ export default function App() {
                 </div>
 
                 <BoutonPartage lien={lienPartage({ base, brut }, ETAT_PAR_DEFAUT)} />
+                <BoutonReset onReset={reinitialiser} />
 
                 <p className="mt-4 px-2 text-xs leading-relaxed text-ink-400">
                   Simulation indicative, hors CFE, mutuelle et prévoyance. Elle ne

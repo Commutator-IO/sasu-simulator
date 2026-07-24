@@ -23,6 +23,9 @@ const CLES = {
   verses: 'verses',
 } as const;
 
+/** Query-string keys this tool owns, for state persistence. */
+export const CLES_ACOMPTES: string[] = Object.values(CLES);
+
 const STRATEGIES: Strategie[] = ['appele', 'conserver', 'lisser', 'manuel'];
 
 function lireStrategie(brut: string | null, defaut: Strategie): Strategie {

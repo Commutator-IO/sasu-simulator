@@ -35,6 +35,9 @@ const CLES = {
   bareme: 'bareme',
 } as const;
 
+/** Query-string keys this tool owns, for state persistence. */
+export const CLES_ARBITRAGE: string[] = Object.values(CLES);
+
 export const MAX_MONTANT = 100_000_000;
 
 export function nombre(

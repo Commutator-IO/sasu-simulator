@@ -3,6 +3,7 @@ import { Curseur, Montant, Segments } from './components/Champs';
 import { Entete, Pied } from './components/Cadre';
 import { HistogrammeProjection } from './components/HistogrammeProjection';
 import { BoutonPartage } from './components/BoutonPartage';
+import { BoutonReset } from './components/BoutonReset';
 import { eur, pct } from './lib/format';
 import {
   calculerProjection,
@@ -13,12 +14,18 @@ import {
   type HypothesesProjection,
 } from './lib/projection';
 import {
+  CLES_PROJECTION,
   decoderProjection,
   encoderProjection,
   lienPartageProjection,
   lienVersAcomptes,
   lienVersArbitrage,
 } from './lib/urlProjection';
+import {
+  chargerRecherche,
+  sauvegarderRecherche,
+  CLE_PROJECTION,
+} from './lib/persistance';
 import { LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
@@ -26,14 +33,12 @@ export default function PageProjection() {
   // Initial state comes from the URL: a shared link must reopen exactly the
   // same projection.
   const [h, setH] = useState<HypothesesProjection>(() =>
-    decoderProjection(
-      typeof window === 'undefined' ? '' : window.location.search,
-      DEFAUTS_PROJECTION,
-    ),
+    decoderProjection(chargerRecherche(CLES_PROJECTION, CLE_PROJECTION), DEFAUTS_PROJECTION),
   );
   const r = useMemo(() => calculerProjection(h), [h]);
 
-  // The URL follows the state without pushing a history entry on every edit.
+  // The URL follows the state without pushing a history entry on every edit,
+  // and the same encoding is kept in the browser for the next visit.
   useEffect(() => {
     const minuteur = setTimeout(() => {
       const requete = encoderProjection(h, DEFAUTS_PROJECTION);
@@ -42,6 +47,7 @@ export default function PageProjection() {
         '',
         `${window.location.pathname}${requete}${window.location.hash}`,
       );
+      sauvegarderRecherche(CLE_PROJECTION, requete);
     }, 250);
     return () => clearTimeout(minuteur);
   }, [h]);
@@ -69,7 +75,15 @@ export default function PageProjection() {
 
   return (
     <div className="min-h-screen">
-      <Entete chemin="/projection/" />
+      <Entete
+        chemin="/projection/"
+        liens={{
+          // The top tabs carry the projected result into the next tool, exactly
+          // like the buttons in the result panel do.
+          '/': lienVersArbitrage(r.resultatAvantRemuneration, h.eligibleISReduit),
+          '/acomptes/': lienVersAcomptes(r.resultatAvantRemuneration, h.eligibleISReduit),
+        }}
+      />
 
       <main>
         <section className="border-b border-ink-200/70 bg-white">
@@ -255,6 +269,7 @@ export default function PageProjection() {
                 </div>
 
                 <BoutonPartage lien={lienPartageProjection(h, DEFAUTS_PROJECTION)} />
+                <BoutonReset onReset={() => setH(DEFAUTS_PROJECTION)} />
               </div>
             </div>
           </div>

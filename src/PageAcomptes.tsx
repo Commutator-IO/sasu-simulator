@@ -14,11 +14,18 @@ import {
   type ResultatAcomptes,
 } from './lib/acomptes';
 import { BoutonPartage } from './components/BoutonPartage';
+import { BoutonReset } from './components/BoutonReset';
 import {
+  CLES_ACOMPTES,
   decoderAcomptes,
   encoderAcomptes,
   lienPartageAcomptes,
 } from './lib/urlAcomptes';
+import {
+  chargerRecherche,
+  sauvegarderRecherche,
+  CLE_ACOMPTES,
+} from './lib/persistance';
 import { LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
@@ -26,14 +33,12 @@ export default function PageAcomptes() {
   // Initial state comes from the URL: a shared link must reopen exactly the
   // same simulation.
   const [h, setH] = useState<HypothesesAcomptes>(() =>
-    decoderAcomptes(
-      typeof window === 'undefined' ? '' : window.location.search,
-      DEFAUTS_ACOMPTES,
-    ),
+    decoderAcomptes(chargerRecherche(CLES_ACOMPTES, CLE_ACOMPTES), DEFAUTS_ACOMPTES),
   );
   const r = useMemo(() => calculerAcomptes(h), [h]);
 
-  // The URL follows the state without pushing a history entry on every edit.
+  // The URL follows the state without pushing a history entry on every edit,
+  // and the same encoding is kept in the browser for the next visit.
   useEffect(() => {
     const minuteur = setTimeout(() => {
       const requete = encoderAcomptes(h, DEFAUTS_ACOMPTES);
@@ -42,6 +47,7 @@ export default function PageAcomptes() {
         '',
         `${window.location.pathname}${requete}${window.location.hash}`,
       );
+      sauvegarderRecherche(CLE_ACOMPTES, requete);
     }, 250);
     return () => clearTimeout(minuteur);
   }, [h]);
@@ -381,6 +387,7 @@ export default function PageAcomptes() {
                 </div>
 
                 <BoutonPartage lien={lienPartageAcomptes(h, DEFAUTS_ACOMPTES)} />
+                <BoutonReset onReset={() => setH(DEFAUTS_ACOMPTES)} />
               </div>
             </div>
           </div>
