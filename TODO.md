@@ -359,7 +359,7 @@ acomptes d'IS **+** la projection de CA. C'est le creux.
 barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
 *calcule*, il ne délivre pas de *conseil financier personnalisé*.
 
-**Modèle envisagé.** Accès payant (3 mois / 10 €, 1 an / 100 €), précédé d'une
+**Modèle envisagé.** Accès payant (3 mois / 10 €, 1 an / 30 €), précédé d'une
 page de pré-inscription pour prévenir de la sortie (onglet « Serveur MCP »). Le
 formulaire est pour l'instant inerte — le moyen d'inscription reste à décider —
 et n'expose aucune adresse. Un backend de collecte (Formspree, Buttondown…) ou

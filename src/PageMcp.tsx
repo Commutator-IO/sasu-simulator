@@ -43,7 +43,7 @@ const FORMULES = [
   },
   {
     cle: '1 an',
-    prix: '100 €',
+    prix: '30 €',
     periode: '1 an',
     accroche: 'Pour s’y appuyer durablement',
     points: [
