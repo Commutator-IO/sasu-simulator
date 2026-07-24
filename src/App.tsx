@@ -512,6 +512,7 @@ export default function App() {
                 brutCourant={brut}
                 brutOptimal={optimum.brutAnnuel}
                 plateau={plateau}
+                brutExterne={base.salaireExterneBrut}
                 onScrub={(b) =>
                   setBrut(Math.min(brutMaxArrondi, Math.round(b / 500) * 500))
                 }

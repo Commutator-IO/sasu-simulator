@@ -9,6 +9,12 @@ type Props = {
   brutOptimal: number;
   /** Range of salaries equivalent to the optimum, within tolerance. */
   plateau?: { min: number; max: number; tolerance: number };
+  /**
+   * Gross salary earned from another employer, shown as a reference on the same
+   * gross-salary axis. The curve already accounts for it; this only marks where
+   * it sits.
+   */
+  brutExterne?: number;
   onScrub?: (brut: number) => void;
 };
 
@@ -32,7 +38,14 @@ function pasLisible(brut: number): number {
  * Take-home pay plotted against gross salary. Drawn as SVG and scaled through
  * the viewBox — no external dependency.
  */
-export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: Props) {
+export function Courbe({
+  points,
+  brutCourant,
+  brutOptimal,
+  plateau,
+  brutExterne,
+  onScrub,
+}: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [survol, setSurvol] = useState<Point | null>(null);
 
@@ -200,6 +213,19 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
           strokeWidth="2"
         />
 
+        {/* External salary, for magnitude reference on the same gross axis */}
+        {brutExterne !== undefined && brutExterne > 0 && brutExterne <= brutMax && (
+          <line
+            x1={x(brutExterne)}
+            x2={x(brutExterne)}
+            y1={T}
+            y2={H - B}
+            stroke="var(--color-ink-400)"
+            strokeWidth="1.5"
+            strokeDasharray="2 4"
+          />
+        )}
+
         {/* Current / hovered position */}
         <line
           x1={x(affiche.brut)}
@@ -233,6 +259,14 @@ export function Courbe({ points, brutCourant, brutOptimal, plateau, onScrub }: P
             <span className="h-2.5 w-4 rounded-sm bg-gold-500/20" />
             Zone équivalente à {eur(plateau.tolerance)} près — {eur(plateau.min)} à{' '}
             {eur(plateau.max)}
+          </span>
+        )}
+        {brutExterne !== undefined && brutExterne > 0 && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-px bg-ink-400" />
+            Salaire perçu ailleurs — {eur(brutExterne)}
+            {brutExterne > Math.max(...points.map((p) => p.brut), 1) &&
+              ' (au-delà de l’échelle)'}
           </span>
         )}
         <span className="text-ink-400">Cliquez sur la courbe pour vous y placer.</span>
