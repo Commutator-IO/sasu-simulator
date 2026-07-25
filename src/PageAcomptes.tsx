@@ -21,6 +21,7 @@ import {
   lienPartageAcomptes,
 } from './lib/urlAcomptes';
 import { litStockage, sauvegarderRecherche, CLE_ACOMPTES } from './lib/persistance';
+import { minifier, rechercheCourante } from './lib/compact';
 import { LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
@@ -30,10 +31,7 @@ export default function PageAcomptes() {
   const [h, setH] = useState<HypothesesAcomptes>(() => {
     // The URL overrides the saved state field by field, not the defaults.
     const saved = decoderAcomptes(litStockage(CLE_ACOMPTES), DEFAUTS_ACOMPTES);
-    return decoderAcomptes(
-      typeof window === 'undefined' ? '' : window.location.search,
-      saved,
-    );
+    return decoderAcomptes(rechercheCourante(), saved);
   });
   const r = useMemo(() => calculerAcomptes(h), [h]);
 
@@ -46,7 +44,7 @@ export default function PageAcomptes() {
       window.history.replaceState(
         null,
         '',
-        `${window.location.pathname}${requete}${window.location.hash}`,
+        `${window.location.pathname}${minifier(requete)}${window.location.hash}`,
       );
     }, 250);
     return () => clearTimeout(minuteur);

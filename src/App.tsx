@@ -15,6 +15,7 @@ import {
   ETAT_ARBITRAGE_PAR_DEFAUT as ETAT_PAR_DEFAUT,
 } from './lib/arbitrage';
 import { litStockage, sauvegarderRecherche, CLE_ARBITRAGE } from './lib/persistance';
+import { minifier, rechercheCourante } from './lib/compact';
 import * as P from './lib/parametres2026';
 
 export default function App() {
@@ -24,10 +25,7 @@ export default function App() {
     // The URL overrides the saved state field by field, not the defaults: a
     // funnel hand-off like `?resultat=…` keeps every other saved setting.
     const saved = decoderEtat(litStockage(CLE_ARBITRAGE), ETAT_PAR_DEFAUT);
-    return decoderEtat(
-      typeof window === 'undefined' ? '' : window.location.search,
-      saved,
-    );
+    return decoderEtat(rechercheCourante(), saved);
   });
   const [base, setBase] = useState(initial.base);
   const [brut, setBrut] = useState(initial.brut);
@@ -78,7 +76,7 @@ export default function App() {
       window.history.replaceState(
         null,
         '',
-        `${window.location.pathname}${requete}${window.location.hash}`,
+        `${window.location.pathname}${minifier(requete)}${window.location.hash}`,
       );
     }, 250);
     return () => clearTimeout(minuteur);

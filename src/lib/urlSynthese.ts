@@ -4,6 +4,7 @@ import { encoderEtat } from './url';
 import { ETAT_ARBITRAGE_PAR_DEFAUT } from './arbitrage';
 import { DEFAUTS_ACOMPTES } from './acomptes';
 import { encoderAcomptes } from './urlAcomptes';
+import { minifier } from './compact';
 import type { ScenarioSynthese } from './synthese';
 
 /**
@@ -33,5 +34,5 @@ export function encoderSynthese(scenario: ScenarioSynthese): string {
 export function lienPartageSynthese(scenario: ScenarioSynthese): string {
   if (typeof window === 'undefined') return '';
   const { origin, pathname } = window.location;
-  return `${origin}${pathname}${encoderSynthese(scenario)}`;
+  return `${origin}${pathname}${minifier(encoderSynthese(scenario))}`;
 }

@@ -1,5 +1,6 @@
 import { NB_MOIS, type HypothesesProjection } from './projection';
 import { arrondi, booleen, MAX_MONTANT, nombre } from './url';
+import { minifier } from './compact';
 
 /**
  * Serialisation of a projection into the URL.
@@ -90,7 +91,7 @@ export function lienPartageProjection(
 ): string {
   if (typeof window === 'undefined') return '';
   const { origin, pathname } = window.location;
-  return `${origin}${pathname}${encoderProjection(h, defauts)}`;
+  return `${origin}${pathname}${minifier(encoderProjection(h, defauts))}`;
 }
 
 /**
@@ -106,7 +107,7 @@ export function lienVersArbitrage(
   const params = new URLSearchParams();
   params.set('resultat', String(arrondi(Math.max(0, resultatAvantRemuneration))));
   if (!eligibleISReduit) params.set('isReduit', '0');
-  return `${base}/?${params.toString()}`;
+  return `${base}/${minifier(`?${params.toString()}`)}`;
 }
 
 /**
@@ -122,5 +123,5 @@ export function lienVersAcomptes(
   const params = new URLSearchParams();
   params.set('previsionnel', String(arrondi(Math.max(0, resultatAvantRemuneration))));
   if (!eligibleISReduit) params.set('isReduit', '0');
-  return `${base}/acomptes/?${params.toString()}`;
+  return `${base}/acomptes/${minifier(`?${params.toString()}`)}`;
 }

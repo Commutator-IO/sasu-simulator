@@ -1,3 +1,4 @@
+import { minifier } from './compact';
 import type { Hypotheses } from './simulation';
 
 /**
@@ -163,5 +164,5 @@ export function decoderEtat(recherche: string, defauts: EtatPartage): EtatPartag
 export function lienPartage(etat: EtatPartage, defauts: EtatPartage): string {
   if (typeof window === 'undefined') return '';
   const { origin, pathname } = window.location;
-  return `${origin}${pathname}${encoderEtat(etat, defauts)}`;
+  return `${origin}${pathname}${minifier(encoderEtat(etat, defauts))}`;
 }

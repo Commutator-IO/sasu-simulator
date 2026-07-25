@@ -93,17 +93,17 @@ describe('robustesse face à une URL trafiquée', () => {
 
 describe('ponts vers les autres outils', () => {
   it('passe le résultat à l’arbitrage', () => {
-    expect(lienVersArbitrage(106_000, true)).toBe('/?resultat=106000');
+    expect(lienVersArbitrage(106_000, true)).toBe('/?r=106000');
     // Le taux réduit non éligible est transmis.
-    expect(lienVersArbitrage(106_000, false)).toBe('/?resultat=106000&isReduit=0');
+    expect(lienVersArbitrage(106_000, false)).toBe('/?r=106000&ir=0');
   });
 
   it('passe le résultat aux acomptes comme point de départ', () => {
-    expect(lienVersAcomptes(80_000, true)).toBe('/acomptes/?previsionnel=80000');
+    expect(lienVersAcomptes(80_000, true)).toBe('/acomptes/?pv=80000');
   });
 
   it('borne un résultat déficitaire à zéro dans les liens', () => {
-    expect(lienVersArbitrage(-20_000, true)).toBe('/?resultat=0');
-    expect(lienVersAcomptes(-20_000, true)).toBe('/acomptes/?previsionnel=0');
+    expect(lienVersArbitrage(-20_000, true)).toBe('/?r=0');
+    expect(lienVersAcomptes(-20_000, true)).toBe('/acomptes/?pv=0');
   });
 });

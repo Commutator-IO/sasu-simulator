@@ -1,5 +1,6 @@
 import { NB_ECHEANCES, type HypothesesAcomptes, type Strategie } from './acomptes';
 import { arrondi, booleen, MAX_MONTANT, nombre } from './url';
+import { minifier } from './compact';
 
 /**
  * Serialisation of an instalment simulation into the URL.
@@ -140,5 +141,5 @@ export function lienPartageAcomptes(
 ): string {
   if (typeof window === 'undefined') return '';
   const { origin, pathname } = window.location;
-  return `${origin}${pathname}${encoderAcomptes(h, defauts)}`;
+  return `${origin}${pathname}${minifier(encoderAcomptes(h, defauts))}`;
 }

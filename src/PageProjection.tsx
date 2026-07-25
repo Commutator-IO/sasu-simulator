@@ -21,6 +21,7 @@ import {
   lienVersArbitrage,
 } from './lib/urlProjection';
 import { litStockage, sauvegarderRecherche, CLE_PROJECTION } from './lib/persistance';
+import { minifier, rechercheCourante } from './lib/compact';
 import { LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
@@ -30,10 +31,7 @@ export default function PageProjection() {
   const [h, setH] = useState<HypothesesProjection>(() => {
     // The URL overrides the saved state field by field, not the defaults.
     const saved = decoderProjection(litStockage(CLE_PROJECTION), DEFAUTS_PROJECTION);
-    return decoderProjection(
-      typeof window === 'undefined' ? '' : window.location.search,
-      saved,
-    );
+    return decoderProjection(rechercheCourante(), saved);
   });
   const r = useMemo(() => calculerProjection(h), [h]);
 
@@ -46,7 +44,7 @@ export default function PageProjection() {
       window.history.replaceState(
         null,
         '',
-        `${window.location.pathname}${requete}${window.location.hash}`,
+        `${window.location.pathname}${minifier(requete)}${window.location.hash}`,
       );
     }, 250);
     return () => clearTimeout(minuteur);

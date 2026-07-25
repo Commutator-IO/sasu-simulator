@@ -7,10 +7,11 @@ import { BoutonPartage } from './components/BoutonPartage';
 import { eur, pct } from './lib/format';
 import { calculerSynthese } from './lib/synthese';
 import { lienPartageSynthese } from './lib/urlSynthese';
+import { rechercheCourante } from './lib/compact';
 import * as P from './lib/parametres2026';
 
 export default function PageSynthese() {
-  const recherche = typeof window === 'undefined' ? '' : window.location.search;
+  const recherche = rechercheCourante();
   const s = useMemo(() => calculerSynthese(recherche), [recherche]);
   const { projection, arbitrage, acomptes, balayage, brutChoisi, repartition, scenario } = s;
 
