@@ -222,19 +222,6 @@ export function Courbe({
           strokeWidth="2"
         />
 
-        {/* External salary, for magnitude reference on the same gross axis */}
-        {brutExterne !== undefined && brutExterne > 0 && brutExterne <= brutMax && (
-          <line
-            x1={x(brutExterne)}
-            x2={x(brutExterne)}
-            y1={T}
-            y2={H - B}
-            stroke="var(--color-ink-400)"
-            strokeWidth="1.5"
-            strokeDasharray="2 4"
-          />
-        )}
-
         {/* Current / hovered position */}
         <line
           x1={x(affiche.brut)}
@@ -270,16 +257,15 @@ export function Courbe({
             {eur(plateau.max)}
           </span>
         )}
-        {brutExterne !== undefined && brutExterne > 0 && (
-          <span className="flex items-center gap-1.5">
-            <span className="h-3 w-px bg-ink-400" />
-            Salaire perçu ailleurs — {eur(brutExterne)}
-            {brutExterne > Math.max(...points.map((p) => p.brut), 1) &&
-              ' (au-delà de l’échelle)'}
-          </span>
-        )}
         <span className="text-ink-400">Cliquez sur la courbe pour vous y placer.</span>
       </figcaption>
+
+      {brutExterne !== undefined && brutExterne > 0 && (
+        <p className="mt-1.5 text-xs text-ink-400">
+          Courbe établie en tenant compte de {eur(brutExterne)} de salaire perçu
+          ailleurs, qui pèse sur l'impôt du foyer.
+        </p>
+      )}
     </figure>
   );
 }
