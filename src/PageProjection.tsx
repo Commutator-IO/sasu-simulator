@@ -22,7 +22,7 @@ import {
 } from './lib/urlProjection';
 import { litStockage, sauvegarderRecherche, CLE_PROJECTION } from './lib/persistance';
 import { minifier, rechercheCourante } from './lib/compact';
-import { LIEN_ISSUES } from './lib/depot';
+import { LienSignaler } from './components/LienSignaler';
 import * as P from './lib/parametres2026';
 
 export default function PageProjection() {
@@ -360,14 +360,9 @@ function Regles() {
 
         <p className="mt-10 max-w-3xl text-sm leading-relaxed text-ink-300">
           Un calcul vous paraît faux ?{' '}
-          <a
-            href={LIEN_ISSUES}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-brand-300 underline underline-offset-4 hover:text-brand-200"
-          >
+          <LienSignaler className="font-medium text-brand-300 underline underline-offset-4 hover:text-brand-200">
             Signalez-le
-          </a>
+          </LienSignaler>
           .
         </p>
       </div>

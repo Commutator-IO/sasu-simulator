@@ -1,4 +1,5 @@
-import { DEPOT, LIEN_ISSUES } from '../lib/depot';
+import { DEPOT } from '../lib/depot';
+import { LienSignaler } from './LienSignaler';
 import * as P from '../lib/parametres2026';
 
 /**
@@ -101,14 +102,9 @@ export function Pied() {
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
           <p>Boîte à outils fiscale pour les SASU — barèmes {P.ANNEE}.</p>
           <p className="flex flex-wrap gap-x-5 gap-y-1">
-            <a
-              href={LIEN_ISSUES}
-              target="_blank"
-              rel="noreferrer"
-              className="transition hover:text-ink-900"
-            >
+            <LienSignaler className="transition hover:text-ink-900">
               Signaler une erreur
-            </a>
+            </LienSignaler>
             <a
               href={DEPOT}
               target="_blank"
