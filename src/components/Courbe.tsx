@@ -16,6 +16,11 @@ type Props = {
    */
   brutExterne?: number;
   onScrub?: (brut: number) => void;
+  /**
+   * Read-only rendering: no clickable green cursor, no hover, no invitation to
+   * interact. Used in the synthesis, which is a static presentation.
+   */
+  statique?: boolean;
 };
 
 const L = 56; // left margin
@@ -54,6 +59,7 @@ export function Courbe({
   plateau,
   brutExterne,
   onScrub,
+  statique = false,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [survol, setSurvol] = useState<Point | null>(null);
@@ -128,12 +134,16 @@ export function Courbe({
         className="w-full touch-none select-none"
         role="img"
         aria-label="Net en poche selon le niveau de rémunération brute"
-        onMouseMove={(e) => setSurvol(pointLePlusProche(e.clientX))}
-        onMouseLeave={() => setSurvol(null)}
-        onClick={(e) => {
-          const p = pointLePlusProche(e.clientX);
-          if (p && onScrub) onScrub(p.brut);
-        }}
+        onMouseMove={statique ? undefined : (e) => setSurvol(pointLePlusProche(e.clientX))}
+        onMouseLeave={statique ? undefined : () => setSurvol(null)}
+        onClick={
+          statique
+            ? undefined
+            : (e) => {
+                const p = pointLePlusProche(e.clientX);
+                if (p && onScrub) onScrub(p.brut);
+              }
+        }
       >
         <defs>
           <linearGradient id="degradeAire" x1="0" y1="0" x2="0" y2="1">
@@ -222,30 +232,36 @@ export function Courbe({
           strokeWidth="2"
         />
 
-        {/* Current / hovered position */}
-        <line
-          x1={x(affiche.brut)}
-          x2={x(affiche.brut)}
-          y1={T}
-          y2={H - B}
-          stroke="var(--color-brand-600)"
-          strokeWidth="1.5"
-        />
-        <circle
-          cx={x(affiche.brut)}
-          cy={y(affiche.net)}
-          r="6"
-          fill="var(--color-brand-600)"
-          stroke="#fff"
-          strokeWidth="2.5"
-        />
+        {/* Current / hovered position — not shown in a static, read-only render */}
+        {!statique && (
+          <>
+            <line
+              x1={x(affiche.brut)}
+              x2={x(affiche.brut)}
+              y1={T}
+              y2={H - B}
+              stroke="var(--color-brand-600)"
+              strokeWidth="1.5"
+            />
+            <circle
+              cx={x(affiche.brut)}
+              cy={y(affiche.net)}
+              r="6"
+              fill="var(--color-brand-600)"
+              stroke="#fff"
+              strokeWidth="2.5"
+            />
+          </>
+        )}
       </svg>
 
       <figcaption className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-ink-500">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-brand-600" />
-          Votre choix — {eur(affiche.brut)} de brut → {eur(affiche.net)} net
-        </span>
+        {!statique && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-brand-600" />
+            Votre choix — {eur(affiche.brut)} de brut → {eur(affiche.net)} net
+          </span>
+        )}
         <span className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-gold-500" />
           Optimum — {eur(optimal.brut)} de brut
@@ -257,7 +273,9 @@ export function Courbe({
             {eur(plateau.max)}
           </span>
         )}
-        <span className="text-ink-400">Cliquez sur la courbe pour vous y placer.</span>
+        {!statique && (
+          <span className="text-ink-400">Cliquez sur la courbe pour vous y placer.</span>
+        )}
       </figcaption>
 
       {brutExterne !== undefined && brutExterne > 0 && (

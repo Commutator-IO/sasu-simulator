@@ -328,6 +328,7 @@ function SlideArbitrage({
           brutOptimal={balayage.optimum.brutAnnuel}
           plateau={balayage.plateau}
           brutExterne={arbitrage.salaireExterneBrut}
+          statique
         />
       </div>
     </div>
