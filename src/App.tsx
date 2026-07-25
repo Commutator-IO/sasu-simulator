@@ -9,24 +9,26 @@ import { BoutonPartage } from './components/BoutonPartage';
 import { BoutonReset } from './components/BoutonReset';
 import { eur, pct } from './lib/format';
 import { balayer, brutMaxPourBudget, simuler } from './lib/simulation';
-import { CLES_ARBITRAGE, decoderEtat, encoderEtat, lienPartage } from './lib/url';
+import { decoderEtat, encoderEtat, lienPartage } from './lib/url';
 import {
   DEFAUTS_ARBITRAGE as DEFAUTS,
   ETAT_ARBITRAGE_PAR_DEFAUT as ETAT_PAR_DEFAUT,
 } from './lib/arbitrage';
-import {
-  chargerRecherche,
-  sauvegarderRecherche,
-  CLE_ARBITRAGE,
-} from './lib/persistance';
+import { litStockage, sauvegarderRecherche, CLE_ARBITRAGE } from './lib/persistance';
 import * as P from './lib/parametres2026';
 
 export default function App() {
   // Initial state comes from the URL: a shared link must reopen exactly the
   // same simulation.
-  const [initial] = useState(() =>
-    decoderEtat(chargerRecherche(CLES_ARBITRAGE, CLE_ARBITRAGE), ETAT_PAR_DEFAUT),
-  );
+  const [initial] = useState(() => {
+    // The URL overrides the saved state field by field, not the defaults: a
+    // funnel hand-off like `?resultat=…` keeps every other saved setting.
+    const saved = decoderEtat(litStockage(CLE_ARBITRAGE), ETAT_PAR_DEFAUT);
+    return decoderEtat(
+      typeof window === 'undefined' ? '' : window.location.search,
+      saved,
+    );
+  });
   const [base, setBase] = useState(initial.base);
   const [brut, setBrut] = useState(initial.brut);
   const [avanceOuvert, setAvanceOuvert] = useState(
@@ -68,14 +70,16 @@ export default function App() {
   // notch. The delay avoids calling replaceState dozens of times during a
   // single drag.
   useEffect(() => {
+    const requete = encoderEtat({ base, brut }, ETAT_PAR_DEFAUT);
+    // Save to the browser at once: a debounced save is lost if the page is left
+    // within the delay. Only the address-bar rewrite is debounced.
+    sauvegarderRecherche(CLE_ARBITRAGE, requete);
     const minuteur = setTimeout(() => {
-      const requete = encoderEtat({ base, brut }, ETAT_PAR_DEFAUT);
       window.history.replaceState(
         null,
         '',
         `${window.location.pathname}${requete}${window.location.hash}`,
       );
-      sauvegarderRecherche(CLE_ARBITRAGE, requete);
     }, 250);
     return () => clearTimeout(minuteur);
   }, [base, brut]);

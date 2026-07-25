@@ -40,8 +40,10 @@ function encoderVersements(versements: number[], passees: number): string {
     .join(',');
 }
 
-function decoderVersements(brut: string | null): number[] {
-  if (brut === null || brut.trim() === '') return [];
+function decoderVersements(brut: string | null, defaut: number[]): number[] {
+  // Absent from the URL means "keep the default": otherwise decoding a link
+  // that overrides other fields would wipe the saved past instalments.
+  if (brut === null || brut.trim() === '') return [...defaut];
   return brut
     .split(',')
     .slice(0, NB_ECHEANCES)
@@ -127,7 +129,7 @@ export function decoderAcomptes(
       MAX_MONTANT,
     ),
     echeancesPassees: nombre(p.get(CLES.passees), defauts.echeancesPassees, 0, NB_ECHEANCES),
-    versements: decoderVersements(p.get(CLES.verses)),
+    versements: decoderVersements(p.get(CLES.verses), defauts.versements),
   };
 }
 

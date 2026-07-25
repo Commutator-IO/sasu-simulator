@@ -14,40 +14,40 @@ import {
   type HypothesesProjection,
 } from './lib/projection';
 import {
-  CLES_PROJECTION,
   decoderProjection,
   encoderProjection,
   lienPartageProjection,
   lienVersAcomptes,
   lienVersArbitrage,
 } from './lib/urlProjection';
-import {
-  chargerRecherche,
-  sauvegarderRecherche,
-  CLE_PROJECTION,
-} from './lib/persistance';
+import { litStockage, sauvegarderRecherche, CLE_PROJECTION } from './lib/persistance';
 import { LIEN_ISSUES } from './lib/depot';
 import * as P from './lib/parametres2026';
 
 export default function PageProjection() {
   // Initial state comes from the URL: a shared link must reopen exactly the
   // same projection.
-  const [h, setH] = useState<HypothesesProjection>(() =>
-    decoderProjection(chargerRecherche(CLES_PROJECTION, CLE_PROJECTION), DEFAUTS_PROJECTION),
-  );
+  const [h, setH] = useState<HypothesesProjection>(() => {
+    // The URL overrides the saved state field by field, not the defaults.
+    const saved = decoderProjection(litStockage(CLE_PROJECTION), DEFAUTS_PROJECTION);
+    return decoderProjection(
+      typeof window === 'undefined' ? '' : window.location.search,
+      saved,
+    );
+  });
   const r = useMemo(() => calculerProjection(h), [h]);
 
-  // The URL follows the state without pushing a history entry on every edit,
-  // and the same encoding is kept in the browser for the next visit.
+  // The browser is updated at once (a debounced save is lost if the page is
+  // left within the delay); only the address-bar rewrite is debounced.
   useEffect(() => {
+    const requete = encoderProjection(h, DEFAUTS_PROJECTION);
+    sauvegarderRecherche(CLE_PROJECTION, requete);
     const minuteur = setTimeout(() => {
-      const requete = encoderProjection(h, DEFAUTS_PROJECTION);
       window.history.replaceState(
         null,
         '',
         `${window.location.pathname}${requete}${window.location.hash}`,
       );
-      sauvegarderRecherche(CLE_PROJECTION, requete);
     }, 250);
     return () => clearTimeout(minuteur);
   }, [h]);

@@ -50,6 +50,24 @@ describe('aller-retour', () => {
     expect(decoderAcomptes('?', D)).toEqual(D);
   });
 
+  it('n’écrase que les clés présentes, en gardant le reste du défaut fourni', () => {
+    // Cœur de la persistance : une URL partielle (ici un simple prévisionnel
+    // venu du tunnel) décodée contre un état sauvegardé ne doit remplacer que
+    // ce qu'elle porte, et surtout ne pas vider les versements passés.
+    const sauvegarde = avec({
+      beneficePrecedent: 140_000,
+      strategie: 'lisser',
+      echeancesPassees: 2,
+      versements: [5000, 3000],
+    });
+    const fusion = decoderAcomptes('?previsionnel=50000', sauvegarde);
+    expect(fusion.beneficePrevisionnel).toBe(50_000);
+    expect(fusion.beneficePrecedent).toBe(140_000);
+    expect(fusion.strategie).toBe('lisser');
+    expect(fusion.echeancesPassees).toBe(2);
+    expect(fusion.versements).toEqual([5000, 3000]);
+  });
+
   it('survit à un aller-retour répété', () => {
     const un = decoderAcomptes(
       encoderAcomptes(avec({ beneficePrevisionnel: 12_345 }), D),

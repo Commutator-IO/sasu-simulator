@@ -16,12 +16,15 @@ export const CLE_PROJECTION = 'sasu:projection';
 export const CLE_ARBITRAGE = 'sasu:arbitrage';
 export const CLE_ACOMPTES = 'sasu:acomptes';
 
-/** The query string to decode on load: the URL if it owns any of `cles`, else the saved one. */
-export function chargerRecherche(cles: string[], cleStockage: string): string {
+/**
+ * The query string a tool last saved, or empty. Decode it against the defaults
+ * to get the "saved state", then decode the current URL *against that saved
+ * state* — so a link that only carries some keys (a funnel hand-off like
+ * `?resultat=…`) overrides just those and keeps every other saved value,
+ * instead of resetting them to defaults.
+ */
+export function litStockage(cleStockage: string): string {
   if (typeof window === 'undefined') return '';
-  const search = window.location.search;
-  const params = new URLSearchParams(search);
-  if (cles.some((c) => params.has(c))) return search;
   try {
     return localStorage.getItem(cleStockage) ?? '';
   } catch {
