@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Filet de sécurité pour l'hébergement statique : après un redéploiement,
+      // une page encore en cache peut référencer un asset dont le nom a changé,
+      // d'où une page blanche. On détecte l'échec de chargement et on recharge
+      // une fois — un rechargement revalide le HTML et récupère les bons noms.
+      (function () {
+        try {
+          addEventListener(
+            'error',
+            function (e) {
+              var el = e.target;
+              var url = el && (el.src || el.href);
+              if (url && /\/assets\//.test(url) && !sessionStorage.getItem('rechargeAsset')) {
+                sessionStorage.setItem('rechargeAsset', '1');
+                location.reload();
+              }
+            },
+            true,
+          );
+          addEventListener('load', function () {
+            sessionStorage.removeItem('rechargeAsset');
+          });
+        } catch (_) {}
+      })();
+    </script>
     <meta
       name="description"
       content="Ajustez vos acomptes d'impôt sur les sociétés : calcul des quatre échéances trimestrielles, modulation légale quand le bénéfice baisse, et solde au 15 mai. Barèmes 2026."

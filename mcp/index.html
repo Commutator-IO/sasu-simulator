@@ -4,6 +4,31 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Filet de sécurité pour l'hébergement statique : après un redéploiement,
+      // une page encore en cache peut référencer un asset dont le nom a changé,
+      // d'où une page blanche. On détecte l'échec de chargement et on recharge
+      // une fois — un rechargement revalide le HTML et récupère les bons noms.
+      (function () {
+        try {
+          addEventListener(
+            'error',
+            function (e) {
+              var el = e.target;
+              var url = el && (el.src || el.href);
+              if (url && /\/assets\//.test(url) && !sessionStorage.getItem('rechargeAsset')) {
+                sessionStorage.setItem('rechargeAsset', '1');
+                location.reload();
+              }
+            },
+            true,
+          );
+          addEventListener('load', function () {
+            sessionStorage.removeItem('rechargeAsset');
+          });
+        } catch (_) {}
+      })();
+    </script>
     <meta
       name="description"
       content="Bientôt : un serveur MCP (Model Context Protocol) qui expose l'arbitrage rémunération / dividendes, les acomptes d'IS et la projection de chiffre d'affaires d'une SASU à votre assistant IA. Laissez votre adresse pour être prévenu de la sortie."
