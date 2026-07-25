@@ -35,6 +35,15 @@ function pasLisible(brut: number): number {
 }
 
 /**
+ * Compact axis label: "95 k€" rather than "95 000 €". Full euro figures for
+ * six-digit amounts were clipped against the left edge of the plot.
+ */
+function etiquetteAxe(v: number): string {
+  if (Math.abs(v) < 1000) return eur(v);
+  return `${(v / 1000).toLocaleString('fr-FR')} k€`;
+}
+
+/**
  * Take-home pay plotted against gross salary. Drawn as SVG and scaled through
  * the viewBox — no external dependency.
  */
@@ -152,7 +161,7 @@ export function Courbe({
               fontSize="11"
               fill="var(--color-ink-400)"
             >
-              {eur(v)}
+              {etiquetteAxe(v)}
             </text>
           </g>
         ))}
@@ -168,7 +177,7 @@ export function Courbe({
             fontSize="11"
             fill="var(--color-ink-400)"
           >
-            {eur(v)}
+            {etiquetteAxe(v)}
           </text>
         ))}
 

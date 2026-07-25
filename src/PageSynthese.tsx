@@ -299,6 +299,26 @@ function SlideArbitrage({
         <strong className="text-ink-900">{eur(balayage.optimum.brutAnnuel)}</strong> de
         brut (plage équivalente de {eur(balayage.plateau.min)} à {eur(balayage.plateau.max)}).
         Taux de prélèvement global : {pct(arbitrage.tauxPrelevementGlobal)}.
+        {arbitrage.salaireExterneBrut > 0 && (
+          <>
+            {' '}
+            Cette rémunération de président s'ajoute à{' '}
+            <strong className="text-ink-900">{eur(arbitrage.salaireExterneBrut)}</strong>{' '}
+            de salaire brut perçu ailleurs.
+          </>
+        )}
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-ink-500">
+        Après impôt sur les sociétés, le résultat net s'élève à{' '}
+        <strong className="text-ink-900">{eur(arbitrage.resultatNet)}</strong> : c'est ce
+        que vous pouvez mettre en réserve à l'issue de l'exercice plutôt que distribuer.
+        {arbitrage.reserves > 0.5 && (
+          <>
+            {' '}
+            Ici, <strong className="text-ink-900">{eur(arbitrage.reserves)}</strong> y sont
+            effectivement affectés.
+          </>
+        )}
       </p>
       <div className="mt-auto pt-4">
         <Courbe
