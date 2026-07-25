@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { calculerSynthese, construireScenario } from './synthese';
 import { encoderSynthese } from './urlSynthese';
 import { calculerProjection, NB_MOIS } from './projection';
@@ -42,6 +42,42 @@ describe('construction du scénario', () => {
   it('laisse un prévisionnel explicite intact', () => {
     const s = construireScenario('?resultat=150000&brut=60000&previsionnel=42000');
     expect(s.acomptes.beneficePrevisionnel).toBe(42_000);
+  });
+});
+
+describe('repli sur la mémoire du navigateur', () => {
+  const avecStockage = (store: Record<string, string>, corps: () => void) => {
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store[k] ?? null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    try {
+      corps();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  };
+
+  it('lit la projection sauvegardée quand l’URL ne la porte pas', () => {
+    // Le bug : la synthèse ouverte sans paramètres affichait « non renseignée »
+    // alors que la projection avait été saisie et sauvegardée.
+    const ca = Array(NB_MOIS).fill(10_000).join(',');
+    avecStockage(
+      { 'sasu:projection': `?ca=${ca}&moisFactures=12&fraisMensuels=0` },
+      () => {
+        const s = construireScenario('');
+        expect(s.aProjection).toBe(true);
+        expect(s.arbitrage.base.resultatAvantRemuneration).toBeCloseTo(120_000, 0);
+      },
+    );
+  });
+
+  it('laisse l’URL primer sur la mémoire', () => {
+    avecStockage({ 'sasu:arbitrage': '?resultat=90000' }, () => {
+      const s = construireScenario('?resultat=150000');
+      expect(s.arbitrage.base.resultatAvantRemuneration).toBe(150_000);
+    });
   });
 });
 
