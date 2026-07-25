@@ -9,13 +9,13 @@ import * as P from '../lib/parametres2026';
  * without any redirect trick, and links survive being shared.
  */
 
-const OUTILS = [
+const OUTILS: { chemin: string; libelle: string; aVenir?: boolean }[] = [
   { chemin: '/projection/', libelle: 'Projection de CA' },
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
   { chemin: '/synthese/', libelle: 'Synthèse' },
-  { chemin: '/mcp/', libelle: 'Serveur MCP' },
-] as const;
+  { chemin: '/mcp/', libelle: 'Serveur MCP', aVenir: true },
+];
 
 /**
  * The synthesis reads every tool's parameters from one URL, so opening it from
@@ -76,6 +76,11 @@ export function Entete({
                 ].join(' ')}
               >
                 {o.libelle}
+                {o.aVenir && (
+                  <span className="ml-1.5 rounded-full bg-gold-100 px-1.5 py-0.5 text-[10px] font-medium text-gold-700 align-middle">
+                    bientôt
+                  </span>
+                )}
               </a>
             );
           })}
