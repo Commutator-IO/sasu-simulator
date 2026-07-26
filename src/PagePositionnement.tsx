@@ -185,7 +185,8 @@ export default function PagePositionnement() {
                 <dl className="mt-6 space-y-3 border-t border-ink-100 pt-5">
                   <div className="flex items-baseline justify-between gap-4">
                     <dt className="text-sm text-ink-500">
-                      Moyenne {h.ville === 'national' ? 'France' : h.ville} ({DERNIER.date.slice(0, 4)})
+                      Moyenne {h.ville === 'national' ? 'France' : h.ville} ({DERNIER.date.slice(0, 4)}
+                      {DERNIER.origine === 'estimation' ? ', est.' : ''})
                     </dt>
                     <dd className="tabular text-sm font-semibold text-ink-900">
                       {eur(moyenneVille(h.ville))}

@@ -6,9 +6,9 @@ import { anneeDecimale } from '../lib/barometreTjm';
  * Day-rate evolution over time. Hand-drawn SVG, scaled through the viewBox — no
  * dependency, like the other charts.
  *
- * Estimated points (2024-2025, not archived — inferred from the level of other
- * public barometers) and any segment touching them are drawn dashed with a
- * hollow marker, so they read as a trend, not measured data.
+ * Estimated points (from 2024 on, not archived — inferred from the level of
+ * other recent public barometers) and any segment touching them are drawn dashed
+ * with a hollow marker, so they read as a trend, not measured data.
  */
 
 export type SerieTemporelle = {
@@ -150,7 +150,7 @@ export function EvolutionTjm({
         </span>
         <span className="flex items-center gap-1.5 text-ink-400">
           <span className="h-2 w-2 rounded-full border border-ink-400 bg-white" />
-          2024-2025 : estimation
+          depuis 2024 : estimation
         </span>
       </figcaption>
     </figure>
