@@ -138,8 +138,8 @@ export default function App() {
                     onChange={(v) => maj('resultatAvantRemuneration', v)}
                     hint={`Chiffre d'affaires encaissé moins toutes vos charges, avant de vous verser quoi que ce soit. Soit ${eur(
                       P.tjmEquivalent(base.resultatAvantRemuneration),
-                    )} de TJM sur ${P.JOURS_FACTURES_MALT} jours facturés — la moyenne tech du baromètre Malt est de ${eur(
-                      P.TJM_MOYEN_MALT,
+                    )} de TJM sur ${P.JOURS_FACTURES_REFERENCE} jours facturés — une moyenne tech de référence est de ${eur(
+                      P.TJM_MOYEN_REFERENCE,
                     )}.`}
                   />
                 </div>

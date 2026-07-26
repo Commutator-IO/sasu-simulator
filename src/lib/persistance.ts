@@ -15,6 +15,7 @@
 export const CLE_PROJECTION = 'sasu:projection';
 export const CLE_ARBITRAGE = 'sasu:arbitrage';
 export const CLE_ACOMPTES = 'sasu:acomptes';
+export const CLE_POSITIONNEMENT = 'sasu:positionnement';
 
 /**
  * The query string a tool last saved, or empty. Decode it against the defaults

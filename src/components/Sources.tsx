@@ -38,7 +38,7 @@ const SOURCES = [
   },
   {
     titre: 'Repère de marché : baromètre Malt',
-    detail: `La valeur proposée par défaut correspond à un tarif journalier de ${eur(P.TJM_MOYEN_MALT)} — la moyenne tech constatée par Malt — sur ${P.JOURS_FACTURES_MALT} jours facturés, moins 10 % de frais. Cette base de jours suppose une année pleine : comptez plutôt 180 à 216 jours en pratique.`,
+    detail: `La valeur proposée par défaut correspond à un tarif journalier de ${eur(P.TJM_MOYEN_REFERENCE)} — la moyenne tech constatée par Malt — sur ${P.JOURS_FACTURES_REFERENCE} jours facturés, moins 10 % de frais. Cette base de jours suppose une année pleine : comptez plutôt 180 à 216 jours en pratique.`,
     url: 'https://www.malt.fr/t/barometre-tarifs/tech/',
     hote: 'malt.fr',
   },

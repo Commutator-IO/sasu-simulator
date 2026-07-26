@@ -21,6 +21,7 @@ export default defineConfig({
         projection: resolve(import.meta.dirname, 'projection/index.html'),
         synthese: resolve(import.meta.dirname, 'synthese/index.html'),
         mcp: resolve(import.meta.dirname, 'mcp/index.html'),
+        tjm: resolve(import.meta.dirname, 'tjm/index.html'),
       },
     },
   },
