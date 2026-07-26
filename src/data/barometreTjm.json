@@ -41,35 +41,40 @@
         "taux": 0.1,
         "note": "Frais dégressifs : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez.",
         "url": "https://help.malt.com/hc/fr/articles/29567589850002-Les-offres-et-frais-de-service-Malt",
-        "hote": "help.malt.com"
+        "hote": "help.malt.com",
+        "instruction": "Ouvrez les paramètres de votre profil depuis le tableau de bord freelance et remplacez le TJM affiché par le montant corrigé. Annoncez-le avant d'entrer en discussion : Malt recommande de ne pas le modifier en fin de processus sans raison valable. Les frais étant dégressifs, la correction se réduit sur un client déjà ancien (5 %, voire 2 % si vous l'avez amené)."
       },
       {
         "nom": "Comet",
         "taux": 0.15,
         "note": "Plateforme tech (développement, data, produit).",
         "url": "https://www.comet.co/",
-        "hote": "comet.co"
+        "hote": "comet.co",
+        "instruction": "Mettez à jour le tarif de votre profil avant toute nouvelle mise en relation, et saisissez le montant corrigé : la commission est prélevée sur votre facture, pas ajoutée au prix client."
       },
       {
         "nom": "Crème de la Crème",
         "taux": 0.1,
         "note": "Sélection à l'entrée ; certaines missions grands comptes affichées sans commission.",
         "url": "https://www.cremedelacreme.io/",
-        "hote": "cremedelacreme.io"
+        "hote": "cremedelacreme.io",
+        "instruction": "Ajustez le tarif de votre profil avant un nouveau matching, avec le montant corrigé. Vérifiez au cas par cas : certaines missions grands comptes sont annoncées sans commission, auquel cas votre TJM suffit tel quel."
       },
       {
         "nom": "Free-Work",
         "taux": 0.0,
         "note": "Site d'annonces : vous contractez en direct, rien n'est prélevé sur votre facture.",
         "url": "https://www.free-work.com/fr",
-        "hote": "free-work.com"
+        "hote": "free-work.com",
+        "instruction": "Rien à corriger : indiquez directement le tarif que vous voulez percevoir, dans votre profil comme dans vos réponses aux annonces."
       },
       {
         "nom": "En direct / régie",
         "taux": 0.0,
         "note": "Aucun intermédiaire ne prélève : votre TJM facturé est votre TJM perçu.",
         "url": null,
-        "hote": null
+        "hote": null,
+        "instruction": "Rien à corriger non plus. Pensez plutôt à inscrire une clause de révision annuelle dans le contrat cadre, pour ne pas avoir à renégocier tarif par tarif."
       }
     ]
   },
