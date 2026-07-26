@@ -119,11 +119,11 @@ try {
 
   const donnees = JSON.parse(readFileSync(CHEMIN_JSON, 'utf8'));
 
-  // The barometer scraped here is the data scientist one; other professions
-  // would need their own capture. Append to that profession's series.
-  const prof = donnees.professions.find((p) => p.cle === 'data-scientist');
+  // BAROMETRE_URL points at the Experts Data category page; other professions
+  // would each need their own capture. Append to that profession's series.
+  const prof = donnees.professions.find((p) => p.cle === 'expert-data');
   if (!prof) {
-    console.error('Profession data-scientist introuvable dans le dataset.');
+    console.error('Profession expert-data introuvable dans le dataset.');
     process.exit(3);
   }
 
@@ -133,7 +133,12 @@ try {
   }
 
   prof.villes.push({ date: mois, origine: 'live', national, ...parVille });
-  prof.experienceHistorique.push({ date: mois, ...experience });
+  // A profession only carries a per-bracket history when its page publishes one.
+  if (Array.isArray(prof.experienceHistorique)) {
+    prof.experienceHistorique.push({ date: mois, ...experience });
+  }
+  // Keep the projections after the freshly measured point.
+  prof.villes.sort((a, b) => (a.date < b.date ? -1 : 1));
 
   writeFileSync(CHEMIN_JSON, `${JSON.stringify(donnees, null, 2)}\n`);
   console.log(`Point ${mois} ajouté : national ${national} €, Paris ${parVille.Paris} €.`);

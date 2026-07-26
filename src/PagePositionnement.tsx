@@ -50,7 +50,12 @@ export default function PagePositionnement() {
     return () => clearTimeout(t);
   }, [h]);
 
-  const profs = h.professions.map(getProfession);
+  // Drop unknown or repeated keys — a stale saved link would otherwise fall back
+  // to the first profession and draw it twice.
+  const clesValides = [...new Set(h.professions)].filter((c) =>
+    PROFESSIONS.some((p) => p.cle === c),
+  );
+  const profs = (clesValides.length ? clesValides : [PROFESSIONS[0].cle]).map(getProfession);
   const villes = villesCommunes(profs);
   const ville = villes.includes(h.ville) ? h.ville : 'national';
 

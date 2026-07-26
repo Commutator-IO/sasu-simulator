@@ -102,7 +102,7 @@ describe('positionnement d’un TJM', () => {
   });
 
   it('la dernière capture donne bien Paris au-dessus du national', () => {
-    const d = dernier(getProfession('data-scientist'));
+    const d = dernier(getProfession('expert-data'));
     expect(d.Paris as number).toBeGreaterThan(d.national as number);
   });
 });
