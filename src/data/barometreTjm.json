@@ -5,7 +5,7 @@
       "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié. Les TJM sont donnés HT et hors commission de plateforme — c'est le prix facturé par le freelance, dont l'intermédiaire déduit ensuite ses frais de service.",
       "Les points passés sont reconstitués depuis des archives web publiques, y compris 2024 et 2025 : ce sont des mesures, pas des estimations. Les captures restent espacées (une à deux par an).",
       "Une valeur par ville est la moyenne des spécialités publiées pour ce métier, et la même méthode est appliquée à toutes les dates pour que la courbe reste comparable.",
-      "Les points 2027 et 2028 sont des projections : la tendance des trois dernières années est prolongée à demi-intensité. C'est un ordre de grandeur, pas une prévision.",
+      "Une valeur par ville est la moyenne des spécialités publiées pour ce métier, et la même méthode est appliquée à toutes les dates pour que la courbe reste comparable. Pour les experts data, cette moyenne porte sur de petits échantillons par spécialité : elle situe un ordre de grandeur, pas un tarif de référence.",
       "Vous pouvez saisir votre propre TJM en 2024 et 2025 pour comparer votre trajectoire à celle du marché.",
       "Les échantillons par ville sont petits : à lire comme un ordre de grandeur, pas une mesure."
     ],
@@ -112,116 +112,146 @@
       "couleur": "var(--color-brand-600)",
       "villes": [
         {
-          "date": "2021-12",
+          "date": "2019-10",
           "origine": "archive:base",
-          "national": 632,
-          "Paris": 669,
-          "Lyon": 536,
-          "Bordeaux": 559,
-          "Lille": 570,
-          "Marseille": 537
+          "national": 548,
+          "Paris": 734,
+          "Lyon": 503,
+          "Bordeaux": 467,
+          "Lille": 500,
+          "Marseille": 587
         },
         {
-          "date": "2022-12",
+          "date": "2021-05",
           "origine": "archive:base",
-          "national": 652,
-          "Paris": 695,
-          "Lyon": 567,
-          "Bordeaux": 577,
-          "Lille": 555,
-          "Marseille": 570
+          "national": 600,
+          "Paris": 726,
+          "Lyon": 554,
+          "Bordeaux": 524,
+          "Lille": 640,
+          "Marseille": 667
         },
         {
-          "date": "2023-09",
+          "date": "2022-05",
           "origine": "archive:base",
-          "national": 663,
-          "Paris": 704,
-          "Lyon": 567,
-          "Bordeaux": 601,
-          "Lille": 560,
-          "Marseille": 564
+          "national": 625,
+          "Paris": 745,
+          "Lyon": 575,
+          "Bordeaux": 627,
+          "Lille": 565,
+          "Marseille": 706
+        },
+        {
+          "date": "2023-01",
+          "origine": "archive:base",
+          "national": 641,
+          "Paris": 754,
+          "Lyon": 580,
+          "Bordeaux": 593,
+          "Lille": 553,
+          "Marseille": 656
+        },
+        {
+          "date": "2024-03",
+          "origine": "archive:base",
+          "national": 655,
+          "Paris": 742,
+          "Lyon": 605,
+          "Bordeaux": 671,
+          "Lille": 571,
+          "Marseille": 684
+        },
+        {
+          "date": "2025-05",
+          "origine": "archive:base",
+          "national": 673,
+          "Paris": 732,
+          "Lyon": 583,
+          "Bordeaux": 661,
+          "Lille": 587,
+          "Marseille": 642
         },
         {
           "date": "2026-07",
           "origine": "live",
-          "national": 666,
-          "Paris": 710,
-          "Lyon": 647,
-          "Bordeaux": 629,
-          "Lille": 617,
-          "Marseille": 660
+          "national": 680,
+          "Paris": 742,
+          "Lyon": 641,
+          "Bordeaux": 631,
+          "Lille": 604,
+          "Marseille": 653
         },
         {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
             "national": [
-              657,
-              677
+              668,
+              703
             ],
             "Paris": [
-              698,
-              724
+              727,
+              757
             ],
             "Lyon": [
-              644,
-              681
+              612,
+              686
             ],
             "Bordeaux": [
-              622,
-              647
+              572,
+              673
             ],
             "Lille": [
-              609,
-              647
+              563,
+              660
             ],
             "Marseille": [
-              654,
-              704
+              594,
+              699
             ]
           },
-          "national": 667,
-          "Paris": 711,
-          "Lyon": 662,
-          "Bordeaux": 634,
-          "Lille": 628,
-          "Marseille": 679
+          "national": 686,
+          "Paris": 742,
+          "Lyon": 649,
+          "Bordeaux": 623,
+          "Lille": 611,
+          "Marseille": 647
         },
         {
           "date": "2028-07",
           "origine": "projection",
           "marge": {
             "national": [
-              639,
-              696
+              643,
+              740
             ],
             "Paris": [
-              677,
-              749
+              701,
+              784
             ],
             "Lyon": [
-              625,
-              733
+              555,
+              768
             ],
             "Bordeaux": [
-              604,
-              675
+              482,
+              764
             ],
             "Lille": [
-              586,
-              694
+              488,
+              765
             ],
             "Marseille": [
-              628,
-              773
+              502,
+              795
             ]
           },
-          "national": 667,
-          "Paris": 712,
-          "Lyon": 678,
-          "Bordeaux": 639,
-          "Lille": 639,
-          "Marseille": 698
+          "national": 691,
+          "Paris": 742,
+          "Lyon": 657,
+          "Bordeaux": 615,
+          "Lille": 619,
+          "Marseille": 640
         }
       ],
       "experience": [
@@ -229,29 +259,29 @@
           "cle": "0-2",
           "label": "0 à 2 ans",
           "bas": 120,
-          "moyen": 352,
+          "moyen": 360,
           "haut": 710
         },
         {
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 513,
+          "moyen": 520,
           "haut": 810
         },
         {
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 300,
-          "moyen": 666,
-          "haut": 1010
+          "moyen": 680,
+          "haut": 1210
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
-          "bas": 400,
-          "moyen": 733,
-          "haut": 1210
+          "bas": 350,
+          "moyen": 735,
+          "haut": 1510
         }
       ]
     },
