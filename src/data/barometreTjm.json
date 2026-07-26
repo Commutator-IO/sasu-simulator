@@ -3,10 +3,11 @@
     "unite": "€/jour, TJM affiché (hors taxes)",
     "notes": [
       "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié.",
-      "Les points passés sont reconstitués depuis des archives web publiques ; les captures sont rares (quelques mois par an).",
-      "Le point le plus récent (juillet 2026) est une mesure directe ; pour le data scientist, 2024 et 2025 sont des estimations (non archivées), à lire comme une tendance.",
+      "Les points passés sont reconstitués depuis des archives web publiques ; les captures sont rares (quelques mois par an), et certains métiers remontent à 2019 quand d'autres commencent en 2021.",
+      "Le point le plus récent (juillet 2026) est une mesure directe. Pour le data scientist, 2024 et 2025 ne sont pas archivés : ce sont des estimations, à lire comme une tendance.",
+      "Une valeur par ville est la moyenne des spécialités publiées pour ce métier ; la même méthode est appliquée à toutes les dates pour que la courbe reste comparable.",
       "Vous pouvez saisir votre propre TJM en 2024 et 2025 pour tracer votre trajectoire réelle plutôt qu'une estimation.",
-      "Les TJM par ville reposent sur de petits échantillons : à lire comme un ordre de grandeur, pas une mesure."
+      "Les échantillons par ville sont petits : à lire comme un ordre de grandeur, pas une mesure."
     ]
   },
   "evenements": [
@@ -87,11 +88,11 @@
           "date": "2026-07",
           "origine": "live",
           "national": 680,
-          "Paris": 742,
-          "Lyon": 641,
-          "Bordeaux": 631,
-          "Lille": 604,
-          "Marseille": 653
+          "Paris": 710,
+          "Lyon": 647,
+          "Bordeaux": 629,
+          "Lille": 617,
+          "Marseille": 660
         }
       ],
       "experience": [
@@ -172,12 +173,12 @@
       "couleur": "var(--color-gold-600)",
       "villes": [
         {
-          "date": "2020-12",
+          "date": "2020-11",
           "origine": "archive:base",
           "national": 517,
           "Paris": 577,
-          "Lyon": 506,
-          "Bordeaux": 477,
+          "Lyon": 507,
+          "Bordeaux": 471,
           "Lille": 485,
           "Marseille": 451
         },
@@ -187,7 +188,7 @@
           "national": 526,
           "Paris": 585,
           "Lyon": 511,
-          "Bordeaux": 483,
+          "Bordeaux": 482,
           "Lille": 491,
           "Marseille": 467
         },
@@ -200,6 +201,26 @@
           "Bordeaux": 514,
           "Lille": 521,
           "Marseille": 476
+        },
+        {
+          "date": "2023-01",
+          "origine": "archive:base",
+          "national": 565,
+          "Paris": 609,
+          "Lyon": 547,
+          "Bordeaux": 525,
+          "Lille": 522,
+          "Marseille": 491
+        },
+        {
+          "date": "2023-09",
+          "origine": "archive:base",
+          "national": 570,
+          "Paris": 609,
+          "Lyon": 548,
+          "Bordeaux": 536,
+          "Lille": 529,
+          "Marseille": 499
         },
         {
           "date": "2026-07",
@@ -240,6 +261,545 @@
           "bas": 300,
           "moyen": 671,
           "haut": 1210
+        }
+      ]
+    },
+    {
+      "cle": "consultant",
+      "libelle": "Consultant stratégie & business",
+      "couleur": "#0ea5e9",
+      "villes": [
+        {
+          "date": "2019-10",
+          "origine": "archive:base",
+          "national": 706,
+          "Paris": 732,
+          "Lyon": 664,
+          "Bordeaux": 603,
+          "Lille": 619,
+          "Marseille": 571
+        },
+        {
+          "date": "2020-12",
+          "origine": "archive:base",
+          "national": 742,
+          "Paris": 746,
+          "Lyon": 668,
+          "Bordeaux": 598,
+          "Lille": 644,
+          "Marseille": 614
+        },
+        {
+          "date": "2021-05",
+          "origine": "archive:base",
+          "national": 750,
+          "Paris": 748,
+          "Lyon": 676,
+          "Bordeaux": 608,
+          "Lille": 656,
+          "Marseille": 610
+        },
+        {
+          "date": "2022-05",
+          "origine": "archive:base",
+          "national": 772,
+          "Paris": 778,
+          "Lyon": 690,
+          "Bordeaux": 626,
+          "Lille": 684,
+          "Marseille": 628
+        },
+        {
+          "date": "2023-01",
+          "origine": "archive:base",
+          "national": 780,
+          "Paris": 785,
+          "Lyon": 697,
+          "Bordeaux": 628,
+          "Lille": 678,
+          "Marseille": 637
+        },
+        {
+          "date": "2023-09",
+          "origine": "archive:base",
+          "national": 767,
+          "Paris": 776,
+          "Lyon": 706,
+          "Bordeaux": 644,
+          "Lille": 665,
+          "Marseille": 642
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 712,
+          "Paris": 718,
+          "Lyon": 644,
+          "Bordeaux": 622,
+          "Lille": 625,
+          "Marseille": 641
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 387,
+          "haut": 1010
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 511,
+          "haut": 1010
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 120,
+          "moyen": 712,
+          "haut": 1510
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 300,
+          "moyen": 894,
+          "haut": 2010
+        }
+      ]
+    },
+    {
+      "cle": "chef-de-projet",
+      "libelle": "Chef de projet & Coach agile",
+      "couleur": "#7c3aed",
+      "villes": [
+        {
+          "date": "2020-11",
+          "origine": "archive:base",
+          "national": 650,
+          "Paris": 716,
+          "Lyon": 618,
+          "Bordeaux": 532,
+          "Lille": 612,
+          "Marseille": 584
+        },
+        {
+          "date": "2021-05",
+          "origine": "archive:base",
+          "national": 656,
+          "Paris": 722,
+          "Lyon": 633,
+          "Bordeaux": 552,
+          "Lille": 618,
+          "Marseille": 584
+        },
+        {
+          "date": "2022-05",
+          "origine": "archive:base",
+          "national": 677,
+          "Paris": 741,
+          "Lyon": 642,
+          "Bordeaux": 587,
+          "Lille": 640,
+          "Marseille": 598
+        },
+        {
+          "date": "2023-01",
+          "origine": "archive:base",
+          "national": 692,
+          "Paris": 751,
+          "Lyon": 656,
+          "Bordeaux": 614,
+          "Lille": 644,
+          "Marseille": 616
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 679,
+          "Paris": 719,
+          "Lyon": 658,
+          "Bordeaux": 630,
+          "Lille": 634,
+          "Marseille": 651
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 395,
+          "haut": 810
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 519,
+          "haut": 810
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 350,
+          "moyen": 679,
+          "haut": 1210
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 400,
+          "moyen": 778,
+          "haut": 1210
+        }
+      ]
+    },
+    {
+      "cle": "marketing",
+      "libelle": "Consultant marketing & analytics",
+      "couleur": "#db2777",
+      "villes": [
+        {
+          "date": "2019-11",
+          "origine": "archive:base",
+          "national": 562,
+          "Paris": 564,
+          "Lyon": 480,
+          "Bordeaux": 458,
+          "Lille": 532,
+          "Marseille": 465
+        },
+        {
+          "date": "2020-11",
+          "origine": "archive:base",
+          "national": 568,
+          "Paris": 566,
+          "Lyon": 493,
+          "Bordeaux": 456,
+          "Lille": 502,
+          "Marseille": 473
+        },
+        {
+          "date": "2022-05",
+          "origine": "archive:base",
+          "national": 593,
+          "Paris": 590,
+          "Lyon": 514,
+          "Bordeaux": 484,
+          "Lille": 528,
+          "Marseille": 511
+        },
+        {
+          "date": "2023-03",
+          "origine": "archive:base",
+          "national": 607,
+          "Paris": 597,
+          "Lyon": 516,
+          "Bordeaux": 490,
+          "Lille": 531,
+          "Marseille": 512
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 580,
+          "Paris": 581,
+          "Lyon": 510,
+          "Bordeaux": 505,
+          "Lille": 517,
+          "Marseille": 543
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 309,
+          "haut": 610
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 393,
+          "haut": 810
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 120,
+          "moyen": 580,
+          "haut": 1010
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 120,
+          "moyen": 789,
+          "haut": 2010
+        }
+      ]
+    },
+    {
+      "cle": "graphiste",
+      "libelle": "Graphiste & Photographe",
+      "couleur": "#ea580c",
+      "villes": [
+        {
+          "date": "2021-05",
+          "origine": "archive:base",
+          "national": 391,
+          "Paris": 415,
+          "Lyon": 383,
+          "Bordeaux": 383,
+          "Lille": 383,
+          "Marseille": 355
+        },
+        {
+          "date": "2022-05",
+          "origine": "archive:base",
+          "national": 401,
+          "Paris": 426,
+          "Lyon": 395,
+          "Bordeaux": 392,
+          "Lille": 396,
+          "Marseille": 365
+        },
+        {
+          "date": "2023-04",
+          "origine": "archive:base",
+          "national": 408,
+          "Paris": 432,
+          "Lyon": 401,
+          "Bordeaux": 398,
+          "Lille": 395,
+          "Marseille": 373
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 430,
+          "Paris": 448,
+          "Lyon": 416,
+          "Bordeaux": 424,
+          "Lille": 407,
+          "Marseille": 408
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 274,
+          "haut": 510
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 337,
+          "haut": 610
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 120,
+          "moyen": 430,
+          "haut": 710
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 120,
+          "moyen": 482,
+          "haut": 810
+        }
+      ]
+    },
+    {
+      "cle": "redacteur",
+      "libelle": "Rédacteur & Community manager",
+      "couleur": "#64748b",
+      "villes": [
+        {
+          "date": "2019-10",
+          "origine": "archive:base",
+          "national": 430,
+          "Paris": 419,
+          "Lyon": 371,
+          "Bordeaux": 323,
+          "Lille": 358,
+          "Marseille": 315
+        },
+        {
+          "date": "2021-01",
+          "origine": "archive:base",
+          "national": 431,
+          "Paris": 433,
+          "Lyon": 391,
+          "Bordeaux": 336,
+          "Lille": 372,
+          "Marseille": 341
+        },
+        {
+          "date": "2022-01",
+          "origine": "archive:base",
+          "national": 440,
+          "Paris": 448,
+          "Lyon": 408,
+          "Bordeaux": 364,
+          "Lille": 423,
+          "Marseille": 353
+        },
+        {
+          "date": "2023-02",
+          "origine": "archive:base",
+          "national": 441,
+          "Paris": 452,
+          "Lyon": 401,
+          "Bordeaux": 379,
+          "Lille": 422,
+          "Marseille": 363
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 439,
+          "Paris": 444,
+          "Lyon": 413,
+          "Bordeaux": 401,
+          "Lille": 395,
+          "Marseille": 393
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 247,
+          "haut": 510
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 317,
+          "haut": 610
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 120,
+          "moyen": 439,
+          "haut": 810
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 120,
+          "moyen": 535,
+          "haut": 1210
+        }
+      ]
+    },
+    {
+      "cle": "motion",
+      "libelle": "Motion designer & Réalisateur",
+      "couleur": "#0d9488",
+      "villes": [
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 465,
+          "Paris": 456,
+          "Lyon": 438,
+          "Bordeaux": 425,
+          "Lille": 421,
+          "Marseille": 436
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 275,
+          "haut": 510
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 363,
+          "haut": 610
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 120,
+          "moyen": 465,
+          "haut": 810
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 120,
+          "moyen": 533,
+          "haut": 1010
+        }
+      ]
+    },
+    {
+      "cle": "jeux-video",
+      "libelle": "Expert jeux vidéo",
+      "couleur": "#a16207",
+      "villes": [
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 431,
+          "Paris": 507,
+          "Lyon": 427,
+          "Bordeaux": 561,
+          "Lille": 498,
+          "Marseille": 372
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 275,
+          "haut": 510
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 317,
+          "haut": 510
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 120,
+          "moyen": 431,
+          "haut": 710
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 120,
+          "moyen": 468,
+          "haut": 810
         }
       ]
     }
