@@ -47,7 +47,10 @@ const VERS_COURT: Record<string, string> = {
   fraisMensuels: 'fm',
   tauxVariable: 'tv',
   // TJM positioning
+  metiers: 'me',
   tjm: 'tj',
+  tjm2024: 't4',
+  tjm2025: 't5',
   niveau: 'nv',
   ville: 'vl',
   commission: 'cm',

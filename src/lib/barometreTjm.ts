@@ -1,32 +1,20 @@
 import donnees from '../data/barometreTjm.json';
 
 /**
- * "Data scientists" (Experts Data) day-rate figures, gathered from public
- * sources, for positioning a freelancer's own rate and tracing its evolution.
+ * Freelance day-rate figures from public sources, by profession, for positioning
+ * one's own rate and tracing its evolution — with several professions overlaid.
  *
  * The figures live in ../data/barometreTjm.json so the dataset can grow — more
- * capture dates, more cities — without touching this logic. Read the JSON's own
- * `meta.notes` for the caveats: snapshot metric, archive reconstruction, the
- * estimated 2024-2025 points, low city samples, and the seasonality of dates.
+ * capture dates, more professions — without touching this logic. Each profession
+ * carries what public archives allowed to reconstruct plus a recent measured
+ * point; the monthly capture densifies it going forward.
  */
 
 export const META = donnees.meta;
 
-/**
- * The reference figures are quoted commission included (the client-facing price
- * on the platform they come from). A freelancer whose own rate is quoted net of
- * commission — as on most other platforms — can add this back to compare on the
- * same basis.
- */
+/** The reference figures are quoted commission included; a rate quoted net of it
+ * can be grossed back up to compare on the same basis. */
 export const TAUX_COMMISSION_PLATEFORME = 0.1;
-
-export const VILLES = ['Paris', 'Lyon', 'Bordeaux', 'Lille', 'Marseille'] as const;
-export type Ville = (typeof VILLES)[number];
-export type Lieu = Ville | 'national';
-
-export type PointVille = { date: string; origine: string } & Record<Lieu, number>;
-export const POINTS_VILLES = donnees.villes as PointVille[];
-export const DERNIER = POINTS_VILLES[POINTS_VILLES.length - 1];
 
 export type NiveauExperience = {
   cle: string;
@@ -35,30 +23,64 @@ export type NiveauExperience = {
   moyen: number;
   haut: number;
 };
-export const NIVEAUX = donnees.experience as NiveauExperience[];
+
+export type PointVille = {
+  date: string;
+  origine: string;
+} & Record<string, string | number>;
+
+type PointExperience = Record<string, string | number>;
+
+export type Profession = {
+  cle: string;
+  libelle: string;
+  couleur: string;
+  villes: PointVille[];
+  experience: NiveauExperience[];
+  experienceHistorique?: PointExperience[];
+  nationalHistorique?: { date: string; moyenneActifs: number; origine: string }[];
+};
+
+export const PROFESSIONS = donnees.professions as Profession[];
 
 export type Evenement = { date: string; label: string };
 export const EVENEMENTS = donnees.evenements as Evenement[];
 
-type PointExperience = Record<string, string | number>;
-const EXPERIENCE_HISTORIQUE = donnees.experienceHistorique as PointExperience[];
-
-/**
- * National average over time for one seniority bracket, at the dates where that
- * bracket has data (the finer brackets only appear from 2023).
- */
-export function serieExperience(cle: string): { annee: number; valeur: number }[] {
-  return EXPERIENCE_HISTORIQUE.filter((p) => typeof p[cle] === 'number').map((p) => ({
-    annee: anneeDecimale(p.date as string),
-    valeur: p[cle] as number,
-  }));
+/** A profession by key, defaulting to the first (data scientist). */
+export function getProfession(cle: string): Profession {
+  return PROFESSIONS.find((p) => p.cle === cle) ?? PROFESSIONS[0];
 }
 
-export const HISTORIQUE_NATIONAL = donnees.nationalHistorique as {
-  date: string;
-  moyenneActifs: number;
-  origine: string;
-}[];
+const ORDRE_VILLES = ['national', 'Paris', 'Lyon', 'Bordeaux', 'Lille', 'Marseille'];
+
+/** Cities present in a profession's data, in a stable order. */
+export function villesProfession(p: Profession): string[] {
+  const cles = new Set<string>();
+  for (const pt of p.villes) {
+    for (const k of Object.keys(pt)) {
+      if (k !== 'date' && k !== 'origine') cles.add(k);
+    }
+  }
+  return ORDRE_VILLES.filter((c) => cles.has(c));
+}
+
+/** Cities common to every selected profession — the ones an overlay can use. */
+export function villesCommunes(profs: Profession[]): string[] {
+  if (!profs.length) return ['national'];
+  return profs
+    .map(villesProfession)
+    .reduce((commun, liste) => commun.filter((c) => liste.includes(c)));
+}
+
+/** The most recent point of a profession. */
+export function dernier(p: Profession): PointVille {
+  return p.villes[p.villes.length - 1];
+}
+
+/** Average day rate for a place, at the most recent capture. */
+export function moyenneVille(p: Profession, lieu: string): number {
+  return dernier(p)[lieu] as number;
+}
 
 /** A "YYYY-MM" date as a decimal year, for placing points on a time axis. */
 export function anneeDecimale(date: string): number {
@@ -66,9 +88,15 @@ export function anneeDecimale(date: string): number {
   return an + ((mois || 1) - 0.5) / 12;
 }
 
-/** Average day rate for a place, at the most recent capture. */
-export function moyenneVille(lieu: Lieu): number {
-  return DERNIER[lieu];
+/** A profession's day-rate points for one city, ready to plot. */
+export function serieVille(p: Profession, lieu: string): { annee: number; valeur: number; estime?: boolean }[] {
+  return p.villes
+    .filter((pt) => typeof pt[lieu] === 'number')
+    .map((pt) => ({
+      annee: anneeDecimale(pt.date),
+      valeur: pt[lieu] as number,
+      estime: pt.origine === 'estimation',
+    }));
 }
 
 export type Positionnement = {

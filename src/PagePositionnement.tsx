@@ -6,19 +6,17 @@ import { BoutonReset } from './components/BoutonReset';
 import { LienSignaler } from './components/LienSignaler';
 import { EvolutionTjm, type SerieTemporelle } from './components/EvolutionTjm';
 import { JaugeExperience } from './components/JaugeExperience';
-import { eur } from './lib/format';
 import {
   anneeDecimale,
-  DERNIER,
   EVENEMENTS,
+  getProfession,
   META,
   moyenneVille,
-  NIVEAUX,
-  POINTS_VILLES,
-  serieExperience,
+  PROFESSIONS,
+  serieVille,
   TAUX_COMMISSION_PLATEFORME,
-  VILLES,
-  type Lieu,
+  villesCommunes,
+  type NiveauExperience,
 } from './lib/barometreTjm';
 import {
   decoderPositionnement,
@@ -51,53 +49,50 @@ export default function PagePositionnement() {
     return () => clearTimeout(t);
   }, [h]);
 
-  const niveau = NIVEAUX.find((n) => n.cle === h.niveau) ?? NIVEAUX[2];
+  const profs = h.professions.map(getProfession);
+  const villes = villesCommunes(profs);
+  const ville = villes.includes(h.ville) ? h.ville : 'national';
+  const villeLabel = ville === 'national' ? 'France' : ville;
 
-  // The reference figures include the platform commission. If the entered rate
-  // is quoted net of it, add it back so the comparison is on the same basis.
+  // Shared seniority brackets — every profession uses the same keys/labels.
+  const brackets = PROFESSIONS[0].experience;
+
+  // Effective rates (add the platform commission back when asked).
+  const facteurComm = h.commission ? 1 + TAUX_COMMISSION_PLATEFORME : 1;
   const pourcentCommission = Math.round(TAUX_COMMISSION_PLATEFORME * 100);
-  const tjmEffectif = h.commission
-    ? Math.round(h.tjm * (1 + TAUX_COMMISSION_PLATEFORME))
-    : h.tjm;
+  const tjmEffectif = Math.round(h.tjm * facteurComm);
 
-  // The seniority brackets are only known nationally, so for a city we shift them
-  // by that city's level relative to France — the gauge then follows the city.
-  const facteurVille = moyenneVille(h.ville) / moyenneVille('national');
-  const niveauVille =
-    h.ville === 'national'
-      ? niveau
-      : {
-          ...niveau,
-          bas: Math.round(niveau.bas * facteurVille),
-          moyen: Math.round(niveau.moyen * facteurVille),
-          haut: Math.round(niveau.haut * facteurVille),
-        };
+  const basculerProfession = (cle: string) =>
+    setH((s) => {
+      const dedans = s.professions.includes(cle);
+      if (dedans && s.professions.length === 1) return s; // keep at least one
+      const professions = dedans
+        ? s.professions.filter((c) => c !== cle)
+        : [...s.professions, cle];
+      return { ...s, professions };
+    });
 
-  // Two lines that respond to the two selectors: the chosen city (all
-  // seniorities) and, nationally, the chosen seniority bracket.
+  // One market line per selected profession (for the chosen city), plus the
+  // user's own path if they filled in 2024/2025.
   const series = useMemo<SerieTemporelle[]>(() => {
-    const ville = h.ville === 'national' ? 'France' : h.ville;
-    return [
-      {
-        label: `${ville} · tous niveaux`,
-        couleur: 'var(--color-brand-600)',
-        epais: true,
-        points: POINTS_VILLES.map((p) => ({
-          annee: anneeDecimale(p.date),
-          valeur: p[h.ville],
-          estime: p.origine === 'estimation',
-        })),
-      },
-      {
-        label: `France · ${niveau.label}`,
-        couleur: 'var(--color-ink-500)',
-        epais: false,
-        points: serieExperience(h.niveau),
-      },
-    ];
-  }, [h.ville, h.niveau, niveau.label]);
+    const marche: SerieTemporelle[] = profs.map((p) => ({
+      label: `${p.libelle} · ${villeLabel}`,
+      couleur: p.couleur,
+      epais: true,
+      points: serieVille(p, ville),
+    }));
+    const pts = [
+      h.tjm2024 > 0 ? { annee: anneeDecimale('2024-07'), valeur: Math.round(h.tjm2024 * facteurComm) } : null,
+      h.tjm2025 > 0 ? { annee: anneeDecimale('2025-07'), valeur: Math.round(h.tjm2025 * facteurComm) } : null,
+      { annee: anneeDecimale('2026-07'), valeur: tjmEffectif },
+    ].filter((p): p is { annee: number; valeur: number } => p !== null);
+    if (pts.length > 1) {
+      marche.push({ label: 'Votre TJM', couleur: 'var(--color-ink-800)', epais: true, points: pts });
+    }
+    return marche;
+  }, [profs, ville, villeLabel, h.tjm2024, h.tjm2025, facteurComm, tjmEffectif]);
 
-  const lieux: (Lieu)[] = ['national', ...VILLES];
+  const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0;
 
   return (
     <div className="min-h-screen">
@@ -111,12 +106,12 @@ export default function PagePositionnement() {
               Données de sources publiques
             </p>
             <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-ink-900 sm:text-5xl">
-              Où se situe votre TJM de data&nbsp;?
+              Où se situe votre TJM&nbsp;?
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
-              L'évolution du tarif journalier moyen des experts data dans le
-              temps, ville par ville, et où votre propre tarif se place dans sa
-              tranche d'expérience.
+              Superposez l'évolution du tarif jour moyen de plusieurs métiers,
+              ville par ville, situez votre tarif dans sa tranche d'expérience, et
+              tracez votre propre trajectoire.
             </p>
           </div>
         </section>
@@ -128,25 +123,69 @@ export default function PagePositionnement() {
               <div className="card p-6 sm:p-8 lg:sticky lg:top-24">
                 <h2 className="text-lg font-semibold text-ink-900">Votre profil</h2>
                 <div className="mt-6 grid gap-5">
+                  <div>
+                    <p className="field-label">Métiers à comparer</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {PROFESSIONS.map((p) => {
+                        const actif = h.professions.includes(p.cle);
+                        return (
+                          <button
+                            key={p.cle}
+                            type="button"
+                            aria-pressed={actif}
+                            onClick={() => basculerProfession(p.cle)}
+                            className={[
+                              'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition',
+                              actif
+                                ? 'border-brand-500 bg-brand-50 text-brand-700'
+                                : 'border-ink-200 bg-white text-ink-500 hover:border-ink-300 hover:text-ink-800',
+                            ].join(' ')}
+                          >
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: p.couleur }}
+                            />
+                            {p.libelle}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <Montant
-                    label="Votre TJM"
+                    label="Votre TJM (actuel)"
                     valeur={h.tjm}
                     onChange={(v) => setH((s) => ({ ...s, tjm: v }))}
                     suffixe="€ / jour"
                     hint="Le tarif journalier que vous affichez ou visez."
                   />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Montant
+                      label="Votre TJM 2024"
+                      valeur={h.tjm2024}
+                      onChange={(v) => setH((s) => ({ ...s, tjm2024: v }))}
+                      suffixe="€"
+                      hint="Optionnel"
+                    />
+                    <Montant
+                      label="Votre TJM 2025"
+                      valeur={h.tjm2025}
+                      onChange={(v) => setH((s) => ({ ...s, tjm2025: v }))}
+                      suffixe="€"
+                      hint="Optionnel"
+                    />
+                  </div>
                   <Segments
                     label="Commission plateforme"
                     valeur={h.commission}
                     options={[
                       { valeur: false, label: 'Déjà incluse' },
-                      { valeur: true, label: `À ajouter (+${pourcentCommission} %)` },
+                      { valeur: true, label: `À ajouter (+${pourcentCommission} %)` },
                     ]}
                     onChange={(v) => setH((s) => ({ ...s, commission: v }))}
                     hint={
                       h.commission
-                        ? `Les repères incluent la commission. Votre TJM est comparé à ${eur(tjmEffectif)}.`
-                        : `Les repères incluent la commission plateforme (~${pourcentCommission} %). Si votre tarif est hors commission, ajoutez-la.`
+                        ? `Vos TJM sont comparés commission incluse (+${pourcentCommission} %).`
+                        : `Les repères incluent la commission plateforme (~${pourcentCommission} %).`
                     }
                   />
                   <div>
@@ -154,7 +193,7 @@ export default function PagePositionnement() {
                     <div className="mt-1">
                       <Segments
                         valeur={h.niveau}
-                        options={NIVEAUX.map((n) => ({ valeur: n.cle, label: n.label }))}
+                        options={brackets.map((n) => ({ valeur: n.cle, label: n.label }))}
                         onChange={(v) => setH((s) => ({ ...s, niveau: v }))}
                       />
                     </div>
@@ -162,15 +201,15 @@ export default function PagePositionnement() {
                   <div>
                     <p className="field-label">Ville de référence</p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      {lieux.map((l) => (
+                      {villes.map((l) => (
                         <button
                           key={l}
                           type="button"
-                          aria-pressed={h.ville === l}
+                          aria-pressed={ville === l}
                           onClick={() => setH((s) => ({ ...s, ville: l }))}
                           className={[
                             'rounded-lg border px-3 py-1.5 text-sm font-medium transition',
-                            h.ville === l
+                            ville === l
                               ? 'border-brand-500 bg-brand-50 text-brand-700'
                               : 'border-ink-200 bg-white text-ink-500 hover:border-ink-300 hover:text-ink-800',
                           ].join(' ')}
@@ -182,24 +221,6 @@ export default function PagePositionnement() {
                   </div>
                 </div>
 
-                <dl className="mt-6 space-y-3 border-t border-ink-100 pt-5">
-                  <div className="flex items-baseline justify-between gap-4">
-                    <dt className="text-sm text-ink-500">
-                      Moyenne {h.ville === 'national' ? 'France' : h.ville} ({DERNIER.date.slice(0, 4)}
-                      {DERNIER.origine === 'estimation' ? ', est.' : ''})
-                    </dt>
-                    <dd className="tabular text-sm font-semibold text-ink-900">
-                      {eur(moyenneVille(h.ville))}
-                    </dd>
-                  </div>
-                  <div className="flex items-baseline justify-between gap-4">
-                    <dt className="text-sm text-ink-500">Moyenne de votre tranche</dt>
-                    <dd className="tabular text-sm font-semibold text-ink-900">
-                      {eur(niveau.moyen)}
-                    </dd>
-                  </div>
-                </dl>
-
                 <BoutonPartage lien={lienPartagePositionnement(h, DEFAUTS_POSITIONNEMENT)} />
                 <BoutonReset onReset={() => setH(DEFAUTS_POSITIONNEMENT)} />
               </div>
@@ -209,34 +230,34 @@ export default function PagePositionnement() {
             <div className="lg:col-span-8">
               <div className="card p-5 sm:p-8">
                 <h2 className="text-lg font-semibold text-ink-900">
-                  L'évolution du TJM {h.ville === 'national' ? 'en France' : `à ${h.ville}`}
+                  Évolution du TJM {ville === 'national' ? 'en France' : `à ${ville}`}
                 </h2>
                 <p className="mt-1 text-sm text-ink-500">
-                  Tarif jour moyen des experts data. Trait vert&nbsp;: le marché de
-                  la ville choisie, tous niveaux. Trait gris&nbsp;: la moyenne France
-                  de votre tranche d'expérience. Votre TJM en trait horizontal.
+                  Une courbe par métier sélectionné.{' '}
+                  {trajectoire
+                    ? 'Votre trajectoire (2024 → 2026) en trait sombre.'
+                    : 'Votre TJM en trait horizontal.'}
                 </p>
                 <div className="mt-5">
-                  <EvolutionTjm series={series} evenements={EVENEMENTS} tjmUtilisateur={tjmEffectif} />
+                  <EvolutionTjm
+                    series={series}
+                    evenements={EVENEMENTS}
+                    tjmUtilisateur={trajectoire ? undefined : tjmEffectif}
+                  />
                 </div>
               </div>
 
-              <div className="card mt-6 p-5 sm:p-8">
-                <h2 className="text-lg font-semibold text-ink-900">
-                  Votre position dans la tranche {niveau.label}
-                  {h.ville !== 'national' && ` à ${h.ville}`}
-                </h2>
-                {h.ville !== 'national' && (
-                  <p className="mt-1 text-sm text-ink-500">
-                    Repères de la tranche ajustés au niveau {h.ville}, soit{' '}
-                    {facteurVille >= 1 ? '+' : ''}
-                    {Math.round((facteurVille - 1) * 100)}&nbsp;% par rapport à la France.
-                  </p>
-                )}
-                <div className="mt-5">
-                  <JaugeExperience tjm={tjmEffectif} niveau={niveauVille} />
-                </div>
-              </div>
+              {profs.map((p) => (
+                <GaugeMetier
+                  key={p.cle}
+                  libelle={p.libelle}
+                  couleur={p.couleur}
+                  niveau={p.experience.find((n) => n.cle === h.niveau) ?? p.experience[2]}
+                  facteurVille={moyenneVille(p, ville) / moyenneVille(p, 'national')}
+                  ville={ville}
+                  tjm={tjmEffectif}
+                />
+              ))}
             </div>
           </div>
         </section>
@@ -245,6 +266,44 @@ export default function PagePositionnement() {
       </main>
 
       <Pied />
+    </div>
+  );
+}
+
+function GaugeMetier({
+  libelle,
+  couleur,
+  niveau,
+  facteurVille,
+  ville,
+  tjm,
+}: {
+  libelle: string;
+  couleur: string;
+  niveau: NiveauExperience;
+  facteurVille: number;
+  ville: string;
+  tjm: number;
+}) {
+  const niveauVille =
+    ville === 'national'
+      ? niveau
+      : {
+          ...niveau,
+          bas: Math.round(niveau.bas * facteurVille),
+          moyen: Math.round(niveau.moyen * facteurVille),
+          haut: Math.round(niveau.haut * facteurVille),
+        };
+  return (
+    <div className="card mt-6 p-5 sm:p-8">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-ink-900">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: couleur }} />
+        {libelle} — tranche {niveau.label}
+        {ville !== 'national' && ` à ${ville}`}
+      </h2>
+      <div className="mt-5">
+        <JaugeExperience tjm={tjm} niveau={niveauVille} />
+      </div>
     </div>
   );
 }

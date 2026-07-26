@@ -1,102 +1,247 @@
 {
   "meta": {
-    "specialite": "Data scientists",
-    "categorie": "Experts Data",
     "unite": "€/jour, TJM affiché (hors taxes)",
-    "source": "Sources publiques (baromètres de tarifs freelances et leurs archives web)",
-    "capteLe": "2026-07",
     "notes": [
-      "Chiffres recueillis auprès de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié.",
-      "Les points passés sont reconstitués à partir d'archives web publiques ; les captures sont espacées, d'où des trous.",
-      "Le point le plus récent (juillet 2026) est une mesure directe du baromètre public ; les points 2024 et 2025, non archivés, sont des estimations, à lire comme une tendance et non comme une mesure.",
-      "Les TJM par ville — Paris en particulier — reposent sur de petits échantillons que la source signale : à lire comme une tendance, pas une mesure.",
-      "Chaque point est daté au mois : les comparer suppose d'ignorer une éventuelle saisonnalité intra-annuelle.",
-      "Le découpage des tranches d'ancienneté a changé vers 2023 ; les tranches fines n'ont donc de données qu'à partir de cette date."
+      "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié.",
+      "Les points passés sont reconstitués depuis des archives web publiques ; les captures sont rares (quelques mois par an).",
+      "Le point le plus récent (juillet 2026) est une mesure directe ; pour le data scientist, 2024 et 2025 sont des estimations (non archivées), à lire comme une tendance.",
+      "Vous pouvez saisir votre propre TJM en 2024 et 2025 pour tracer votre trajectoire réelle plutôt qu'une estimation.",
+      "Les TJM par ville reposent sur de petits échantillons : à lire comme un ordre de grandeur, pas une mesure."
     ]
   },
-  "villes": [
+  "evenements": [
     {
-      "date": "2021-12",
-      "origine": "archive:base",
-      "national": 615,
-      "Paris": 669,
-      "Lyon": 536,
-      "Bordeaux": 559,
-      "Lille": 570,
-      "Marseille": 537
+      "date": "2020-03",
+      "label": "Pandémie de COVID-19"
     },
     {
-      "date": "2022-12",
-      "origine": "archive:base",
-      "national": 639,
-      "Paris": 695,
-      "Lyon": 567,
-      "Bordeaux": 577,
-      "Lille": 555,
-      "Marseille": 570
+      "date": "2022-07",
+      "label": "Hausse des taux BCE"
     },
     {
-      "date": "2023-09",
-      "origine": "archive:base",
-      "national": 652,
-      "Paris": 704,
-      "Lyon": 567,
-      "Bordeaux": 601,
-      "Lille": 560,
-      "Marseille": 564
+      "date": "2022-11",
+      "label": "Sortie de ChatGPT"
     },
     {
-      "date": "2024-07",
-      "origine": "estimation",
-      "national": 633,
-      "Paris": 684,
-      "Lyon": 552,
-      "Bordeaux": 585,
-      "Lille": 546,
-      "Marseille": 549
-    },
-    {
-      "date": "2025-07",
-      "origine": "estimation",
-      "national": 628,
-      "Paris": 678,
-      "Lyon": 548,
-      "Bordeaux": 580,
-      "Lille": 542,
-      "Marseille": 545
-    },
-    {
-      "date": "2026-07",
-      "origine": "live",
-      "national": 680,
-      "Paris": 742,
-      "Lyon": 641,
-      "Bordeaux": 631,
-      "Lille": 604,
-      "Marseille": 653
+      "date": "2024-05",
+      "label": "IA générative en entreprise"
     }
   ],
-  "nationalHistorique": [
-    { "date": "2019-10", "moyenneActifs": 548, "origine": "archive:data-scientist" },
-    { "date": "2021-05", "moyenneActifs": 600, "origine": "archive:data-scientist" },
-    { "date": "2022-05", "moyenneActifs": 625, "origine": "archive:data-scientist" }
-  ],
-  "experience": [
-    { "cle": "0-2", "label": "0 à 2 ans", "bas": 120, "moyen": 360, "haut": 710 },
-    { "cle": "3-7", "label": "3 à 7 ans", "bas": 120, "moyen": 520, "haut": 810 },
-    { "cle": "8-15", "label": "8 à 15 ans", "bas": 300, "moyen": 680, "haut": 1210 },
-    { "cle": "15p", "label": "15 ans et +", "bas": 350, "moyen": 735, "haut": 1510 }
-  ],
-  "experienceHistorique": [
-    { "date": "2021-12", "0-2": 322 },
-    { "date": "2022-12", "0-2": 332 },
-    { "date": "2023-09", "0-2": 342, "3-7": 509, "8-15": 663, "15p": 754 },
-    { "date": "2026-07", "0-2": 360, "3-7": 520, "8-15": 680, "15p": 735 }
-  ],
-  "evenements": [
-    { "date": "2020-03", "label": "Pandémie de COVID-19" },
-    { "date": "2022-07", "label": "Hausse des taux BCE" },
-    { "date": "2022-11", "label": "Sortie de ChatGPT" },
-    { "date": "2024-05", "label": "IA générative en entreprise" }
+  "professions": [
+    {
+      "cle": "data-scientist",
+      "libelle": "Data scientist",
+      "couleur": "var(--color-brand-600)",
+      "villes": [
+        {
+          "date": "2021-12",
+          "origine": "archive:base",
+          "national": 615,
+          "Paris": 669,
+          "Lyon": 536,
+          "Bordeaux": 559,
+          "Lille": 570,
+          "Marseille": 537
+        },
+        {
+          "date": "2022-12",
+          "origine": "archive:base",
+          "national": 639,
+          "Paris": 695,
+          "Lyon": 567,
+          "Bordeaux": 577,
+          "Lille": 555,
+          "Marseille": 570
+        },
+        {
+          "date": "2023-09",
+          "origine": "archive:base",
+          "national": 652,
+          "Paris": 704,
+          "Lyon": 567,
+          "Bordeaux": 601,
+          "Lille": 560,
+          "Marseille": 564
+        },
+        {
+          "date": "2024-07",
+          "origine": "estimation",
+          "national": 633,
+          "Paris": 684,
+          "Lyon": 552,
+          "Bordeaux": 585,
+          "Lille": 546,
+          "Marseille": 549
+        },
+        {
+          "date": "2025-07",
+          "origine": "estimation",
+          "national": 628,
+          "Paris": 678,
+          "Lyon": 548,
+          "Bordeaux": 580,
+          "Lille": 542,
+          "Marseille": 545
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 680,
+          "Paris": 742,
+          "Lyon": 641,
+          "Bordeaux": 631,
+          "Lille": 604,
+          "Marseille": 653
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 360,
+          "haut": 710
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 520,
+          "haut": 810
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 300,
+          "moyen": 680,
+          "haut": 1210
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 350,
+          "moyen": 735,
+          "haut": 1510
+        }
+      ],
+      "experienceHistorique": [
+        {
+          "date": "2021-12",
+          "0-2": 322
+        },
+        {
+          "date": "2022-12",
+          "0-2": 332
+        },
+        {
+          "date": "2023-09",
+          "0-2": 342,
+          "3-7": 509,
+          "8-15": 663,
+          "15p": 754
+        },
+        {
+          "date": "2026-07",
+          "0-2": 360,
+          "3-7": 520,
+          "8-15": 680,
+          "15p": 735
+        }
+      ],
+      "nationalHistorique": [
+        {
+          "date": "2019-10",
+          "moyenneActifs": 548,
+          "origine": "archive:data-scientist"
+        },
+        {
+          "date": "2021-05",
+          "moyenneActifs": 600,
+          "origine": "archive:data-scientist"
+        },
+        {
+          "date": "2022-05",
+          "moyenneActifs": 625,
+          "origine": "archive:data-scientist"
+        }
+      ]
+    },
+    {
+      "cle": "developpeur",
+      "libelle": "Développeur",
+      "couleur": "var(--color-gold-600)",
+      "villes": [
+        {
+          "date": "2020-12",
+          "origine": "archive:base",
+          "national": 517,
+          "Paris": 577,
+          "Lyon": 506,
+          "Bordeaux": 477,
+          "Lille": 485,
+          "Marseille": 451
+        },
+        {
+          "date": "2021-05",
+          "origine": "archive:base",
+          "national": 526,
+          "Paris": 585,
+          "Lyon": 511,
+          "Bordeaux": 483,
+          "Lille": 491,
+          "Marseille": 467
+        },
+        {
+          "date": "2022-05",
+          "origine": "archive:base",
+          "national": 553,
+          "Paris": 602,
+          "Lyon": 535,
+          "Bordeaux": 514,
+          "Lille": 521,
+          "Marseille": 476
+        },
+        {
+          "date": "2026-07",
+          "origine": "live",
+          "national": 575,
+          "Paris": 594,
+          "Lyon": 555,
+          "Bordeaux": 551,
+          "Lille": 551,
+          "Marseille": 528
+        }
+      ],
+      "experience": [
+        {
+          "cle": "0-2",
+          "label": "0 à 2 ans",
+          "bas": 120,
+          "moyen": 317,
+          "haut": 610
+        },
+        {
+          "cle": "3-7",
+          "label": "3 à 7 ans",
+          "bas": 120,
+          "moyen": 435,
+          "haut": 710
+        },
+        {
+          "cle": "8-15",
+          "label": "8 à 15 ans",
+          "bas": 250,
+          "moyen": 575,
+          "haut": 910
+        },
+        {
+          "cle": "15p",
+          "label": "15 ans et +",
+          "bas": 300,
+          "moyen": 671,
+          "haut": 1210
+        }
+      ]
+    }
   ]
 }

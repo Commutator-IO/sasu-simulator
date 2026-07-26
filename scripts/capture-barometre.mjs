@@ -119,14 +119,21 @@ try {
 
   const donnees = JSON.parse(readFileSync(CHEMIN_JSON, 'utf8'));
 
-  if (donnees.villes.some((p) => p.date === mois && p.origine === 'live')) {
+  // The barometer scraped here is the data scientist one; other professions
+  // would need their own capture. Append to that profession's series.
+  const prof = donnees.professions.find((p) => p.cle === 'data-scientist');
+  if (!prof) {
+    console.error('Profession data-scientist introuvable dans le dataset.');
+    process.exit(3);
+  }
+
+  if (prof.villes.some((p) => p.date === mois && p.origine === 'live')) {
     console.log(`Le mois ${mois} est déjà capturé (mesure réelle). Rien à faire.`);
     process.exit(0);
   }
 
-  donnees.villes.push({ date: mois, origine: 'live', national, ...parVille });
-  donnees.experienceHistorique.push({ date: mois, ...experience });
-  donnees.meta.capteLe = mois;
+  prof.villes.push({ date: mois, origine: 'live', national, ...parVille });
+  prof.experienceHistorique.push({ date: mois, ...experience });
 
   writeFileSync(CHEMIN_JSON, `${JSON.stringify(donnees, null, 2)}\n`);
   console.log(`Point ${mois} ajouté : national ${national} €, Paris ${parVille.Paris} €.`);
