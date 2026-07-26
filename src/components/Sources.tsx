@@ -37,12 +37,6 @@ const SOURCES = [
     hote: 'service-public.gouv.fr',
   },
   {
-    titre: 'Repère de marché : baromètre Malt',
-    detail: `La valeur proposée par défaut correspond à un tarif journalier de ${eur(P.TJM_MOYEN_MALT)} — la moyenne tech constatée par Malt — sur ${P.JOURS_FACTURES_MALT} jours facturés, moins 10 % de frais. Cette base de jours suppose une année pleine : comptez plutôt 180 à 216 jours en pratique.`,
-    url: 'https://www.malt.fr/t/barometre-tarifs/tech/',
-    hote: 'malt.fr',
-  },
-  {
     titre: 'Taux de prélèvement à la source',
     detail:
       "Taux = impôt au barème × (revenus dans le champ / revenu imposable), rapporté à l'assiette de l'article 204 F — le net imposable avant déduction de 10 %. Arrondi à la décimale la plus proche.",

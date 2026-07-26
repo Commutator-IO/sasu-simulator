@@ -279,41 +279,41 @@ export const ABATTEMENT_DIVIDENDES = 0.4;
 export const CSG_DEDUCTIBLE_DIVIDENDES = 0.068;
 
 // ---------------------------------------------------------------------------
-// Market benchmark — Malt day-rate survey
+// Market benchmark — public day-rate survey
 // ---------------------------------------------------------------------------
 
 /**
- * Average daily rate reported by Malt for tech freelancers in 2026.
- * https://www.malt.fr/t/barometre-tarifs/tech/
+ * Average daily rate for tech freelancers in 2026, from a public day-rate
+ * survey.
  */
-export const TJM_MOYEN_MALT = 520;
+export const TJM_MOYEN_REFERENCE = 520;
 
 /**
- * Number of days used by the Malt survey: 251 working days minus five weeks
+ * Number of days used by the survey: 251 working days minus five weeks
  * of holiday. This assumes full occupancy — in practice a freelancer bills
  * closer to 180-216 days.
  */
-export const JOURS_FACTURES_MALT = 226;
+export const JOURS_FACTURES_REFERENCE = 226;
 
-/** Running costs, also assumed at 10% by the Malt survey. */
+/** Running costs, also assumed at 10% by the survey. */
 export const TAUX_FRAIS_REFERENCE = 0.1;
 
 /**
- * Simulator default: the revenue of an average Malt day rate over a full
+ * Simulator default: the revenue of an average survey day rate over a full
  * year, less costs, rounded to the nearest thousand.
  */
 export const RESULTAT_PAR_DEFAUT =
   Math.round(
-    (TJM_MOYEN_MALT * JOURS_FACTURES_MALT * (1 - TAUX_FRAIS_REFERENCE)) / 1_000,
+    (TJM_MOYEN_REFERENCE * JOURS_FACTURES_REFERENCE * (1 - TAUX_FRAIS_REFERENCE)) / 1_000,
   ) * 1_000;
 
 /**
- * Projection tool default: the average Malt day-rate revenue spread evenly
+ * Projection tool default: the average survey day-rate revenue spread evenly
  * over twelve months. A neutral starting point the user overwrites with their
  * own figures.
  */
 export const CA_MENSUEL_PAR_DEFAUT = Math.round(
-  (TJM_MOYEN_MALT * JOURS_FACTURES_MALT) / 12,
+  (TJM_MOYEN_REFERENCE * JOURS_FACTURES_REFERENCE) / 12,
 );
 
 /**
@@ -338,7 +338,7 @@ export const TOLERANCE_OPTIMUM = 100;
 /** Day rate implied by a given profit, at constant days and costs. */
 export function tjmEquivalent(resultatAvantRemuneration: number): number {
   return (
-    resultatAvantRemuneration / (JOURS_FACTURES_MALT * (1 - TAUX_FRAIS_REFERENCE))
+    resultatAvantRemuneration / (JOURS_FACTURES_REFERENCE * (1 - TAUX_FRAIS_REFERENCE))
   );
 }
 

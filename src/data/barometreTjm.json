@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "specialite": "Data scientists",
+    "categorie": "Experts Data",
+    "unite": "€/jour, TJM affiché (hors taxes)",
+    "source": "Sources publiques (baromètres de tarifs freelances et leurs archives web)",
+    "capteLe": "2026-07",
+    "notes": [
+      "Chiffres recueillis auprès de sources publiques : un baromètre de tarifs est un instantané recalculé sur les profils actifs récents, sans historique publié.",
+      "Les points passés sont reconstitués depuis des archives web publiques de ces pages.",
+      "La source est passée à un rendu JavaScript vers 2023-2024 ; les captures 2024 et 2025 n'exposent plus les chiffres dans le HTML archivé, d'où le trou entre 2023 et 2026.",
+      "Les TJM par ville sont peu représentatifs (souvent moins de 10 profils) et à lire comme une tendance, pas une mesure.",
+      "Chaque point est daté au mois : les comparer suppose d'ignorer une éventuelle saisonnalité intra-annuelle."
+    ]
+  },
+  "villes": [
+    {
+      "date": "2021-12",
+      "origine": "archive:base",
+      "national": 615,
+      "Paris": 669,
+      "Lyon": 536,
+      "Bordeaux": 559,
+      "Lille": 570,
+      "Marseille": 537
+    },
+    {
+      "date": "2022-12",
+      "origine": "archive:base",
+      "national": 639,
+      "Paris": 695,
+      "Lyon": 567,
+      "Bordeaux": 577,
+      "Lille": 555,
+      "Marseille": 570
+    },
+    {
+      "date": "2023-09",
+      "origine": "archive:base",
+      "national": 652,
+      "Paris": 704,
+      "Lyon": 567,
+      "Bordeaux": 601,
+      "Lille": 560,
+      "Marseille": 564
+    },
+    {
+      "date": "2026-07",
+      "origine": "live",
+      "national": 680,
+      "Paris": 710,
+      "Lyon": 647,
+      "Bordeaux": 631,
+      "Lille": 617,
+      "Marseille": 660
+    }
+  ],
+  "nationalHistorique": [
+    { "date": "2019-10", "moyenneActifs": 548, "origine": "archive:data-scientist" },
+    { "date": "2021-05", "moyenneActifs": 600, "origine": "archive:data-scientist" },
+    { "date": "2022-05", "moyenneActifs": 625, "origine": "archive:data-scientist" }
+  ],
+  "experience": [
+    { "cle": "0-2", "label": "0 à 2 ans", "bas": 120, "moyen": 360, "haut": 710 },
+    { "cle": "3-7", "label": "3 à 7 ans", "bas": 120, "moyen": 520, "haut": 810 },
+    { "cle": "8-15", "label": "8 à 15 ans", "bas": 300, "moyen": 680, "haut": 1210 },
+    { "cle": "15+", "label": "15 ans et +", "bas": 350, "moyen": 735, "haut": 1510 }
+  ],
+  "evenements": [
+    { "date": "2020-03", "label": "Pandémie de COVID-19" },
+    { "date": "2022-11", "label": "Sortie de ChatGPT" }
+  ]
+}

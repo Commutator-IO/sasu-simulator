@@ -46,6 +46,10 @@ const VERS_COURT: Record<string, string> = {
   moisFactures: 'mf',
   fraisMensuels: 'fm',
   tauxVariable: 'tv',
+  // TJM positioning
+  tjm: 'tj',
+  niveau: 'nv',
+  ville: 'vl',
 };
 
 const VERS_LONG: Record<string, string> = Object.fromEntries(

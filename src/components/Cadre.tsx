@@ -14,6 +14,7 @@ const OUTILS: { chemin: string; libelle: string; aVenir?: boolean }[] = [
   { chemin: '/projection/', libelle: 'Projection de CA' },
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
+  { chemin: '/tjm/', libelle: 'Positionner son TJM' },
   { chemin: '/synthese/', libelle: 'Synthèse' },
   { chemin: '/mcp/', libelle: 'Serveur MCP', aVenir: true },
 ];

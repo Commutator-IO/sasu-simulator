@@ -337,25 +337,15 @@ function Regles() {
         </ul>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          <a
-            href="https://www.malt.fr/t/barometre-tarifs/tech/"
-            target="_blank"
-            rel="noreferrer"
-            className="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:border-brand-400/50 hover:bg-white/10"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold text-white">Valeurs par défaut</h3>
-              <span className="mt-0.5 shrink-0 text-ink-400 transition group-hover:text-brand-300">
-                ↗
-              </span>
-            </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <h3 className="font-semibold text-white">Valeurs par défaut</h3>
             <p className="mt-2 text-sm leading-relaxed text-ink-300">
               Le chiffre d'affaires et les frais proposés par défaut découlent
-              du TJM moyen relevé par le baromètre Malt, réparti sur douze mois.
-              Ce sont des repères à remplacer par vos chiffres.
+              d'un TJM moyen de référence relevé sur des sources publiques,
+              réparti sur douze mois. Ce sont des repères à remplacer par vos
+              chiffres.
             </p>
-            <p className="mt-3 text-xs text-ink-400">malt.fr</p>
-          </a>
+          </div>
         </div>
 
         <p className="mt-10 max-w-3xl text-sm leading-relaxed text-ink-300">
