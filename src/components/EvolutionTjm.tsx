@@ -153,10 +153,15 @@ export function EvolutionTjm({
           </g>
         ))}
 
-        {/* Year ticks */}
+        {/* Year ticks — each label marks 1 January, and a faint rule makes it
+            readable where inside the year a capture actually falls. */}
         {annees.map((a) => (
-          <text key={a} x={x(a)} y={H - BAS + 20} textAnchor="middle" className="tabular"
-            fontSize="11" fill="var(--color-ink-400)">{a}</text>
+          <g key={a}>
+            <line x1={x(a)} x2={x(a)} y1={HAUT} y2={H - BAS + 4}
+              stroke="var(--color-ink-200)" strokeWidth="1" opacity="0.7" />
+            <text x={x(a)} y={H - BAS + 20} textAnchor="middle" className="tabular"
+              fontSize="11" fill="var(--color-ink-400)">{a}</text>
+          </g>
         ))}
 
         {/* Events — a label only drops to a lower row when it would overlap the
