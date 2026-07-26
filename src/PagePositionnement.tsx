@@ -50,7 +50,6 @@ export default function PagePositionnement() {
   const profs = h.professions.map(getProfession);
   const villes = villesCommunes(profs);
   const ville = villes.includes(h.ville) ? h.ville : 'national';
-  const villeLabel = ville === 'national' ? 'France' : ville;
 
   // Shared seniority brackets — every profession uses the same keys/labels.
   const brackets = PROFESSIONS[0].experience;
@@ -73,12 +72,22 @@ export default function PagePositionnement() {
   // One market line per selected profession (for the chosen city), plus the
   // user's own path if they filled in 2024/2025.
   const series = useMemo<SerieTemporelle[]>(() => {
-    const marche: SerieTemporelle[] = profs.map((p) => ({
-      label: `${p.libelle} · ${villeLabel}`,
-      couleur: p.couleur,
-      epais: true,
-      points: serieVille(p, ville),
-    }));
+    const marche: SerieTemporelle[] = profs.map((p) => {
+      // The published average is that of the 8-15 bracket, so a curve at another
+      // seniority is that same curve scaled by the brackets' ratio.
+      const niv = p.experience.find((n) => n.cle === h.niveau) ?? p.experience[2];
+      const ref = p.experience.find((n) => n.cle === '8-15') ?? p.experience[2];
+      const ratio = ref.moyen ? niv.moyen / ref.moyen : 1;
+      return {
+        label: `${p.libelle} · ${niv.label}`,
+        couleur: p.couleur,
+        epais: true,
+        points: serieVille(p, ville).map((pt) => ({
+          ...pt,
+          valeur: Math.round(pt.valeur * ratio),
+        })),
+      };
+    });
     const pts = [
       h.tjm2024 > 0 ? { annee: anneeDecimale('2024-07'), valeur: Math.round(h.tjm2024 * facteurComm) } : null,
       h.tjm2025 > 0 ? { annee: anneeDecimale('2025-07'), valeur: Math.round(h.tjm2025 * facteurComm) } : null,
@@ -88,7 +97,7 @@ export default function PagePositionnement() {
       marche.push({ label: 'Votre TJM', couleur: 'var(--color-ink-800)', epais: true, points: pts });
     }
     return marche;
-  }, [profs, ville, villeLabel, h.tjm2024, h.tjm2025, facteurComm, tjmEffectif]);
+  }, [profs, ville, h.niveau, h.tjm2024, h.tjm2025, facteurComm, tjmEffectif]);
 
   const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0;
 
@@ -231,7 +240,9 @@ export default function PagePositionnement() {
                   Évolution du TJM {ville === 'national' ? 'en France' : `à ${ville}`}
                 </h2>
                 <p className="mt-1 text-sm text-ink-500">
-                  Une courbe par métier sélectionné.{' '}
+                  Une courbe par métier, au niveau d'expérience choisi&nbsp;: le
+                  tarif publié est celui des 8-15&nbsp;ans, les autres tranches sont
+                  déduites au prorata.{' '}
                   {trajectoire
                     ? 'Votre trajectoire (2024 → 2026) en trait sombre.'
                     : 'Votre TJM en trait horizontal.'}

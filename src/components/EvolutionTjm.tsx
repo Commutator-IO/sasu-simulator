@@ -20,7 +20,9 @@ export type SerieTemporelle = {
 
 const W = 760;
 const H = 300;
-const HAUT = 30;
+/** Headroom above the plot, enough for three rows of event labels. */
+const HAUT = 46;
+const RANGEES_EVT = [12, 24, 36];
 const BAS = 40;
 const GAUCHE = 46;
 const DROITE = 14;
@@ -83,23 +85,34 @@ export function EvolutionTjm({
             fontSize="11" fill="var(--color-ink-400)">{a}</text>
         ))}
 
-        {/* Events — labels staggered over two rows so close dates don't collide */}
-        {[...evenements]
-          .map((e) => ({ ...e, a: anneeDecimale(e.date) }))
-          .sort((u, v) => u.a - v.a)
-          .map((e, i) => {
-            const ax = x(e.a);
-            if (ax < GAUCHE || ax > W - DROITE) return null;
-            const ty = i % 2 === 0 ? HAUT - 18 : HAUT - 6;
-            return (
-              <g key={e.date}>
-                <line x1={ax} x2={ax} y1={ty + 3} y2={H - BAS} stroke="var(--color-gold-500)"
-                  strokeWidth="1.2" strokeDasharray="2 3" opacity="0.8" />
-                <text x={ax} y={ty} textAnchor="middle" fontSize="9.5"
-                  fontWeight="600" fill="var(--color-gold-600)">{e.label}</text>
-              </g>
-            );
-          })}
+        {/* Events — a label only drops to a lower row when it would overlap the
+            previous one, and it shifts inward rather than spilling off the edge. */}
+        {(() => {
+          const fins = RANGEES_EVT.map(() => -Infinity);
+          return [...evenements]
+            .map((e) => ({ ...e, a: anneeDecimale(e.date) }))
+            .sort((u, v) => u.a - v.a)
+            .map((e) => {
+              const ax = x(e.a);
+              if (ax < GAUCHE || ax > W - DROITE) return null;
+              // Rough text width: enough to detect overlaps at this font size.
+              const demi = (e.label.length * 4.6) / 2;
+              const tx = Math.min(Math.max(ax, GAUCHE + demi), W - DROITE - demi);
+              // First row where this label fits; otherwise the emptiest one.
+              let rangee = fins.findIndex((fin) => tx - demi >= fin + 6);
+              if (rangee < 0) rangee = fins.indexOf(Math.min(...fins));
+              fins[rangee] = tx + demi;
+              const ty = RANGEES_EVT[rangee];
+              return (
+                <g key={e.date}>
+                  <line x1={ax} x2={ax} y1={ty + 3} y2={H - BAS} stroke="var(--color-gold-500)"
+                    strokeWidth="1.2" strokeDasharray="2 3" opacity="0.8" />
+                  <text x={tx} y={ty} textAnchor="middle" fontSize="9.5"
+                    fontWeight="600" fill="var(--color-gold-600)">{e.label}</text>
+                </g>
+              );
+            });
+        })()}
 
         {/* Series */}
         {series.map((s) => {
