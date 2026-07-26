@@ -1,6 +1,16 @@
+import { useState } from 'react';
 import { eur } from '../lib/format';
 import type { Evenement } from '../lib/barometreTjm';
 import { anneeDecimale } from '../lib/barometreTjm';
+
+const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+  'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+/** "2024-03" → "mars 2024". */
+function moisAnnee(date: string): string {
+  const [an, m] = date.split('-');
+  return `${MOIS[Number(m) - 1] ?? ''} ${an}`.trim();
+}
 
 /**
  * Day-rate evolution over time. Hand-drawn SVG, scaled through the viewBox — no
@@ -17,6 +27,7 @@ export type SerieTemporelle = {
   epais?: boolean;
   points: {
     annee: number;
+    date?: string;
     valeur: number;
     estime?: boolean;
     /** Projected, not measured: drawn inside a shaded band past the cut-off. */
@@ -54,6 +65,8 @@ export function EvolutionTjm({
   /** Decimal year where measurements stop and projections begin. */
   finMesures?: number;
 }) {
+  const [survol, setSurvol] = useState<number | null>(null);
+
   const toutesValeurs = series.flatMap((s) =>
     s.points.flatMap((p) => [p.valeur, p.bas, p.haut].filter((v): v is number => v !== undefined)),
   );
@@ -78,10 +91,43 @@ export function EvolutionTjm({
   const annees: number[] = [];
   for (let a = anMin; a <= anMax; a++) annees.push(a);
 
+  // Hovering snaps to the nearest capture date, so the tooltip always shows a
+  // real figure rather than an interpolation.
+  const datesTracees = [...new Set(series.flatMap((s) => s.points.map((p) => p.annee)))].sort(
+    (a, b) => a - b,
+  );
+  const survolee =
+    survol !== null
+      ? datesTracees.reduce((a, b) => (Math.abs(b - survol) < Math.abs(a - survol) ? b : a))
+      : null;
+  // Captures fall on different months from one profession to the next, so each
+  // series contributes its closest point rather than needing the same date.
+  const auSurvol =
+    survolee === null
+      ? []
+      : series
+          .map((s) => {
+            const p = s.points.reduce<(typeof s.points)[number] | null>(
+              (a, b) => (!a || Math.abs(b.annee - survolee) < Math.abs(a.annee - survolee) ? b : a),
+              null,
+            );
+            return p && Math.abs(p.annee - survolee) <= 0.6 ? { s, p } : null;
+          })
+          .filter((x): x is { s: SerieTemporelle; p: (typeof series)[number]['points'][number] } => !!x);
+  const dateSurvolee = auSurvol.find((x) => x.p.date)?.p.date;
+
+  function pointer(e: { clientX: number; currentTarget: SVGSVGElement }) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const vx = ((e.clientX - r.left) / r.width) * W;
+    setSurvol(anMin + ((vx - GAUCHE) / (W - GAUCHE - DROITE)) * (anMax - anMin));
+  }
+
   return (
-    <figure className="m-0">
+    <figure className="relative m-0">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full select-none" role="img"
-        aria-label="Évolution du tarif jour moyen dans le temps">
+        aria-label="Évolution du tarif jour moyen dans le temps"
+        onMouseMove={pointer}
+        onMouseLeave={() => setSurvol(null)}>
         {/* Everything past the last measurement is hypothetical: shade it, and
             draw a hard divider so it cannot be mistaken for measured data. */}
         {finMesures !== undefined && finMesures > 0 && x(finMesures) < W - DROITE && (
@@ -190,6 +236,18 @@ export function EvolutionTjm({
           );
         })}
 
+        {/* Hover guide: a rule on the snapped date, with its points ringed. */}
+        {survolee !== null && auSurvol.length > 0 && (
+          <g pointerEvents="none">
+            <line x1={x(survolee)} x2={x(survolee)} y1={HAUT} y2={H - BAS}
+              stroke="var(--color-ink-400)" strokeWidth="1" strokeDasharray="3 3" />
+            {auSurvol.map(({ s, p }) => (
+              <circle key={s.label} cx={x(p.annee)} cy={y(p.valeur)} r="6"
+                fill="none" stroke={s.couleur} strokeWidth="2" />
+            ))}
+          </g>
+        )}
+
         {/* User's rate */}
         {tjmUtilisateur !== undefined && tjmUtilisateur > 0 && (
           <>
@@ -202,6 +260,33 @@ export function EvolutionTjm({
           </>
         )}
       </svg>
+
+      {survolee !== null && auSurvol.length > 0 && (
+        <div
+          className="pointer-events-none absolute z-10 min-w-40 -translate-y-1/2 rounded-lg border border-ink-200 bg-white/95 p-2.5 shadow-lg backdrop-blur"
+          style={{
+            left: `${(x(survolee) / W) * 100}%`,
+            top: '38%',
+            marginLeft: x(survolee) > W / 2 ? undefined : 12,
+            marginRight: x(survolee) > W / 2 ? 12 : undefined,
+            transform: x(survolee) > W / 2 ? 'translate(-100%, -50%)' : 'translateY(-50%)',
+          }}
+        >
+          <p className="text-[11px] font-semibold text-ink-500">
+            {dateSurvolee ? moisAnnee(dateSurvolee) : Math.round(survolee)}
+          </p>
+          <ul className="mt-1 space-y-1">
+            {auSurvol.map(({ s, p }) => (
+              <li key={s.label} className="flex items-baseline gap-2 text-xs">
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: s.couleur }} />
+                <span className="flex-1 text-ink-600">{s.label}</span>
+                <span className="tabular font-semibold text-ink-900">{eur(p.valeur)}</span>
+                {p.projete && <span className="text-[10px] text-ink-400">proj.</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <figcaption className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-ink-500">
         {series.map((s) => (

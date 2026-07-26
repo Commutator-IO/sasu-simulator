@@ -6,6 +6,7 @@ import { BoutonReset } from './components/BoutonReset';
 import { LienSignaler } from './components/LienSignaler';
 import { EvolutionTjm, type SerieTemporelle } from './components/EvolutionTjm';
 import { JaugeExperience } from './components/JaugeExperience';
+import { ClassementMetiers } from './components/ClassementMetiers';
 import {
   anneeDecimale,
   EVENEMENTS,
@@ -91,10 +92,14 @@ export default function PagePositionnement() {
       };
     });
     const pts = [
-      h.tjm2024 > 0 ? { annee: anneeDecimale('2024-07'), valeur: Math.round(h.tjm2024 * facteurComm) } : null,
-      h.tjm2025 > 0 ? { annee: anneeDecimale('2025-07'), valeur: Math.round(h.tjm2025 * facteurComm) } : null,
-      { annee: anneeDecimale('2026-07'), valeur: tjmEffectif },
-    ].filter((p): p is { annee: number; valeur: number } => p !== null);
+      h.tjm2024 > 0
+        ? { annee: anneeDecimale('2024-07'), date: '2024-07', valeur: Math.round(h.tjm2024 * facteurComm) }
+        : null,
+      h.tjm2025 > 0
+        ? { annee: anneeDecimale('2025-07'), date: '2025-07', valeur: Math.round(h.tjm2025 * facteurComm) }
+        : null,
+      { annee: anneeDecimale('2026-07'), date: '2026-07', valeur: tjmEffectif },
+    ].filter((p): p is { annee: number; date: string; valeur: number } => p !== null);
     if (pts.length > 1) {
       marche.push({ label: 'Votre TJM', couleur: 'var(--color-ink-800)', epais: true, points: pts });
     }
@@ -255,6 +260,24 @@ export default function PagePositionnement() {
                     evenements={EVENEMENTS}
                     tjmUtilisateur={trajectoire ? undefined : tjmEffectif}
                     finMesures={finDesMesures(profs)}
+                  />
+                </div>
+              </div>
+
+              <div className="card mt-6 p-5 sm:p-8">
+                <h2 className="text-lg font-semibold text-ink-900">
+                  Tous les métiers {ville === 'national' ? 'en France' : `à ${ville}`}
+                </h2>
+                <p className="mt-1 text-sm text-ink-500">
+                  Dernier tarif mesuré, et son évolution depuis 2023 — l'année où la
+                  plupart des courbes culminent. Cliquez pour ajouter un métier au
+                  graphique.
+                </p>
+                <div className="mt-5">
+                  <ClassementMetiers
+                    lieu={ville}
+                    selection={h.professions}
+                    onChoisir={basculerProfession}
                   />
                 </div>
               </div>

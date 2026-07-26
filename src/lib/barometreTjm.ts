@@ -102,6 +102,8 @@ export function anneeDecimale(date: string): number {
 
 export type PointSerie = {
   annee: number;
+  /** "YYYY-MM", for labelling a hovered point. */
+  date: string;
   valeur: number;
   /** A projected point (2027-2028), not a measurement. */
   projete?: boolean;
@@ -118,11 +120,40 @@ export function serieVille(p: Profession, lieu: string): PointSerie[] {
       const marge = pt.marge?.[lieu];
       return {
         annee: anneeDecimale(pt.date),
+        date: pt.date,
         valeur: pt[lieu] as number,
         projete: pt.origine === 'projection',
         ...(marge ? { bas: marge[0], haut: marge[1] } : {}),
       };
     });
+}
+
+/** The most recent measured point (projections excluded). */
+export function derniereMesure(p: Profession): PointVille | undefined {
+  return [...p.villes].reverse().find((pt) => pt.origine !== 'projection');
+}
+
+/**
+ * Change in a profession's rate for a city between the capture closest to a
+ * reference year and the latest measurement. Null when that year is not covered,
+ * so a profession with no history is not given a made-up variation.
+ */
+export function variationDepuis(
+  p: Profession,
+  lieu: string,
+  anneeRef: number,
+): { depuis: string; pourcent: number } | null {
+  const mesures = p.villes.filter((pt) => pt.origine !== 'projection' && pt[lieu]);
+  const fin = mesures[mesures.length - 1];
+  const candidats = mesures.filter((pt) => Math.abs(anneeDecimale(pt.date) - anneeRef) <= 1);
+  if (!fin || !candidats.length) return null;
+  const debut = candidats.reduce((a, b) =>
+    Math.abs(anneeDecimale(b.date) - anneeRef) < Math.abs(anneeDecimale(a.date) - anneeRef) ? b : a,
+  );
+  if (debut.date === fin.date) return null;
+  const av = debut[lieu] as number;
+  const ap = fin[lieu] as number;
+  return { depuis: debut.date, pourcent: ((ap - av) / av) * 100 };
 }
 
 /** The last measured date across professions — where projections take over. */

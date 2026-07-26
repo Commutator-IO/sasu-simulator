@@ -14,8 +14,10 @@ const OUTILS: { chemin: string; libelle: string; aVenir?: boolean }[] = [
   { chemin: '/projection/', libelle: 'Projection de CA' },
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
-  { chemin: '/tjm/', libelle: 'Positionner son TJM' },
   { chemin: '/synthese/', libelle: 'Synthèse' },
+  // Sits after the synthesis: it informs the day rate rather than continuing
+  // the turnover-to-dividends sequence.
+  { chemin: '/tjm/', libelle: 'TJM du marché' },
   { chemin: '/mcp/', libelle: 'Serveur MCP', aVenir: true },
 ];
 
