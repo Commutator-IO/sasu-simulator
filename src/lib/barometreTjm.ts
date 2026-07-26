@@ -22,8 +22,6 @@ export type Plateforme = {
   /** Service fee taken on the freelance's invoice, 0 when none. */
   taux: number;
   note: string;
-  /** How to update the rate on that platform. */
-  instruction?: string;
   url?: string | null;
   hote?: string | null;
 };
