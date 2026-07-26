@@ -15,6 +15,8 @@ import {
   moyenneVille,
   NIVEAUX,
   POINTS_VILLES,
+  serieExperience,
+  TAUX_COMMISSION_PLATEFORME,
   VILLES,
   type Lieu,
 } from './lib/barometreTjm';
@@ -51,20 +53,32 @@ export default function PagePositionnement() {
 
   const niveau = NIVEAUX.find((n) => n.cle === h.niveau) ?? NIVEAUX[2];
 
-  // City line (bold) + national line (faint) unless the national is chosen.
+  // The reference figures include the platform commission. If the entered rate
+  // is quoted net of it, add it back so the comparison is on the same basis.
+  const pourcentCommission = Math.round(TAUX_COMMISSION_PLATEFORME * 100);
+  const tjmEffectif = h.commission
+    ? Math.round(h.tjm * (1 + TAUX_COMMISSION_PLATEFORME))
+    : h.tjm;
+
+  // Two lines that respond to the two selectors: the chosen city (all
+  // seniorities) and, nationally, the chosen seniority bracket.
   const series = useMemo<SerieTemporelle[]>(() => {
-    const ligne = (lieu: Lieu, couleur: string, epais: boolean): SerieTemporelle => ({
-      label: lieu === 'national' ? 'France' : lieu,
-      couleur,
-      epais,
-      points: POINTS_VILLES.map((p) => ({ annee: anneeDecimale(p.date), valeur: p[lieu] })),
-    });
-    if (h.ville === 'national') return [ligne('national', 'var(--color-brand-600)', true)];
+    const ville = h.ville === 'national' ? 'France' : h.ville;
     return [
-      ligne(h.ville, 'var(--color-brand-600)', true),
-      ligne('national', 'var(--color-ink-400)', false),
+      {
+        label: `${ville} · tous niveaux`,
+        couleur: 'var(--color-brand-600)',
+        epais: true,
+        points: POINTS_VILLES.map((p) => ({ annee: anneeDecimale(p.date), valeur: p[h.ville] })),
+      },
+      {
+        label: `France · ${niveau.label}`,
+        couleur: 'var(--color-ink-500)',
+        epais: false,
+        points: serieExperience(h.niveau),
+      },
     ];
-  }, [h.ville]);
+  }, [h.ville, h.niveau, niveau.label]);
 
   const lieux: (Lieu)[] = ['national', ...VILLES];
 
@@ -103,6 +117,20 @@ export default function PagePositionnement() {
                     onChange={(v) => setH((s) => ({ ...s, tjm: v }))}
                     suffixe="€ / jour"
                     hint="Le tarif journalier que vous affichez ou visez."
+                  />
+                  <Segments
+                    label="Commission plateforme"
+                    valeur={h.commission}
+                    options={[
+                      { valeur: false, label: 'Déjà incluse' },
+                      { valeur: true, label: `À ajouter (+${pourcentCommission} %)` },
+                    ]}
+                    onChange={(v) => setH((s) => ({ ...s, commission: v }))}
+                    hint={
+                      h.commission
+                        ? `Les repères incluent la commission. Votre TJM est comparé à ${eur(tjmEffectif)}.`
+                        : `Les repères incluent la commission plateforme (~${pourcentCommission} %). Si votre tarif est hors commission, ajoutez-la.`
+                    }
                   />
                   <div>
                     <p className="field-label">Votre expérience</p>
@@ -166,11 +194,12 @@ export default function PagePositionnement() {
                   L'évolution du TJM {h.ville === 'national' ? 'en France' : `à ${h.ville}`}
                 </h2>
                 <p className="mt-1 text-sm text-ink-500">
-                  Experts data ({META.specialite.toLowerCase()}), tarif jour moyen.
-                  Votre TJM apparaît en trait horizontal.
+                  Tarif jour moyen des experts data. Trait vert&nbsp;: le marché de
+                  la ville choisie, tous niveaux. Trait gris&nbsp;: la moyenne France
+                  de votre tranche d'expérience. Votre TJM en trait horizontal.
                 </p>
                 <div className="mt-5">
-                  <EvolutionTjm series={series} evenements={EVENEMENTS} tjmUtilisateur={h.tjm} />
+                  <EvolutionTjm series={series} evenements={EVENEMENTS} tjmUtilisateur={tjmEffectif} />
                 </div>
               </div>
 
@@ -179,7 +208,7 @@ export default function PagePositionnement() {
                   Votre position dans la tranche {niveau.label}
                 </h2>
                 <div className="mt-5">
-                  <JaugeExperience tjm={h.tjm} niveau={niveau} />
+                  <JaugeExperience tjm={tjmEffectif} niveau={niveau} />
                 </div>
               </div>
             </div>

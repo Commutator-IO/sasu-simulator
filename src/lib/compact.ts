@@ -50,6 +50,7 @@ const VERS_COURT: Record<string, string> = {
   tjm: 'tj',
   niveau: 'nv',
   ville: 'vl',
+  commission: 'cm',
 };
 
 const VERS_LONG: Record<string, string> = Object.fromEntries(
@@ -60,8 +61,12 @@ function transformer(requete: string, table: Record<string, string>): string {
   if (!requete || requete === '?') return '';
   const p = new URLSearchParams(requete);
   const parts: string[] = [];
-  // URLSearchParams decodes values, so commas come back literal and are kept.
-  for (const [cle, valeur] of p) parts.push(`${table[cle] ?? cle}=${valeur}`);
+  // URLSearchParams decodes values; re-encode them (keeping commas literal, for
+  // the month-by-month lists) so a "+" or space survives the round trip.
+  for (const [cle, valeur] of p) {
+    const v = encodeURIComponent(valeur).replace(/%2C/g, ',');
+    parts.push(`${table[cle] ?? cle}=${v}`);
+  }
   return parts.length ? `?${parts.join('&')}` : '';
 }
 

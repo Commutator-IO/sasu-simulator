@@ -12,6 +12,14 @@ import donnees from '../data/barometreTjm.json';
 
 export const META = donnees.meta;
 
+/**
+ * The reference figures are quoted commission included (the client-facing price
+ * on the platform they come from). A freelancer whose own rate is quoted net of
+ * commission — as on most other platforms — can add this back to compare on the
+ * same basis.
+ */
+export const TAUX_COMMISSION_PLATEFORME = 0.1;
+
 export const VILLES = ['Paris', 'Lyon', 'Bordeaux', 'Lille', 'Marseille'] as const;
 export type Ville = (typeof VILLES)[number];
 export type Lieu = Ville | 'national';
@@ -31,6 +39,20 @@ export const NIVEAUX = donnees.experience as NiveauExperience[];
 
 export type Evenement = { date: string; label: string };
 export const EVENEMENTS = donnees.evenements as Evenement[];
+
+type PointExperience = Record<string, string | number>;
+const EXPERIENCE_HISTORIQUE = donnees.experienceHistorique as PointExperience[];
+
+/**
+ * National average over time for one seniority bracket, at the dates where that
+ * bracket has data (the finer brackets only appear from 2023).
+ */
+export function serieExperience(cle: string): { annee: number; valeur: number }[] {
+  return EXPERIENCE_HISTORIQUE.filter((p) => typeof p[cle] === 'number').map((p) => ({
+    annee: anneeDecimale(p.date as string),
+    valeur: p[cle] as number,
+  }));
+}
 
 export const HISTORIQUE_NATIONAL = donnees.nationalHistorique as {
   date: string;
