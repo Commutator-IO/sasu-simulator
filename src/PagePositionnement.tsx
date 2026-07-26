@@ -60,6 +60,19 @@ export default function PagePositionnement() {
     ? Math.round(h.tjm * (1 + TAUX_COMMISSION_PLATEFORME))
     : h.tjm;
 
+  // The seniority brackets are only known nationally, so for a city we shift them
+  // by that city's level relative to France — the gauge then follows the city.
+  const facteurVille = moyenneVille(h.ville) / moyenneVille('national');
+  const niveauVille =
+    h.ville === 'national'
+      ? niveau
+      : {
+          ...niveau,
+          bas: Math.round(niveau.bas * facteurVille),
+          moyen: Math.round(niveau.moyen * facteurVille),
+          haut: Math.round(niveau.haut * facteurVille),
+        };
+
   // Two lines that respond to the two selectors: the chosen city (all
   // seniorities) and, nationally, the chosen seniority bracket.
   const series = useMemo<SerieTemporelle[]>(() => {
@@ -206,9 +219,17 @@ export default function PagePositionnement() {
               <div className="card mt-6 p-5 sm:p-8">
                 <h2 className="text-lg font-semibold text-ink-900">
                   Votre position dans la tranche {niveau.label}
+                  {h.ville !== 'national' && ` à ${h.ville}`}
                 </h2>
+                {h.ville !== 'national' && (
+                  <p className="mt-1 text-sm text-ink-500">
+                    Repères de la tranche ajustés au niveau {h.ville}, soit{' '}
+                    {facteurVille >= 1 ? '+' : ''}
+                    {Math.round((facteurVille - 1) * 100)}&nbsp;% par rapport à la France.
+                  </p>
+                )}
                 <div className="mt-5">
-                  <JaugeExperience tjm={tjmEffectif} niveau={niveau} />
+                  <JaugeExperience tjm={tjmEffectif} niveau={niveauVille} />
                 </div>
               </div>
             </div>

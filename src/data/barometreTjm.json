@@ -74,6 +74,8 @@
   ],
   "evenements": [
     { "date": "2020-03", "label": "Pandémie de COVID-19" },
-    { "date": "2022-11", "label": "Sortie de ChatGPT" }
+    { "date": "2022-07", "label": "Hausse des taux BCE" },
+    { "date": "2022-11", "label": "Sortie de ChatGPT" },
+    { "date": "2024-05", "label": "IA générative en entreprise" }
   ]
 }

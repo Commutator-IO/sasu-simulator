@@ -83,19 +83,23 @@ export function EvolutionTjm({
             fontSize="11" fill="var(--color-ink-400)">{a}</text>
         ))}
 
-        {/* Events */}
-        {evenements.map((e) => {
-          const ax = x(anneeDecimale(e.date));
-          if (ax < GAUCHE || ax > W - DROITE) return null;
-          return (
-            <g key={e.date}>
-              <line x1={ax} x2={ax} y1={HAUT} y2={H - BAS} stroke="var(--color-gold-500)"
-                strokeWidth="1.2" strokeDasharray="2 3" opacity="0.8" />
-              <text x={ax} y={HAUT - 6} textAnchor="middle" fontSize="9.5"
-                fontWeight="600" fill="var(--color-gold-600)">{e.label}</text>
-            </g>
-          );
-        })}
+        {/* Events — labels staggered over two rows so close dates don't collide */}
+        {[...evenements]
+          .map((e) => ({ ...e, a: anneeDecimale(e.date) }))
+          .sort((u, v) => u.a - v.a)
+          .map((e, i) => {
+            const ax = x(e.a);
+            if (ax < GAUCHE || ax > W - DROITE) return null;
+            const ty = i % 2 === 0 ? HAUT - 18 : HAUT - 6;
+            return (
+              <g key={e.date}>
+                <line x1={ax} x2={ax} y1={ty + 3} y2={H - BAS} stroke="var(--color-gold-500)"
+                  strokeWidth="1.2" strokeDasharray="2 3" opacity="0.8" />
+                <text x={ax} y={ty} textAnchor="middle" fontSize="9.5"
+                  fontWeight="600" fill="var(--color-gold-600)">{e.label}</text>
+              </g>
+            );
+          })}
 
         {/* Series */}
         {series.map((s) => {
