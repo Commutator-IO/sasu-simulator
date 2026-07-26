@@ -12,9 +12,20 @@ import donnees from '../data/barometreTjm.json';
 
 export const META = donnees.meta;
 
-/** The reference figures are quoted commission included; a rate quoted net of it
- * can be grossed back up to compare on the same basis. */
-export const TAUX_COMMISSION_PLATEFORME = 0.1;
+/**
+ * Freelance platforms and the service fee they deduct, so a rate can be set to
+ * earn the same across them. Barometer figures are the price invoiced by the
+ * freelance, before any such fee.
+ */
+export type Plateforme = {
+  nom: string;
+  /** Service fee taken on the freelance's invoice, 0 when none. */
+  taux: number;
+  note: string;
+  url?: string | null;
+  hote?: string | null;
+};
+export const PLATEFORMES = (donnees.meta.plateformes ?? []) as Plateforme[];
 
 export type NiveauExperience = {
   cle: string;

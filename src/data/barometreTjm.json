@@ -2,7 +2,7 @@
   "meta": {
     "unite": "€/jour, TJM affiché (hors taxes)",
     "notes": [
-      "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié.",
+      "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié. Les TJM sont donnés HT et hors commission de plateforme — c'est le prix facturé par le freelance, dont l'intermédiaire déduit ensuite ses frais de service.",
       "Les points passés sont reconstitués depuis des archives web publiques, y compris 2024 et 2025 : ce sont des mesures, pas des estimations. Les captures restent espacées (une à deux par an).",
       "Une valeur par ville est la moyenne des spécialités publiées pour ce métier, et la même méthode est appliquée à toutes les dates pour que la courbe reste comparable.",
       "Les points 2027 et 2028 sont des projections : la tendance des trois dernières années est prolongée à demi-intensité. C'est un ordre de grandeur, pas une prévision.",
@@ -33,6 +33,43 @@
         "detail": "Médianes déclaratives par métier et par ville, sur plusieurs milliers de réponses. Sert de contrôle indépendant du niveau courant, sans historique publié.",
         "url": "https://tjmetre.fr/barometre",
         "hote": "tjmetre.fr"
+      }
+    ],
+    "plateformes": [
+      {
+        "nom": "Malt",
+        "taux": 0.1,
+        "note": "Frais dégressifs : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez.",
+        "url": "https://help.malt.com/hc/fr/articles/29567589850002-Les-offres-et-frais-de-service-Malt",
+        "hote": "help.malt.com"
+      },
+      {
+        "nom": "Comet",
+        "taux": 0.15,
+        "note": "Plateforme tech (développement, data, produit).",
+        "url": "https://www.comet.co/",
+        "hote": "comet.co"
+      },
+      {
+        "nom": "Crème de la Crème",
+        "taux": 0.1,
+        "note": "Sélection à l'entrée ; certaines missions grands comptes affichées sans commission.",
+        "url": "https://www.cremedelacreme.io/",
+        "hote": "cremedelacreme.io"
+      },
+      {
+        "nom": "Free-Work",
+        "taux": 0.0,
+        "note": "Site d'annonces : vous contractez en direct, rien n'est prélevé sur votre facture.",
+        "url": "https://www.free-work.com/fr",
+        "hote": "free-work.com"
+      },
+      {
+        "nom": "En direct / régie",
+        "taux": 0.0,
+        "note": "Aucun intermédiaire ne prélève : votre TJM facturé est votre TJM perçu.",
+        "url": null,
+        "hote": null
       }
     ]
   },

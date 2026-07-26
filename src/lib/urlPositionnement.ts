@@ -17,8 +17,6 @@ export type EtatPositionnement = {
   tjm2025: number;
   niveau: string;
   ville: string;
-  /** Add the platform commission back to the entered rate before comparing. */
-  commission: boolean;
 };
 
 /** Shared seniority brackets (every profession uses the same keys). */
@@ -31,7 +29,6 @@ export const DEFAUTS_POSITIONNEMENT: EtatPositionnement = {
   tjm2025: 0,
   niveau: '8-15',
   ville: 'national',
-  commission: false,
 };
 
 const CLES = {
@@ -41,7 +38,6 @@ const CLES = {
   tjm2025: 'tjm2025',
   niveau: 'niveau',
   ville: 'ville',
-  commission: 'commission',
 } as const;
 
 export const CLES_POSITIONNEMENT: string[] = Object.values(CLES);
@@ -62,12 +58,6 @@ function lireVille(brut: string | null, profs: string[], defaut: string): string
   return dispo.includes(brut ?? '') ? (brut as string) : defaut;
 }
 
-function lireBool(brut: string | null, defaut: boolean): boolean {
-  if (brut === '1') return true;
-  if (brut === '0') return false;
-  return defaut;
-}
-
 export function encoderPositionnement(
   e: EtatPositionnement,
   defauts: EtatPositionnement,
@@ -80,7 +70,6 @@ export function encoderPositionnement(
   if (e.tjm2025 > 0) params.set(CLES.tjm2025, String(Math.round(e.tjm2025)));
   if (e.niveau !== defauts.niveau) params.set(CLES.niveau, e.niveau);
   if (e.ville !== defauts.ville) params.set(CLES.ville, e.ville);
-  if (e.commission !== defauts.commission) params.set(CLES.commission, e.commission ? '1' : '0');
   const chaine = params.toString();
   return chaine === '' ? '' : `?${chaine}`;
 }
@@ -98,7 +87,6 @@ export function decoderPositionnement(
     tjm2025: nombre(p.get(CLES.tjm2025), defauts.tjm2025, 0, MAX_MONTANT),
     niveau: lireNiveau(p.get(CLES.niveau), defauts.niveau),
     ville: lireVille(p.get(CLES.ville), professions, defauts.ville),
-    commission: lireBool(p.get(CLES.commission), defauts.commission),
   };
 }
 

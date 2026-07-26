@@ -7,6 +7,7 @@ import { LienSignaler } from './components/LienSignaler';
 import { EvolutionTjm, type SerieTemporelle } from './components/EvolutionTjm';
 import { JaugeExperience } from './components/JaugeExperience';
 import { ClassementMetiers } from './components/ClassementMetiers';
+import { TarifsPlateformes } from './components/TarifsPlateformes';
 import {
   anneeDecimale,
   EVENEMENTS,
@@ -17,7 +18,6 @@ import {
   PROFESSIONS,
   REFERENCES,
   serieVille,
-  TAUX_COMMISSION_PLATEFORME,
   villesCommunes,
   type NiveauExperience,
 } from './lib/barometreTjm';
@@ -62,10 +62,9 @@ export default function PagePositionnement() {
   // Shared seniority brackets — every profession uses the same keys/labels.
   const brackets = PROFESSIONS[0].experience;
 
-  // Effective rates (add the platform commission back when asked).
-  const facteurComm = h.commission ? 1 + TAUX_COMMISSION_PLATEFORME : 1;
-  const pourcentCommission = Math.round(TAUX_COMMISSION_PLATEFORME * 100);
-  const tjmEffectif = Math.round(h.tjm * facteurComm);
+  // Barometer rates are the invoiced price, before any platform fee — the rate
+  // entered here is on the same basis, so it is compared as is.
+  const tjmEffectif = Math.round(h.tjm);
 
   const basculerProfession = (cle: string) =>
     setH((s) => {
@@ -102,10 +101,10 @@ export default function PagePositionnement() {
     });
     const pts = [
       h.tjm2024 > 0
-        ? { annee: anneeDecimale('2024-07'), date: '2024-07', valeur: Math.round(h.tjm2024 * facteurComm) }
+        ? { annee: anneeDecimale('2024-07'), date: '2024-07', valeur: Math.round(h.tjm2024) }
         : null,
       h.tjm2025 > 0
-        ? { annee: anneeDecimale('2025-07'), date: '2025-07', valeur: Math.round(h.tjm2025 * facteurComm) }
+        ? { annee: anneeDecimale('2025-07'), date: '2025-07', valeur: Math.round(h.tjm2025) }
         : null,
       { annee: anneeDecimale('2026-07'), date: '2026-07', valeur: tjmEffectif },
     ].filter((p): p is { annee: number; date: string; valeur: number } => p !== null);
@@ -113,7 +112,7 @@ export default function PagePositionnement() {
       marche.push({ label: 'Votre TJM', couleur: 'var(--color-ink-800)', epais: true, points: pts });
     }
     return marche;
-  }, [profs, ville, h.niveau, h.tjm2024, h.tjm2025, facteurComm, tjmEffectif]);
+  }, [profs, ville, h.niveau, h.tjm2024, h.tjm2025, tjmEffectif]);
 
   const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0;
 
@@ -197,20 +196,6 @@ export default function PagePositionnement() {
                       hint="Optionnel"
                     />
                   </div>
-                  <Segments
-                    label="Commission plateforme"
-                    valeur={h.commission}
-                    options={[
-                      { valeur: false, label: 'Déjà incluse' },
-                      { valeur: true, label: `À ajouter (+${pourcentCommission} %)` },
-                    ]}
-                    onChange={(v) => setH((s) => ({ ...s, commission: v }))}
-                    hint={
-                      h.commission
-                        ? `Vos TJM sont comparés commission incluse (+${pourcentCommission} %).`
-                        : `Les repères incluent la commission plateforme (~${pourcentCommission} %).`
-                    }
-                  />
                   <div>
                     <p className="field-label">Votre expérience</p>
                     <div className="mt-1">
@@ -288,6 +273,21 @@ export default function PagePositionnement() {
                     selection={h.professions}
                     onChoisir={basculerProfession}
                   />
+                </div>
+              </div>
+
+              <div className="card mt-6 p-5 sm:p-8">
+                <h2 className="text-lg font-semibold text-ink-900">
+                  Ce qu'il faut afficher selon la plateforme
+                </h2>
+                <p className="mt-1 text-sm text-ink-500">
+                  Les tarifs du baromètre — et celui que vous saisissez — sont le
+                  prix HT que vous facturez, <strong>avant</strong> les frais de
+                  service de l'intermédiaire. Pour percevoir la même chose partout,
+                  il faut donc afficher davantage là où une commission s'applique.
+                </p>
+                <div className="mt-5">
+                  <TarifsPlateformes tjm={tjmEffectif} />
                 </div>
               </div>
 

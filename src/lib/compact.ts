@@ -53,7 +53,6 @@ const VERS_COURT: Record<string, string> = {
   tjm2025: 't5',
   niveau: 'nv',
   ville: 'vl',
-  commission: 'cm',
 };
 
 const VERS_LONG: Record<string, string> = Object.fromEntries(
