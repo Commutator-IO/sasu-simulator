@@ -85,9 +85,13 @@ export default function PagePositionnement() {
         label: `${p.libelle} · ${niv.label}`,
         couleur: p.couleur,
         epais: true,
+        // The whole point scales, bounds included: otherwise a projection's
+        // band would stay at the 8-15 level while its line moves.
         points: serieVille(p, ville).map((pt) => ({
           ...pt,
           valeur: Math.round(pt.valeur * ratio),
+          ...(pt.bas !== undefined ? { bas: Math.round(pt.bas * ratio) } : {}),
+          ...(pt.haut !== undefined ? { haut: Math.round(pt.haut * ratio) } : {}),
         })),
       };
     });
