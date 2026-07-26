@@ -8,8 +8,8 @@
     "notes": [
       "Chiffres recueillis auprès de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié.",
       "Les points passés sont reconstitués à partir d'archives web publiques ; les captures sont espacées, d'où des trous.",
-      "À partir de 2024, aucun chiffre n'a pu être archivé : les points 2024 à 2026 sont des estimations, cadrées sur le niveau d'autres baromètres publics récents (qui ne montrent pas de reprise), à lire comme une tendance et non comme une mesure.",
-      "Les TJM par ville reposent sur de petits échantillons et sont à lire comme une tendance, pas une mesure.",
+      "Le point le plus récent (juillet 2026) est une mesure directe du baromètre public ; les points 2024 et 2025, non archivés, sont des estimations, à lire comme une tendance et non comme une mesure.",
+      "Les TJM par ville — Paris en particulier — reposent sur de petits échantillons que la source signale : à lire comme une tendance, pas une mesure.",
       "Chaque point est daté au mois : les comparer suppose d'ignorer une éventuelle saisonnalité intra-annuelle.",
       "Le découpage des tranches d'ancienneté a changé vers 2023 ; les tranches fines n'ont donc de données qu'à partir de cette date."
     ]
@@ -48,32 +48,32 @@
     {
       "date": "2024-07",
       "origine": "estimation",
-      "national": 640,
-      "Paris": 686,
-      "Lyon": 556,
-      "Bordeaux": 590,
-      "Lille": 549,
-      "Marseille": 553
+      "national": 645,
+      "Paris": 695,
+      "Lyon": 580,
+      "Bordeaux": 600,
+      "Lille": 565,
+      "Marseille": 585
     },
     {
       "date": "2025-07",
       "origine": "estimation",
-      "national": 632,
-      "Paris": 676,
-      "Lyon": 548,
-      "Bordeaux": 582,
-      "Lille": 542,
-      "Marseille": 546
+      "national": 660,
+      "Paris": 712,
+      "Lyon": 608,
+      "Bordeaux": 614,
+      "Lille": 583,
+      "Marseille": 618
     },
     {
       "date": "2026-07",
-      "origine": "estimation",
-      "national": 635,
-      "Paris": 675,
-      "Lyon": 548,
-      "Bordeaux": 582,
-      "Lille": 542,
-      "Marseille": 548
+      "origine": "live",
+      "national": 680,
+      "Paris": 742,
+      "Lyon": 641,
+      "Bordeaux": 631,
+      "Lille": 604,
+      "Marseille": 653
     }
   ],
   "nationalHistorique": [
@@ -82,16 +82,16 @@
     { "date": "2022-05", "moyenneActifs": 625, "origine": "archive:data-scientist" }
   ],
   "experience": [
-    { "cle": "0-2", "label": "0 à 2 ans", "bas": 120, "moyen": 352, "haut": 710 },
-    { "cle": "3-7", "label": "3 à 7 ans", "bas": 120, "moyen": 513, "haut": 810 },
-    { "cle": "8-15", "label": "8 à 15 ans", "bas": 300, "moyen": 666, "haut": 1010 },
-    { "cle": "15p", "label": "15 ans et +", "bas": 400, "moyen": 733, "haut": 1210 }
+    { "cle": "0-2", "label": "0 à 2 ans", "bas": 120, "moyen": 360, "haut": 710 },
+    { "cle": "3-7", "label": "3 à 7 ans", "bas": 120, "moyen": 520, "haut": 810 },
+    { "cle": "8-15", "label": "8 à 15 ans", "bas": 300, "moyen": 680, "haut": 1210 },
+    { "cle": "15p", "label": "15 ans et +", "bas": 350, "moyen": 735, "haut": 1510 }
   ],
   "experienceHistorique": [
     { "date": "2021-12", "0-2": 322 },
     { "date": "2022-12", "0-2": 332 },
     { "date": "2023-09", "0-2": 342, "3-7": 509, "8-15": 663, "15p": 754 },
-    { "date": "2026-07", "0-2": 352, "3-7": 513, "8-15": 666, "15p": 733 }
+    { "date": "2026-07", "0-2": 360, "3-7": 520, "8-15": 680, "15p": 735 }
   ],
   "evenements": [
     { "date": "2020-03", "label": "Pandémie de COVID-19" },
