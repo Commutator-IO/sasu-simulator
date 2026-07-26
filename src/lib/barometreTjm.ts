@@ -7,7 +7,7 @@ import donnees from '../data/barometreTjm.json';
  * The figures live in ../data/barometreTjm.json so the dataset can grow — more
  * capture dates, more cities — without touching this logic. Read the JSON's own
  * `meta.notes` for the caveats: snapshot metric, archive reconstruction, the
- * 2024-2025 gap, low city samples, and the seasonality of dates.
+ * estimated 2024-2025 points, low city samples, and the seasonality of dates.
  */
 
 export const META = donnees.meta;

@@ -7,7 +7,8 @@
     "capteLe": "2026-07",
     "notes": [
       "Chiffres recueillis auprès de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié.",
-      "Les points passés sont reconstitués à partir d'archives web publiques ; les captures sont espacées, d'où des trous — notamment entre 2023 et 2026.",
+      "Les points passés sont reconstitués à partir d'archives web publiques ; les captures sont espacées, d'où des trous.",
+      "Les points 2024 et 2025 ne sont pas archivés : ce sont des estimations, obtenues en recoupant le niveau d'autres baromètres publics récents, à lire comme une tendance et non comme une mesure.",
       "Les TJM par ville reposent sur de petits échantillons et sont à lire comme une tendance, pas une mesure.",
       "Chaque point est daté au mois : les comparer suppose d'ignorer une éventuelle saisonnalité intra-annuelle.",
       "Le découpage des tranches d'ancienneté a changé vers 2023 ; les tranches fines n'ont donc de données qu'à partir de cette date."
@@ -43,6 +44,26 @@
       "Bordeaux": 601,
       "Lille": 560,
       "Marseille": 564
+    },
+    {
+      "date": "2024-07",
+      "origine": "estimation",
+      "national": 651,
+      "Paris": 692,
+      "Lyon": 585,
+      "Bordeaux": 604,
+      "Lille": 573,
+      "Marseille": 592
+    },
+    {
+      "date": "2025-07",
+      "origine": "estimation",
+      "national": 665,
+      "Paris": 698,
+      "Lyon": 615,
+      "Bordeaux": 616,
+      "Lille": 593,
+      "Marseille": 622
     },
     {
       "date": "2026-07",

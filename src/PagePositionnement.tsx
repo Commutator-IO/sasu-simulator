@@ -82,7 +82,11 @@ export default function PagePositionnement() {
         label: `${ville} · tous niveaux`,
         couleur: 'var(--color-brand-600)',
         epais: true,
-        points: POINTS_VILLES.map((p) => ({ annee: anneeDecimale(p.date), valeur: p[h.ville] })),
+        points: POINTS_VILLES.map((p) => ({
+          annee: anneeDecimale(p.date),
+          valeur: p[h.ville],
+          estime: p.origine === 'estimation',
+        })),
       },
       {
         label: `France · ${niveau.label}`,

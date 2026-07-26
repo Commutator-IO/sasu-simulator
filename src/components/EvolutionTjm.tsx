@@ -6,16 +6,16 @@ import { anneeDecimale } from '../lib/barometreTjm';
  * Day-rate evolution over time. Hand-drawn SVG, scaled through the viewBox — no
  * dependency, like the other charts.
  *
- * A gap wider than 18 months between two points is drawn dashed: the 2024-2025
- * figures are missing (the source moved to client-side rendering), so the line there
- * is an interpolation, not data.
+ * Estimated points (2024-2025, not archived — inferred from the level of other
+ * public barometers) and any segment touching them are drawn dashed with a
+ * hollow marker, so they read as a trend, not measured data.
  */
 
 export type SerieTemporelle = {
   label: string;
   couleur: string;
   epais?: boolean;
-  points: { annee: number; valeur: number }[];
+  points: { annee: number; valeur: number; estime?: boolean }[];
 };
 
 const W = 760;
@@ -108,17 +108,18 @@ export function EvolutionTjm({
             <g key={s.label}>
               {pts.slice(1).map((p, i) => {
                 const prev = pts[i];
-                const trou = p.annee - prev.annee > 1.5;
+                const estime = p.estime || prev.estime || p.annee - prev.annee > 1.5;
                 return (
                   <line key={i} x1={x(prev.annee)} y1={y(prev.valeur)} x2={x(p.annee)}
                     y2={y(p.valeur)} stroke={s.couleur} strokeWidth={s.epais ? 2.5 : 1.5}
-                    strokeLinecap="round" strokeDasharray={trou ? '4 4' : undefined}
+                    strokeLinecap="round" strokeDasharray={estime ? '4 4' : undefined}
                     opacity={s.epais ? 1 : 0.55} />
                 );
               })}
               {pts.map((p) => (
                 <circle key={p.annee} cx={x(p.annee)} cy={y(p.valeur)} r={s.epais ? 4 : 3}
-                  fill={s.couleur} stroke="#fff" strokeWidth="1.5" opacity={s.epais ? 1 : 0.6} />
+                  fill={p.estime ? '#fff' : s.couleur} stroke={p.estime ? s.couleur : '#fff'}
+                  strokeWidth="1.5" opacity={s.epais ? 1 : 0.6} />
               ))}
             </g>
           );
@@ -147,7 +148,10 @@ export function EvolutionTjm({
         <span className="flex items-center gap-1.5">
           <span className="h-0 w-4 border-t-2 border-dashed border-gold-500" /> Événement
         </span>
-        <span className="text-ink-400">— — trait pointillé : 2024-2025 non archivé</span>
+        <span className="flex items-center gap-1.5 text-ink-400">
+          <span className="h-2 w-2 rounded-full border border-ink-400 bg-white" />
+          2024-2025 : estimation
+        </span>
       </figcaption>
     </figure>
   );
