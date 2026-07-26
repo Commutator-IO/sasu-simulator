@@ -148,12 +148,10 @@ export function EvolutionTjm({
         <span className="flex items-center gap-1.5">
           <span className="h-0 w-4 border-t-2 border-dashed border-gold-500" /> Événement
         </span>
-        {series.some((s) => s.points.some((p) => p.estime)) && (
-          <span className="flex items-center gap-1.5 text-ink-400">
-            <span className="h-2 w-2 rounded-full border border-ink-400 bg-white" />
-            2024-2025 : estimation
-          </span>
-        )}
+        <span className="flex items-center gap-1.5 text-ink-400">
+          <span className="h-2 w-2 rounded-full border border-ink-400 bg-white" />
+          2024-2025 : estimation
+        </span>
       </figcaption>
     </figure>
   );
