@@ -11,10 +11,23 @@ import {
 } from './barometreTjm';
 
 describe('données du baromètre', () => {
-  it('expose plusieurs métiers, data scientist en tête', () => {
+  it('expose plusieurs métiers, expert data en tête', () => {
     expect(PROFESSIONS.length).toBeGreaterThan(1);
-    expect(PROFESSIONS[0].cle).toBe('data-scientist');
+    expect(PROFESSIONS[0].cle).toBe('expert-data');
     expect(PROFESSIONS.map((p) => p.cle)).toContain('developpeur');
+  });
+
+  it('ne projette qu’après la dernière mesure, avec une fourchette', () => {
+    for (const p of PROFESSIONS) {
+      const projections = p.villes.filter((pt) => pt.origine === 'projection');
+      const mesures = p.villes.filter((pt) => pt.origine !== 'projection');
+      for (const pj of projections) {
+        expect(pj.date > mesures[mesures.length - 1].date).toBe(true);
+        const [bas, haut] = pj.marge?.Paris ?? [];
+        expect(bas).toBeLessThanOrEqual(pj.Paris as number);
+        expect(haut).toBeGreaterThanOrEqual(pj.Paris as number);
+      }
+    }
   });
 
   it('date les points de chaque métier dans l’ordre chronologique', () => {

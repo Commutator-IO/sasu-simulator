@@ -9,10 +9,12 @@ import { JaugeExperience } from './components/JaugeExperience';
 import {
   anneeDecimale,
   EVENEMENTS,
+  finDesMesures,
   getProfession,
   META,
   moyenneVille,
   PROFESSIONS,
+  REFERENCES,
   serieVille,
   TAUX_COMMISSION_PLATEFORME,
   villesCommunes,
@@ -252,6 +254,7 @@ export default function PagePositionnement() {
                     series={series}
                     evenements={EVENEMENTS}
                     tjmUtilisateur={trajectoire ? undefined : tjmEffectif}
+                    finMesures={finDesMesures(profs)}
                   />
                 </div>
               </div>
@@ -271,6 +274,7 @@ export default function PagePositionnement() {
           </div>
         </section>
 
+        <ReperesEconomiques />
         <Regles />
       </main>
 
@@ -314,6 +318,65 @@ function GaugeMetier({
         <JaugeExperience tjm={tjm} niveau={niveauVille} />
       </div>
     </div>
+  );
+}
+
+/** The milestones drawn on the chart, explained, with the studies behind them. */
+function ReperesEconomiques() {
+  return (
+    <section id="reperes" className="scroll-mt-20 border-t border-ink-200/70 bg-white">
+      <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
+        <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
+          Repères économiques
+        </h2>
+        <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
+          Les jalons tracés sur le graphique, et ce qu'ils ont changé pour les
+          tarifs freelances.
+        </p>
+
+        <ol className="mt-8 grid gap-4 sm:grid-cols-2">
+          {EVENEMENTS.map((e) => (
+            <li key={e.date} className="card p-5">
+              <div className="flex items-baseline gap-3">
+                <span className="tabular shrink-0 rounded-md bg-gold-100 px-2 py-0.5 text-xs font-semibold text-gold-700">
+                  {e.date}
+                </span>
+                <h3 className="text-sm font-semibold text-ink-900">{e.label}</h3>
+              </div>
+              {e.explication && (
+                <p className="mt-2 text-sm leading-relaxed text-ink-600">{e.explication}</p>
+              )}
+            </li>
+          ))}
+        </ol>
+
+        {REFERENCES.length > 0 && (
+          <>
+            <h3 className="mt-12 text-lg font-semibold text-ink-900">
+              Études de marché citées
+            </h3>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {REFERENCES.map((r) => (
+                <li key={r.titre} className="card p-5">
+                  <p className="text-sm font-semibold text-ink-900">{r.titre}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-600">{r.detail}</p>
+                  {r.url && (
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-sm font-medium text-brand-700 underline underline-offset-4 hover:text-brand-800"
+                    >
+                      {r.hote ?? 'Consulter'}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
+    </section>
   );
 }
 

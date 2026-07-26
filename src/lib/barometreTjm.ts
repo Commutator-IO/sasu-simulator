@@ -27,7 +27,10 @@ export type NiveauExperience = {
 export type PointVille = {
   date: string;
   origine: string;
-} & Record<string, string | number>;
+  /** Projection only: [low, high] band per city. */
+  marge?: Record<string, number[]>;
+  [cle: string]: string | number | Record<string, number[]> | undefined;
+};
 
 type PointExperience = Record<string, string | number>;
 
@@ -43,8 +46,17 @@ export type Profession = {
 
 export const PROFESSIONS = donnees.professions as Profession[];
 
-export type Evenement = { date: string; label: string };
+export type Evenement = {
+  date: string;
+  label: string;
+  /** Why this milestone moved day rates — shown in the economic references. */
+  explication?: string;
+};
 export const EVENEMENTS = donnees.evenements as Evenement[];
+
+/** Published market studies backing the milestones above. */
+export type Reference = { titre: string; detail: string; url?: string; hote?: string };
+export const REFERENCES = (donnees.meta.references ?? []) as Reference[];
 
 /** A profession by key, defaulting to the first (data scientist). */
 export function getProfession(cle: string): Profession {
@@ -88,15 +100,37 @@ export function anneeDecimale(date: string): number {
   return an + ((mois || 1) - 0.5) / 12;
 }
 
+export type PointSerie = {
+  annee: number;
+  valeur: number;
+  /** A projected point (2027-2028), not a measurement. */
+  projete?: boolean;
+  /** Uncertainty band around a projection. */
+  bas?: number;
+  haut?: number;
+};
+
 /** A profession's day-rate points for one city, ready to plot. */
-export function serieVille(p: Profession, lieu: string): { annee: number; valeur: number; estime?: boolean }[] {
+export function serieVille(p: Profession, lieu: string): PointSerie[] {
   return p.villes
     .filter((pt) => typeof pt[lieu] === 'number')
-    .map((pt) => ({
-      annee: anneeDecimale(pt.date),
-      valeur: pt[lieu] as number,
-      estime: pt.origine === 'estimation',
-    }));
+    .map((pt) => {
+      const marge = pt.marge?.[lieu];
+      return {
+        annee: anneeDecimale(pt.date),
+        valeur: pt[lieu] as number,
+        projete: pt.origine === 'projection',
+        ...(marge ? { bas: marge[0], haut: marge[1] } : {}),
+      };
+    });
+}
+
+/** The last measured date across professions — where projections take over. */
+export function finDesMesures(profs: Profession[]): number {
+  const dates = profs.flatMap((p) =>
+    p.villes.filter((pt) => pt.origine !== 'projection').map((pt) => anneeDecimale(pt.date)),
+  );
+  return dates.length ? Math.max(...dates) : 0;
 }
 
 export type Positionnement = {
