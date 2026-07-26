@@ -25,20 +25,18 @@ import {
   DEFAUTS_POSITIONNEMENT,
   type EtatPositionnement,
 } from './lib/urlPositionnement';
-import { litStockage, sauvegarderRecherche } from './lib/persistance';
+import { litStockage, sauvegarderRecherche, CLE_POSITIONNEMENT } from './lib/persistance';
 import { minifier, rechercheCourante } from './lib/compact';
-
-const CLE = 'sasu:positionnement';
 
 export default function PagePositionnement() {
   const [h, setH] = useState<EtatPositionnement>(() => {
-    const saved = decoderPositionnement(litStockage(CLE), DEFAUTS_POSITIONNEMENT);
+    const saved = decoderPositionnement(litStockage(CLE_POSITIONNEMENT), DEFAUTS_POSITIONNEMENT);
     return decoderPositionnement(rechercheCourante(), saved);
   });
 
   useEffect(() => {
     const requete = encoderPositionnement(h, DEFAUTS_POSITIONNEMENT);
-    sauvegarderRecherche(CLE, requete);
+    sauvegarderRecherche(CLE_POSITIONNEMENT, requete);
     const t = setTimeout(() => {
       window.history.replaceState(
         null,
