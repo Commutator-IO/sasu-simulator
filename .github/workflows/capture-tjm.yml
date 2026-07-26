@@ -1,0 +1,81 @@
+name: Capture mensuelle du baromètre TJM
+
+# Grows a real month-by-month history: once a month, render the public
+# barometer, append a dated point to src/data/barometreTjm.json, and open a PR
+# for review. Nothing is merged automatically.
+#
+# Requires:
+#   - repository secret BAROMETRE_URL (the barometer page to read)
+#   - Settings > Actions > General > Workflow permissions:
+#       "Read and write" + "Allow GitHub Actions to create and approve pull requests"
+on:
+  schedule:
+    - cron: '17 6 3 * *' # 06:17 UTC on the 3rd of each month (off-peak minute)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  capture:
+    name: Capturer et proposer une PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Playwright lives only here, not in the app's dependencies.
+      - name: Installer Playwright
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Capturer le baromètre
+        env:
+          BAROMETRE_URL: ${{ secrets.BAROMETRE_URL }}
+        run: node scripts/capture-barometre.mjs
+
+      - name: Stop si rien de neuf
+        id: diff
+        run: |
+          if git diff --quiet -- src/data/barometreTjm.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Aucun nouveau point ce mois-ci."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A changed dataset must still typecheck, lint, test and build.
+      - name: Vérifier
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          npm run lint
+          npm test
+          npm run build
+
+      - name: Ouvrir la PR
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MOIS=$(date -u +%Y-%m)
+          BRANCHE="data/tjm-capture-$MOIS"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCHE"
+          git add src/data/barometreTjm.json
+          git commit -m "Add the $MOIS barometer capture"
+          git push -f origin "$BRANCHE"
+          gh pr create \
+            --base main \
+            --head "$BRANCHE" \
+            --title "TJM data : point $MOIS" \
+            --body "Capture mensuelle automatique du baromètre public (point réel daté $MOIS). À relire avant fusion." \
+            || echo "Une PR existe déjà pour $BRANCHE."
