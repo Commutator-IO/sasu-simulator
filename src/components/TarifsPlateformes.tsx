@@ -47,7 +47,7 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
                 )}
               </td>
               <td className="tabular px-3 py-3 text-right text-ink-600">
-                {p.taux === 0 ? '—' : `${Math.round(p.taux * 100)} %`}
+                {p.tauxLibelle ?? (p.taux === 0 ? '—' : `${Math.round(p.taux * 100)} %`)}
               </td>
               <td className="tabular px-3 py-3 text-right font-semibold text-ink-900">
                 {eur(aSaisir(tjm, p.taux))}

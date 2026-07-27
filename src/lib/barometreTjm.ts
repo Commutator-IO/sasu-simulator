@@ -21,6 +21,8 @@ export type Plateforme = {
   nom: string;
   /** Service fee taken on the freelance's invoice, 0 when none. */
   taux: number;
+  /** Shown instead of the rate when it is not a published percentage. */
+  tauxLibelle?: string;
   note: string;
   url?: string | null;
   hote?: string | null;
@@ -48,6 +50,8 @@ type PointExperience = Record<string, string | number>;
 export type Profession = {
   cle: string;
   libelle: string;
+  /** Short form, for the cramped picker; falls back to `libelle`. */
+  court?: string;
   couleur: string;
   villes: PointVille[];
   experience: NiveauExperience[];

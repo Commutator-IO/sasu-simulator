@@ -65,6 +65,14 @@
         "hote": "free-work.com"
       },
       {
+        "nom": "Freelance.com",
+        "taux": 0.0,
+        "tauxLibelle": "marge négociée",
+        "note": "Modèle d'intermédiation, proche d'une ESN : rien n'est prélevé sur votre facture, la marge se prend entre votre tarif et le prix payé par le client. Elle n'est pas publiée — demandez le détail avant de signer.",
+        "url": "https://www.freelance.com/",
+        "hote": "freelance.com"
+      },
+      {
         "nom": "En direct / régie",
         "taux": 0.0,
         "note": "Aucun intermédiaire ne prélève : votre TJM facturé est votre TJM perçu.",
@@ -283,7 +291,8 @@
           "moyen": 735,
           "haut": 1510
         }
-      ]
+      ],
+      "court": "Data"
     },
     {
       "cle": "developpeur",
@@ -442,7 +451,8 @@
           "moyen": 671,
           "haut": 1210
         }
-      ]
+      ],
+      "court": "Dev"
     },
     {
       "cle": "consultant",
@@ -611,7 +621,8 @@
           "moyen": 894,
           "haut": 2010
         }
-      ]
+      ],
+      "court": "Consultant"
     },
     {
       "cle": "chef-de-projet",
@@ -780,7 +791,8 @@
           "moyen": 778,
           "haut": 1210
         }
-      ]
+      ],
+      "court": "Chef de projet"
     },
     {
       "cle": "marketing",
@@ -939,7 +951,8 @@
           "moyen": 789,
           "haut": 2010
         }
-      ]
+      ],
+      "court": "Marketing"
     },
     {
       "cle": "graphiste",
@@ -1098,7 +1111,8 @@
           "moyen": 482,
           "haut": 810
         }
-      ]
+      ],
+      "court": "Graphiste"
     },
     {
       "cle": "redacteur",
@@ -1267,7 +1281,8 @@
           "moyen": 535,
           "haut": 1210
         }
-      ]
+      ],
+      "court": "Rédacteur"
     },
     {
       "cle": "motion",
@@ -1446,7 +1461,8 @@
           "moyen": 533,
           "haut": 1010
         }
-      ]
+      ],
+      "court": "Motion"
     },
     {
       "cle": "jeux-video",
@@ -1493,7 +1509,8 @@
           "moyen": 468,
           "haut": 810
         }
-      ]
+      ],
+      "court": "Jeux vidéo"
     }
   ]
 }

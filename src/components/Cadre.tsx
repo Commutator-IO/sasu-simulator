@@ -11,7 +11,7 @@ import * as P from '../lib/parametres2026';
  */
 
 const OUTILS: { chemin: string; libelle: string; aVenir?: boolean }[] = [
-  { chemin: '/projection/', libelle: 'Projection de CA' },
+  { chemin: '/projection/', libelle: 'Projection' },
   { chemin: '/', libelle: 'Salaire ou dividendes' },
   { chemin: '/acomptes/', libelle: "Acomptes d'IS" },
   { chemin: '/synthese/', libelle: 'Synthèse' },
@@ -54,7 +54,9 @@ export function Entete({
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-ink-200/70 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-3 px-5 py-4">
+      {/* One line at any width: nothing wraps, and the tools scroll sideways
+          rather than pushing the bar onto a second row. */}
+      <div className="mx-auto flex max-w-6xl items-center gap-x-4 px-5 py-3">
         <a href="/" className="flex shrink-0 items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white">
             S
@@ -64,7 +66,7 @@ export function Entete({
           </span>
         </a>
 
-        <nav className="flex flex-1 flex-wrap items-center gap-1">
+        <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {OUTILS.map((o) => {
             const actif = estActif(o.chemin, chemin);
             return (
@@ -73,15 +75,16 @@ export function Entete({
                 href={href(o.chemin, chemin, liens)}
                 aria-current={actif ? 'page' : undefined}
                 className={[
-                  'rounded-lg px-3 py-1.5 text-sm font-medium transition',
+                  'shrink-0 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition',
                   actif
                     ? 'bg-brand-50 text-brand-700'
                     : 'text-ink-500 hover:bg-ink-100 hover:text-ink-900',
                 ].join(' ')}
               >
                 {o.libelle}
+                {/* The badge is the first thing dropped when room runs out. */}
                 {o.aVenir && (
-                  <span className="ml-1.5 rounded-full bg-gold-100 px-1.5 py-0.5 text-[10px] font-medium text-gold-700 align-middle">
+                  <span className="ml-1.5 hidden rounded-full bg-gold-100 px-1.5 py-0.5 align-middle text-[10px] font-medium text-gold-700 xl:inline-block">
                     bientôt
                   </span>
                 )}
@@ -90,8 +93,11 @@ export function Entete({
           })}
         </nav>
 
-        <a href="#sources" className="text-sm text-ink-500 transition hover:text-ink-900">
-          Méthode et sources
+        <a
+          href="#sources"
+          className="shrink-0 whitespace-nowrap text-sm text-ink-500 transition hover:text-ink-900"
+        >
+          Méthode
         </a>
       </div>
     </header>
