@@ -5,8 +5,8 @@ import * as P from './lib/parametres2026';
 /**
  * Waitlist page for the planned MCP server.
  *
- * The site is static, so nothing is charged or stored here: the pricing tiers
- * are informational. The sign-up form is intentionally inert for now — the way
+ * The site is static, so nothing is charged or stored here: the price shown is
+ * informational. The sign-up form is intentionally inert for now — the way
  * people will register is still to be decided — so it collects and sends
  * nothing, and no contact address is exposed.
  */
@@ -57,32 +57,27 @@ const OUTILS_EXPOSES = [
   },
 ];
 
-const FORMULES = [
-  {
-    cle: '3 mois',
-    prix: '10 €',
-    periode: '3 mois',
-    accroche: 'Pour tester sur un exercice',
-    points: ['Accès complet aux outils', 'Barèmes tenus à jour', 'Sans reconduction automatique'],
-    vedette: false,
-  },
-  {
-    cle: '1 an',
-    prix: '30 €',
-    periode: '1 an',
-    accroche: 'Pour s’y appuyer durablement',
-    points: [
-      'Tout ce qui précède',
-      'Un an de mises à jour des barèmes',
-      'Le meilleur coût annuel',
-    ],
-    vedette: true,
-  },
-];
+/**
+ * One price, and time you spend when you need it.
+ *
+ * A freelance uses these tools in bursts — fixing a rate, closing a year,
+ * pricing a proposal — not every week. A subscription would bill the quiet
+ * months, so access is sold as months to activate rather than a period that
+ * runs down whether you open it or not.
+ */
+const OFFRE = {
+  prix: '10 €',
+  duree: '6 mois d’accès',
+  points: [
+    'Les six mois s’activent quand vous en avez besoin, dans les deux ans',
+    'Rechargeable à tout moment : les mois s’ajoutent, ils ne se remplacent pas',
+    'Aucune reconduction automatique, rien à résilier',
+    'Barèmes tenus à jour pendant toute la durée active',
+  ],
+};
 
 export default function PageMcp() {
   const [email, setEmail] = useState('');
-  const [formule, setFormule] = useState<string>('3 mois');
   // The form does nothing yet: the sign-up channel is still to be decided, so
   // submitting only shows a note and sends nothing anywhere.
   const [note, setNote] = useState(false);
@@ -136,59 +131,57 @@ export default function PageMcp() {
         <section className="border-y border-ink-200/70 bg-ink-50">
           <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
             <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
-              Tarifs prévus
+              Tarif prévu
             </h2>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-              Un accès simple, sans abonnement qui se renouvelle à votre insu. Rien
-              n'est encaissé pour l'instant : l'accès ouvrira à la sortie du serveur.
+              Un seul prix, et du temps que vous dépensez quand vous en avez
+              besoin. Ces outils servent par à-coups — fixer un tarif, clôturer un
+              exercice, chiffrer une proposition — pas toutes les semaines&nbsp;: un
+              abonnement vous ferait payer les mois creux. Rien n'est encaissé pour
+              l'instant, l'accès ouvrira à la sortie du serveur.
             </p>
 
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:max-w-3xl">
-              {FORMULES.map((f) => (
-                <div
-                  key={f.cle}
-                  className={[
-                    'card relative flex flex-col p-6 sm:p-8',
-                    f.vedette ? 'ring-2 ring-brand-500' : '',
-                  ].join(' ')}
+            <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:max-w-4xl">
+              <div className="card flex flex-col p-6 sm:p-8">
+                <p className="flex items-baseline gap-2">
+                  <span className="tabular text-4xl font-semibold tracking-tight text-ink-900">
+                    {OFFRE.prix}
+                  </span>
+                  <span className="text-sm text-ink-400">/ {OFFRE.duree}</span>
+                </p>
+                <ul className="mt-6 space-y-2.5 text-sm text-ink-600">
+                  {OFFRE.points.map((p) => (
+                    <li key={p} className="flex gap-2">
+                      <span className="shrink-0 text-brand-500">✓</span>
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() =>
+                    document.getElementById('alerte')?.scrollIntoView({ behavior: 'smooth' })
+                  }
+                  className="mt-8 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
                 >
-                  {f.vedette && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-brand-600 px-3 py-1 text-xs font-medium text-white">
-                      Le plus avantageux
-                    </span>
-                  )}
-                  <p className="text-sm text-ink-500">{f.accroche}</p>
-                  <p className="mt-3 flex items-baseline gap-2">
-                    <span className="tabular text-4xl font-semibold tracking-tight text-ink-900">
-                      {f.prix}
-                    </span>
-                    <span className="text-sm text-ink-400">/ {f.periode}</span>
-                  </p>
-                  <ul className="mt-6 space-y-2.5 text-sm text-ink-600">
-                    {f.points.map((p) => (
-                      <li key={p} className="flex gap-2">
-                        <span className="text-brand-500">✓</span>
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFormule(f.cle);
-                      document.getElementById('alerte')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className={[
-                      'mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition',
-                      f.vedette
-                        ? 'bg-brand-600 text-white hover:bg-brand-700'
-                        : 'border border-ink-200 text-ink-800 hover:border-brand-400 hover:text-brand-700',
-                    ].join(' ')}
-                  >
-                    Être prévenu pour cette formule
-                  </button>
-                </div>
-              ))}
+                  Être prévenu de la sortie
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-ink-200 bg-white/60 p-6 sm:p-8">
+                <h3 className="font-semibold text-ink-900">À quoi sert ce prix</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                  Un serveur MCP demande un backend qui tourne, contrairement à ce
+                  site qui est statique et gratuit à héberger. Les 10 € couvrent cet
+                  hébergement et le travail de conception — lire les textes, sourcer
+                  chaque paramètre, tenir les barèmes à jour.
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-ink-600">
+                  Le prix n'est pas indexé sur ce que l'outil vous fait gagner. Il
+                  reste à une dizaine d'euros, et les simulateurs du site restent
+                  gratuits et sans compte.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -225,27 +218,6 @@ export default function PageMcp() {
                   className="mt-1 w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-base text-ink-900 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 />
 
-                <fieldset className="mt-5">
-                  <legend className="field-label">Formule qui vous intéresse</legend>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {FORMULES.map((f) => (
-                      <button
-                        key={f.cle}
-                        type="button"
-                        aria-pressed={formule === f.cle}
-                        onClick={() => setFormule(f.cle)}
-                        className={[
-                          'rounded-lg border px-3 py-1.5 text-sm font-medium transition',
-                          formule === f.cle
-                            ? 'border-brand-500 bg-brand-50 text-brand-700'
-                            : 'border-ink-200 bg-white text-ink-500 hover:border-ink-300 hover:text-ink-800',
-                        ].join(' ')}
-                      >
-                        {f.cle} · {f.prix}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
 
                 <button
                   type="submit"
