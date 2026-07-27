@@ -27,8 +27,23 @@ const OUTILS_EXPOSES = [
     detail: 'Du CA mensuel au résultat avant rémunération de fin d’année.',
   },
   {
+    nom: 'Étude de marché du TJM',
+    detail:
+      'L’évolution du tarif jour depuis 2019, métier par métier et ville par ville, avec les repères économiques qui l’expliquent.',
+  },
+  {
+    nom: 'Seuil de rentabilité',
+    detail:
+      'Le chiffre d’affaires et le nombre de jours qu’il faut pour atteindre un net en poche, ou pour égaler un salaire en CDI.',
+  },
+  {
+    nom: 'Décomposition d’une journée facturée',
+    detail:
+      'Ce que gardent la plateforme, l’intermédiaire et l’État, selon le canal — freelance en direct, via une plateforme, en régie ou salarié en ESN.',
+  },
+  {
     nom: 'Synthèse consolidée',
-    detail: 'Les trois volets réconciliés en un seul scénario cohérent.',
+    detail: 'Tous les volets réconciliés en un seul scénario cohérent.',
   },
 ];
 
@@ -79,9 +94,11 @@ export default function PageMcp() {
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
               Un <strong>serveur MCP</strong> (Model Context Protocol) exposera le
               moteur de ces simulateurs à Claude, ChatGPT et consorts. Vous
-              demandez « quel salaire pour 140 000 € de résultat ? » et l'assistant
-              répond, chiffré et sourcé, sans quitter votre conversation — et peut
-              enchaîner avec vos données comptables réelles.
+              demandez « quel salaire pour 140 000 € de résultat ? », ou «&nbsp;mon
+              TJM tient-il face au marché, et que me faut-il pour égaler mon
+              ancien CDI ? », et l'assistant répond — chiffré, sourcé, sans quitter
+              votre conversation, et en enchaînant avec vos données comptables
+              réelles.
             </p>
           </div>
         </section>

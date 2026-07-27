@@ -1,12 +1,25 @@
 # Feuille de route
 
-Ce dépôt a vocation à devenir une boîte à outils pour les freelances en SASU,
-pas seulement un simulateur. Le premier outil — l'arbitrage salaire /
-dividendes — est en ligne ; voici ce qui viendrait ensuite.
+Ce dépôt est une boîte à outils pour les freelances en SASU, pas un simulateur
+isolé. Voici ce qui est en ligne, puis ce qui viendrait ensuite.
 
 Le moteur de calcul ([src/lib/simulation.ts](src/lib/simulation.ts)) est
-volontairement séparé de l'interface : les prochains outils doivent pouvoir le
-réutiliser sans le dupliquer.
+volontairement séparé de l'interface : chaque outil le réutilise sans le
+dupliquer, et c'est ce qui rend les suivants peu coûteux à ajouter.
+
+## Ce qui est en ligne
+
+| Outil | Ce qu'il répond |
+|---|---|
+| Projection de CA | Du chiffre d'affaires mois par mois au résultat de fin d'exercice |
+| Salaire ou dividendes | Quel niveau de rémunération maximise le net en poche |
+| Acomptes d'IS | Combien verser à chaque échéance, et le coût d'une sous-estimation |
+| Synthèse | Les volets réconciliés en un scénario, imprimable pour le comptable |
+| TJM du marché | Où se situe un tarif, ce qu'il faut pour en vivre, ce qu'il en reste |
+| Serveur MCP | Page d'attente : le moteur exposé aux assistants IA (à venir) |
+
+L'état de chaque outil tient dans son URL, ce qui permet de passer de l'un à
+l'autre sans ressaisie et de partager une simulation telle quelle.
 
 ---
 
@@ -209,10 +222,12 @@ qu'il ne rapporte.
 
 ---
 
-## Ce que proposent les cabinets en ligne
+## Ce que propose la concurrence
 
-Relevé de l'existant chez trois acteurs, pour situer ce qui manque ici et ce
-qui ne vaut pas la peine d'être refait.
+Relevé de l'existant, pour situer ce qui manque ici et ce qui ne vaut pas la
+peine d'être refait. Deux familles : les cabinets comptables, qui publient des
+calculateurs pour capter du trafic, et les sites de simulateurs purs, apparus
+depuis.
 
 **Dougs** — une cinquantaine d'outils, de loin le catalogue le plus fourni.
 Création (forme juridique, capital social, SASU vs EURL, ARCE, holding),
@@ -236,19 +251,42 @@ sur le revenu, quotient familial, prélèvement à la source, TJM freelance.
 revenu pour l'auto-entrepreneur, adossés à des pages de guide. Leur produit
 est l'application comptable, pas les calculateurs.
 
-**Ce qu'il faut en retenir.** Le volume est déjà pris : aligner cinquante
-calculateurs de plus n'aurait aucun intérêt. Trois choses manquent en revanche
-partout, et sont déjà les nôtres :
+**IndepNet** — le concurrent le plus proche, et le seul à jouer le même jeu :
+un site de simulateurs, sans produit derrière. Neuf outils, tous gratuits et
+sans inscription : revenu net micro, TVA auto-entrepreneur, ACRE et versement
+libératoire, portage salarial, TJM freelance, comparateur de statuts
+(micro / EI / SASU / portage), simulateur SASU avec arbitrage salaire /
+dividendes, ARE et cumul création, ARCE.
+
+Vérifié en le parcourant : il ne propose **ni historique de TJM par métier et
+par ville, ni comparaison des commissions de plateformes, ni décomposition
+d'une journée facturée, ni acomptes d'IS, ni synthèse partageable**. En
+revanche il nous dépasse nettement sur les statuts, le chômage et l'ARCE.
+
+D'autres suivent le même modèle sur le seul arbitrage : FreelanceKit, RemUp,
+Cleerly, CalculateurFinance, salaire-freelance.com.
+
+**Ce qu'il faut en retenir — et une correction.** Ce document affirmait que
+l'arbitrage salaire / dividendes était l'un de nos différenciateurs. **Ce n'est
+plus vrai** : au moins six sites le font désormais, certains avec plus d'options
+que nous. Il faut cesser de compter dessus.
+
+Ce qui distingue réellement, après vérification :
 
 - **les sources.** Aucun de ces outils ne cite le texte appliqué. Nous
   référençons le BOFiP et Légifrance paramètre par paramètre ;
-- **l'arbitrage plutôt que le calcul.** Ils répondent « combien » ; nous
-  répondons « quel niveau choisir », courbe et optimum à l'appui ;
+- **le volet marché.** Historique de TJM depuis 2019, positionnement, seuil de
+  rentabilité face à un CDI, décomposition par canal de distribution : personne
+  ne le fait, et c'est ce qui a le moins de chances d'être copié vite, parce que
+  les données ont dû être reconstituées d'archives ;
+- **le chaînage.** Du positionnement de tarif jusqu'aux acomptes d'IS, avec
+  l'état porté par l'URL d'un outil à l'autre. Les autres sont des calculateurs
+  isolés ;
 - **le partage et l'ouverture.** Une simulation tient dans une URL, et le code
   est vérifiable.
 
 La ligne directrice à tenir : peu d'outils, mais chacun sourcé, décidable et
-partageable.
+partageable — et ne plus investir sur les terrains déjà saturés.
 
 ## Le cycle de vie du CA : les maillons manquants
 
@@ -345,13 +383,18 @@ Personne n'expose l'arbitrage rémunération / dividendes **+** la modulation de
 acomptes d'IS **+** la projection de CA. C'est le creux.
 
 **Ce que le serveur exposerait.** `simuler`, `balayer`, `calculerAcomptes`,
-`calculerProjection`, `calculerSynthese`, chaque paramètre sourcé.
+`calculerProjection`, `calculerSynthese`, plus le volet marché ajouté depuis —
+`seuilRentabilite`, `decomposerTjm`, `decomposerCdi` et les séries du baromètre.
+Chaque paramètre sourcé.
 
-**Deux usages inédits.**
+**Trois usages inédits.**
 
 1. L'arbitrage dans la conversation : « quel salaire pour 140 k€ de résultat ? »
    → réponse chiffrée et sourcée, sans ouvrir le site.
-2. Le chaînage avec un connecteur de la première famille : lire le vrai P&L
+2. L'étude de marché à la demande : « mon TJM tient-il face au marché, et que me
+   faut-il pour égaler mon ancien CDI ? » → l'historique par métier et par ville,
+   le seuil de rentabilité et la décomposition par canal, en une réponse.
+3. Le chaînage avec un connecteur de la première famille : lire le vrai P&L
    depuis Pennylane / QuickBooks → le passer à la projection → arbitrer. La
    donnée réelle rencontre la décision, ce qu'aucune famille ne fait seule.
 
@@ -371,11 +414,6 @@ tant que ce choix n'est pas fait.
 
 Classés par intérêt pour un freelance en SASU, en réutilisant le moteur
 existant.
-
-**TJM nécessaire pour un revenu net cible.** L'inverse du simulateur
-salaire / dividendes : on part du net voulu et on remonte au tarif journalier.
-C'est la question que se pose réellement un indépendant qui fixe ses prix, et
-tout le calcul est déjà écrit — il ne manque que l'inversion.
 
 **ARE et ARCE.** Le cumul allocation chômage / création d'entreprise décide du
 niveau de rémunération des premiers mois, et interagit directement avec
