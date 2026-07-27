@@ -61,9 +61,16 @@ export function SeuilRentabilite({
             className="tabular mt-1 w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
           />
           <span className="field-hint">
-            {mode === 'cdi'
-              ? `Soit ${eur(Math.round(net))} net en poche, une fois cotisations et impôt payés.`
-              : 'Ce qu’il vous reste après cotisations et impôt.'}
+            {mode === 'cdi' ? (
+              <>
+                Soit {eur(Math.round(net))} net en poche, une fois cotisations et impôt
+                payés. À net égal un CDI vaut davantage&nbsp;: mutuelle, tickets
+                restaurant, participation et surtout droits au chômage ne sont pas
+                comptés ici.
+              </>
+            ) : (
+              'Ce qu’il vous reste après cotisations et impôt.'
+            )}
           </span>
         </label>
         <label className="block">

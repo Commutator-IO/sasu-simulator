@@ -10,6 +10,7 @@ import { eur } from './lib/format';
 import { ClassementMetiers } from './components/ClassementMetiers';
 import { TarifsPlateformes } from './components/TarifsPlateformes';
 import { SeuilRentabilite } from './components/SeuilRentabilite';
+import { DecompositionTjm } from './components/DecompositionTjm';
 import { DEFAUTS_ARBITRAGE } from './lib/arbitrage';
 import { netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
 import {
@@ -379,6 +380,18 @@ export default function PagePositionnement() {
                 </p>
                 <div className="mt-5">
                   <TarifsPlateformes tjm={tjmEffectif} cible={h.tjm2027 > 0 ? h.tjm2027 : undefined} />
+                </div>
+
+                <h3 className="mt-10 text-base font-semibold text-ink-900">
+                  Où part votre TJM
+                </h3>
+                <p className="mt-1 text-sm text-ink-500">
+                  Une journée facturée, découpée selon la commission prélevée — et
+                  ce qui vous reste vraiment une fois les frais, les cotisations et
+                  l'impôt payés.
+                </p>
+                <div className="mt-4">
+                  <DecompositionTjm tjm={tjmEffectif} jours={h.jours} />
                 </div>
               </div>
 
