@@ -23,6 +23,15 @@ type Segment = { cle: string; label: string; couleur: string; fond?: string; cla
 const HACHURE =
   'repeating-linear-gradient(45deg, #1e9970 0 4px, #6ec4a4 4px 8px)';
 
+/*
+ * Two families, told apart by saturation rather than by hue — which survives
+ * colour-blindness and a black-and-white print.
+ *
+ *  · Saturated: your side of the day — what you keep and what is levied on you.
+ *  · Neutral: the intermediary's side — money that never reaches you, the solid
+ *    grey a published fee, the pale dashed one an estimate.
+ */
+
 // Drawn in this order, so on the salaried bar everything borne by the employee
 // sits on the left and what the employer carries on top of the gross sits on
 // the right — the two sides of a payslip, read left to right.
@@ -40,15 +49,15 @@ const SEGMENTS: Segment[] = [
   { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
   // A published fee, deducted from your own invoice: a known figure, so a solid
   // colour.
-  { cle: 'commission', label: 'Commission prélevée sur vous', couleur: '#db2777' },
+  { cle: 'commission', label: 'Commission prélevée sur vous', couleur: '#475569' },
   // Taken on the client side and not published: an estimate, so neutral and
   // dashed rather than dressed as measured.
   {
     cle: 'marge',
     label: 'Marge prise côté client',
     couleur: 'transparent',
-    fond: 'var(--color-ink-100)',
-    classe: 'border border-dashed border-ink-300 !text-ink-500',
+    fond: '#e2e8f0',
+    classe: 'border border-dashed border-slate-400 !text-slate-600',
   },
 ];
 
@@ -157,14 +166,31 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
 
   return (
     <figure className="m-0">
-      <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-500">
-        {SEGMENTS.filter((s) => s.cle !== 'is').map((s) => (
-          <span key={s.cle} className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: s.fond ?? s.couleur }} />
-            {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
-          </span>
+      {/* Grouped so the reading rule is stated, not left to be inferred. */}
+      <figcaption className="space-y-1.5 text-xs text-ink-500">
+        {[
+          { titre: 'Ce qui vous concerne', cles: ['net', 'salariales', 'cotisations', 'ir', 'frais', 'avantages', 'patronales'] },
+          { titre: 'Ce que garde l’intermédiaire', cles: ['commission', 'marge'] },
+        ].map((famille) => (
+          <div key={famille.titre} className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span className="font-medium text-ink-400">{famille.titre}</span>
+            {famille.cles
+              .map((c) => SEGMENTS.find((s) => s.cle === c))
+              .filter((s): s is Segment => !!s)
+              .map((s) => (
+                <span key={s.cle} className="flex items-center gap-1.5">
+                  <span
+                    className={[
+                      'h-2.5 w-2.5 rounded-sm',
+                      s.cle === 'marge' ? 'border border-dashed border-slate-400' : '',
+                    ].join(' ')}
+                    style={{ background: s.fond ?? s.couleur }}
+                  />
+                  {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
+                </span>
+              ))}
+          </div>
         ))}
-
       </figcaption>
 
       <div className="mt-4 space-y-3">
