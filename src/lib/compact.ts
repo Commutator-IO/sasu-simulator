@@ -51,6 +51,7 @@ const VERS_COURT: Record<string, string> = {
   tjm: 'tj',
   tjm2024: 't4',
   tjm2025: 't5',
+  tjm2027: 't7',
   niveau: 'nv',
   ville: 'vl',
 };

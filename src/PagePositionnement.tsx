@@ -6,6 +6,7 @@ import { BoutonReset } from './components/BoutonReset';
 import { LienSignaler } from './components/LienSignaler';
 import { EvolutionTjm, type SerieTemporelle } from './components/EvolutionTjm';
 import { JaugeExperience } from './components/JaugeExperience';
+import { eur } from './lib/format';
 import { ClassementMetiers } from './components/ClassementMetiers';
 import { TarifsPlateformes } from './components/TarifsPlateformes';
 import {
@@ -107,14 +108,36 @@ export default function PagePositionnement() {
         ? { annee: anneeDecimale('2025-07'), date: '2025-07', valeur: Math.round(h.tjm2025) }
         : null,
       { annee: anneeDecimale('2026-07'), date: '2026-07', valeur: tjmEffectif },
-    ].filter((p): p is { annee: number; date: string; valeur: number } => p !== null);
+      // A target for next year extends the line into the projected zone.
+      h.tjm2027 > 0
+        ? {
+            annee: anneeDecimale('2027-07'),
+            date: '2027-07',
+            valeur: Math.round(h.tjm2027),
+            projete: true,
+          }
+        : null,
+    ].filter(
+      (p): p is { annee: number; date: string; valeur: number; projete?: boolean } => p !== null,
+    );
     if (pts.length > 1) {
       marche.push({ label: 'Votre TJM', couleur: 'var(--color-ink-800)', epais: true, points: pts });
     }
     return marche;
-  }, [profs, ville, h.niveau, h.tjm2024, h.tjm2025, tjmEffectif]);
+  }, [profs, ville, h.niveau, h.tjm2024, h.tjm2025, h.tjm2027, tjmEffectif]);
 
-  const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0;
+  const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0 || h.tjm2027 > 0;
+
+  // Where the market is projected to be next year, for the leading profession,
+  // so a target can be read against it rather than in the abstract.
+  const marche2027 = (() => {
+    const p = profs[0];
+    const niv = p.experience.find((n) => n.cle === h.niveau) ?? p.experience[2];
+    const ref = p.experience.find((n) => n.cle === '8-15') ?? p.experience[2];
+    const ratio = ref.moyen ? niv.moyen / ref.moyen : 1;
+    const pt = p.villes.find((x) => x.date === '2027-07');
+    return pt ? Math.round((pt[ville] as number) * ratio) : null;
+  })();
 
   return (
     <div className="min-h-screen">
@@ -196,6 +219,21 @@ export default function PagePositionnement() {
                       hint="Optionnel"
                     />
                   </div>
+                  <Montant
+                    label="Votre TJM visé en 2027"
+                    valeur={h.tjm2027}
+                    onChange={(v) => setH((s) => ({ ...s, tjm2027: v }))}
+                    suffixe="€ / jour"
+                    hint={
+                      h.tjm2027 > 0 && marche2027
+                        ? `Marché projeté : ${eur(marche2027)} — vous ${
+                            h.tjm2027 >= marche2027 ? 'au-dessus' : 'en dessous'
+                          } de ${eur(Math.abs(h.tjm2027 - marche2027))}.`
+                        : marche2027
+                          ? `Optionnel. Le marché est projeté à ${eur(marche2027)} l'an prochain.`
+                          : 'Optionnel : votre objectif pour la revalorisation.'
+                    }
+                  />
                   <div>
                     <p className="field-label">Votre expérience</p>
                     <div className="mt-1">
@@ -287,7 +325,7 @@ export default function PagePositionnement() {
                   il faut donc afficher davantage là où une commission s'applique.
                 </p>
                 <div className="mt-5">
-                  <TarifsPlateformes tjm={tjmEffectif} />
+                  <TarifsPlateformes tjm={tjmEffectif} cible={h.tjm2027 > 0 ? h.tjm2027 : undefined} />
                 </div>
               </div>
 
