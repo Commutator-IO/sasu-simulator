@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAUTS_ARBITRAGE } from './arbitrage';
-import { decomposerTjm, netEnPocheSalaire, seuilRentabilite } from './rentabilite';
+import {
+  decomposerCdi,
+  decomposerTjm,
+  netEnPocheSalaire,
+  seuilRentabilite,
+} from './rentabilite';
 import { balayer } from './simulation';
 import * as P from './parametres2026';
 
@@ -24,27 +29,74 @@ describe('équivalent d’un salaire', () => {
 });
 
 describe('décomposition d’un TJM', () => {
-  it('répartit exactement le tarif facturé', () => {
-    for (const taux of [0, 0.1, 0.15]) {
+  it('répartit exactement ce que paie le client', () => {
+    for (const taux of [0, 0.1, 0.15, 0.2]) {
       const p = decomposerTjm(700, taux, base, { jours: 200 });
-      expect(p.commission + p.frais + p.prelevements + p.net).toBeCloseTo(700, 6);
-      expect(p.commission).toBeCloseTo(700 * taux, 6);
+      expect(p.clientPaie).toBeCloseTo(700 / (1 - taux), 6);
+      expect(
+        p.commission + p.frais + p.cotisations + p.impots + p.net,
+      ).toBeCloseTo(p.clientPaie, 6);
       for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
     }
   });
 
-  it('laisse moins au freelance quand la commission monte', () => {
+  it('laisse au freelance exactement la même chose sur tous les canaux', () => {
+    const canaux = [0, 0.1, 0.15, 0.2].map((t) => decomposerTjm(700, t, base, { jours: 200 }));
+    for (const c of canaux) {
+      expect(c.net).toBeCloseTo(canaux[0].net, 6);
+      expect(c.cotisations).toBeCloseTo(canaux[0].cotisations, 6);
+      expect(c.impots).toBeCloseTo(canaux[0].impots, 6);
+      expect(c.frais).toBeCloseTo(canaux[0].frais, 6);
+    }
+    // Seule la part de l’intermédiaire — et donc le prix client — bouge.
+    expect(canaux[3].commission).toBeGreaterThan(canaux[1].commission);
+    expect(canaux[0].commission).toBe(0);
+  });
+
+  it('sépare impôts et cotisations sans en perdre', () => {
+    const p = decomposerTjm(700, 0.1, base, { jours: 200 });
+    expect(p.impots).toBeGreaterThan(0);
+    expect(p.cotisations).toBeGreaterThan(0);
+  });
+
+  it('fait payer le client davantage quand la commission monte', () => {
     const sans = decomposerTjm(700, 0, base, { jours: 200 });
     const avec = decomposerTjm(700, 0.15, base, { jours: 200 });
-    expect(avec.net).toBeLessThan(sans.net);
+    expect(avec.clientPaie).toBeGreaterThan(sans.clientPaie);
     expect(avec.commission).toBeGreaterThan(sans.commission);
   });
 
   it('ne renvoie que des zéros pour un tarif nul', () => {
     expect(decomposerTjm(0, 0.1, base)).toEqual({
+      clientPaie: 0,
       commission: 0,
       frais: 0,
-      prelevements: 0,
+      cotisations: 0,
+      impots: 0,
+      net: 0,
+    });
+  });
+});
+
+describe('la même enveloppe prise en CDI', () => {
+  it('répartit exactement le coût employeur', () => {
+    const p = decomposerCdi(700, base, { jours: 200 });
+    expect(p.coutEmployeur).toBeCloseTo(700, 6);
+    expect(p.cotisations + p.impots + p.net).toBeCloseTo(700, 6);
+    for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
+  });
+
+  it('laisse moins en poche qu’une SASU à enveloppe égale', () => {
+    const cdi = decomposerCdi(700, base, { jours: 200 });
+    const sasu = decomposerTjm(700, 0, base, { jours: 200 });
+    expect(cdi.net).toBeLessThan(sasu.net);
+  });
+
+  it('ne renvoie que des zéros pour une enveloppe nulle', () => {
+    expect(decomposerCdi(0, base)).toEqual({
+      coutEmployeur: 0,
+      cotisations: 0,
+      impots: 0,
       net: 0,
     });
   });

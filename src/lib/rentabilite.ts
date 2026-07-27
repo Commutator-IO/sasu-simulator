@@ -2,6 +2,7 @@ import * as P from './parametres2026';
 import {
   abattementSalaire,
   balayer,
+  brutMaxPourBudget,
   calculerIR,
   decomposerSalaire,
   type Hypotheses,
@@ -64,22 +65,29 @@ export function netEnPocheSalaire(
 }
 
 export type PartTjm = {
-  /** Deducted by the platform on the invoice. */
+  /** What the client pays — above the invoiced rate when a body shop resells it. */
+  clientPaie: number;
+  /** Kept by the intermediary, whether deducted or added on top. */
   commission: number;
   /** Running costs of the company. */
   frais: number;
-  /** Contributions, corporate tax and income tax. */
-  prelevements: number;
+  /** Social contributions, employer and employee side. */
+  cotisations: number;
+  /** Corporate tax and income tax. */
+  impots: number;
   /** What the freelance is left with. */
   net: number;
 };
 
 /**
- * Where one day of billing actually goes, for a platform taking `taux`.
+ * Where one billed day goes, for an intermediary keeping `taux`.
  *
- * Expressed per day so day rates can be compared directly: the four parts add
- * back up to the rate invoiced. Contributions are taken at the best
- * salary/dividend split, as everywhere else in the app.
+ * `tjm` is what the freelance keeps, not what the client is charged: a rate is
+ * held constant and each channel is asked what the client must pay to leave it
+ * intact. Whether the cut is deducted from the invoice or added on top by a
+ * body shop, the arithmetic is the same and the freelance's own side —
+ * costs, contributions, tax, take-home — is identical across channels. Only the
+ * intermediary's slice, and so the total, moves.
  */
 export function decomposerTjm(
   tjm: number,
@@ -89,22 +97,76 @@ export function decomposerTjm(
 ): PartTjm {
   const tauxFrais = Math.min(Math.max(options.tauxFrais ?? P.TAUX_FRAIS_REFERENCE, 0), 0.9);
   const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
-  if (tjm <= 0) return { commission: 0, frais: 0, prelevements: 0, net: 0 };
+  const tauxInter = Math.min(Math.max(taux, 0), 0.9);
+  if (tjm <= 0) {
+    return { clientPaie: 0, commission: 0, frais: 0, cotisations: 0, impots: 0, net: 0 };
+  }
 
-  const commission = tjm * taux;
-  const facture = tjm - commission;
-  const ca = facture * jours;
+  const clientPaie = tjm / (1 - tauxInter);
+  const ca = tjm * jours;
   const frais = ca * tauxFrais;
   const resultat = ca - frais;
-  const net = balayer({ ...base, resultatAvantRemuneration: resultat }).optimum.netEnPoche;
+  const r = balayer({ ...base, resultatAvantRemuneration: resultat }).optimum;
 
+  // Taxes are read off the engine; contributions are what the levies leave, so
+  // the parts cannot drift apart from the take-home it computed.
+  const impots = r.is + r.irTotal;
   return {
-    commission,
+    clientPaie,
+    commission: clientPaie - tjm,
     frais: frais / jours,
-    prelevements: Math.max(0, resultat - net) / jours,
-    net: net / jours,
+    cotisations: Math.max(0, resultat - r.netEnPoche - impots) / jours,
+    impots: impots / jours,
+    net: r.netEnPoche / jours,
   };
 }
+
+export type PartCdi = {
+  /** Employer's total cost — the envelope compared against a day rate. */
+  coutEmployeur: number;
+  cotisations: number;
+  impots: number;
+  net: number;
+};
+
+/**
+ * The same envelope taken as a salaried job, for comparison.
+ *
+ * A day rate is what a client pays; the equivalent question on the other side
+ * is what an employer could pay for the same money. The gross that fits the
+ * envelope is solved with the engine's own inversion, then split the same way:
+ * contributions, income tax, take-home.
+ */
+export function decomposerCdi(
+  enveloppeParJour: number,
+  base: BaseRentabilite,
+  options: { jours?: number } = {},
+): PartCdi {
+  const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
+  if (enveloppeParJour <= 0) {
+    return { coutEmployeur: 0, cotisations: 0, impots: 0, net: 0 };
+  }
+  const enveloppe = enveloppeParJour * jours;
+  const brut = brutMaxPourBudget(enveloppe, base.tauxATMP, base.moisRemuneration);
+  const { net, netImposableAvantAbattement } = decomposerSalaire(brut, base.moisRemuneration);
+  const imposable = abattementSalaire(netImposableAvantAbattement);
+  const ir =
+    calculerIR(imposable + base.autresRevenus, base.parts, base.couple) -
+    calculerIR(base.autresRevenus, base.parts, base.couple);
+
+  return {
+    coutEmployeur: enveloppeParJour,
+    cotisations: (enveloppe - net) / jours,
+    impots: ir / jours,
+    net: (net - ir) / jours,
+  };
+}
+
+/**
+ * Typical margin a body shop keeps on the client price. It is negotiated and
+ * ranges roughly from 10 to 30%, so it is an order of magnitude, not a rate.
+ */
+export const MARGE_ESN_TYPIQUE = 0.2;
 
 /** Best take-home achievable at a given profit, whatever the split. */
 function meilleurNet(base: BaseRentabilite, resultat: number, pas: number): number {
