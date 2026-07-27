@@ -82,8 +82,16 @@ describe('la même enveloppe prise en CDI', () => {
   it('répartit exactement le coût employeur', () => {
     const p = decomposerCdi(700, base, { jours: 200 });
     expect(p.coutEmployeur).toBeCloseTo(700, 6);
-    expect(p.cotisations + p.impots + p.net).toBeCloseTo(700, 6);
+    expect(p.patronales + p.salariales + p.impots + p.net).toBeCloseTo(700, 6);
     for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
+  });
+
+  it('distingue la part employeur de la part salarié', () => {
+    const p = decomposerCdi(700, base, { jours: 200 });
+    expect(p.patronales).toBeGreaterThan(0);
+    expect(p.salariales).toBeGreaterThan(0);
+    // Le brut se retrouve : coût employeur moins la part patronale.
+    expect(p.coutEmployeur - p.patronales).toBeCloseTo(p.salariales + p.impots + p.net, 6);
   });
 
   it('laisse moins en poche qu’une SASU à enveloppe égale', () => {
@@ -95,7 +103,8 @@ describe('la même enveloppe prise en CDI', () => {
   it('ne renvoie que des zéros pour une enveloppe nulle', () => {
     expect(decomposerCdi(0, base)).toEqual({
       coutEmployeur: 0,
-      cotisations: 0,
+      patronales: 0,
+      salariales: 0,
       impots: 0,
       net: 0,
     });

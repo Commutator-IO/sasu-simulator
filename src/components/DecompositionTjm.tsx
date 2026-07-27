@@ -19,11 +19,16 @@ import { decomposerCdi, decomposerTjm, MARGE_ESN_TYPIQUE } from '../lib/rentabil
 
 type Segment = { cle: string; label: string; couleur: string };
 
+// Drawn in this order, so on the salaried bar everything borne by the employee
+// sits on the left and what the employer carries on top of the gross sits on
+// the right — the two sides of a payslip, read left to right.
 const SEGMENTS: Segment[] = [
   { cle: 'net', label: 'Net en poche', couleur: '#1e9970' },
+  { cle: 'salariales', label: 'Cotisations salarié', couleur: '#8a5a00' },
   { cle: 'cotisations', label: 'Cotisations sociales', couleur: '#d99b1f' },
   { cle: 'impots', label: 'Impôts (IS et IR)', couleur: '#7c3aed' },
   { cle: 'frais', label: 'Frais de la société', couleur: '#0ea5e9' },
+  { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
   { cle: 'commission', label: 'Commission ou marge', couleur: '#db2777' },
 ];
 
@@ -56,10 +61,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
         return {
           cle: `t${taux}`,
           titre: taux === 0 ? 'Sans intermédiaire' : `Commission ${Math.round(taux * 100)} %`,
-          detail:
-            taux === 0
-              ? noms.join(', ')
-              : `${noms.join(', ')} — le client paie ${eur(Math.round(parts.clientPaie))}`,
+          detail: noms.join(', '),
           total: parts.clientPaie,
           parts: { ...parts },
         };
@@ -69,7 +71,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     canaux.push({
       cle: 'esn',
       titre: `ESN / régie · marge ${Math.round(MARGE_ESN_TYPIQUE * 100)} %`,
-      detail: `le client paie ${eur(Math.round(esn.clientPaie))}`,
+      detail: 'la marge se prend au-dessus de votre tarif',
       total: esn.clientPaie,
       parts: { ...esn },
     });
@@ -78,7 +80,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     canaux.push({
       cle: 'cdi',
       titre: 'La même enveloppe en CDI',
-      detail: 'ce que l’employeur dépense, réparti côté salarié',
+      detail: 'à gauche ce qui vous revient et ce que vous payez, à droite la part employeur',
       total: cdi.coutEmployeur,
       parts: { ...cdi },
       compare: true,
@@ -118,7 +120,11 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
                 {l.titre}
                 <span className="ml-2 text-xs font-normal text-ink-400">{l.detail}</span>
               </p>
+              {/* Both ends of the day: what is charged for it, and what is kept
+                  of it — the take-home alone left the rate out of sight. */}
               <p className="tabular shrink-0 text-sm">
+                <span className="text-ink-500">{eur(Math.round(l.total))}</span>
+                <span className="text-ink-300"> → </span>
                 <span className="font-semibold text-ink-900">
                   {eur(Math.round(l.parts.net))}
                 </span>

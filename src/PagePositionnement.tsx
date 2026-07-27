@@ -383,12 +383,13 @@ export default function PagePositionnement() {
                 </div>
 
                 <h3 className="mt-10 text-base font-semibold text-ink-900">
-                  Où part votre TJM
+                  Où part votre TJM de {eur(tjmEffectif)}
                 </h3>
                 <p className="mt-1 text-sm text-ink-500">
-                  Une journée facturée, découpée selon la commission prélevée — et
-                  ce qui vous reste vraiment une fois les frais, les cotisations et
-                  l'impôt payés.
+                  Vous conservez {eur(tjmEffectif)} par jour quel que soit le canal
+                  — ce qui change, c'est ce que le client paie par-dessus. Chaque
+                  barre montre ce prix client, puis ce qu'il en reste vraiment une
+                  fois les frais, les cotisations et l'impôt payés.
                 </p>
                 <div className="mt-4">
                   <DecompositionTjm tjm={tjmEffectif} jours={h.jours} />

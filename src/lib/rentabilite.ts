@@ -124,7 +124,10 @@ export function decomposerTjm(
 export type PartCdi = {
   /** Employer's total cost — the envelope compared against a day rate. */
   coutEmployeur: number;
-  cotisations: number;
+  /** Paid by the employer, above the gross: money the employee never sees. */
+  patronales: number;
+  /** Withheld from the gross, payslip side. */
+  salariales: number;
   impots: number;
   net: number;
 };
@@ -136,6 +139,10 @@ export type PartCdi = {
  * is what an employer could pay for the same money. The gross that fits the
  * envelope is solved with the engine's own inversion, then split the same way:
  * contributions, income tax, take-home.
+ *
+ * Contributions are split employer/employee, which a SASU bar does not need:
+ * there the president is both, so the distinction changes no decision. In a job
+ * the employer's part is money the employee never sees.
  */
 export function decomposerCdi(
   enveloppeParJour: number,
@@ -144,7 +151,7 @@ export function decomposerCdi(
 ): PartCdi {
   const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
   if (enveloppeParJour <= 0) {
-    return { coutEmployeur: 0, cotisations: 0, impots: 0, net: 0 };
+    return { coutEmployeur: 0, patronales: 0, salariales: 0, impots: 0, net: 0 };
   }
   const enveloppe = enveloppeParJour * jours;
   const brut = brutMaxPourBudget(enveloppe, base.tauxATMP, base.moisRemuneration);
@@ -156,7 +163,8 @@ export function decomposerCdi(
 
   return {
     coutEmployeur: enveloppeParJour,
-    cotisations: (enveloppe - net) / jours,
+    patronales: (enveloppe - brut) / jours,
+    salariales: (brut - net) / jours,
     impots: ir / jours,
     net: (net - ir) / jours,
   };
