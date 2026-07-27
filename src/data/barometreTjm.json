@@ -42,14 +42,17 @@
         "note": "Frais dégressifs côté freelance : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez. La plateforme facture aussi le client, de 5 % à 9 % selon son offre.",
         "url": "https://www.malt.fr",
         "hote": "malt.fr",
-        "margeClient": 0.07
+        "margeClient": 0.07,
+        "margeClientPubliee": true
       },
       {
         "nom": "Comet",
         "taux": 0.05,
-        "note": "Plateforme tech (développement, data, produit) : 5 % côté freelance, la commission la plus basse des trois. La part facturée au client existe mais n'est pas publiée.",
+        "note": "Plateforme tech (développement, data, produit) : 5 % côté freelance, la commission la plus basse des trois. La part facturée au client n'est pas publiée — estimée ici à l'ordre de grandeur du marché.",
         "url": "https://www.comet.co/",
-        "hote": "comet.co"
+        "hote": "comet.co",
+        "margeClient": 0.07,
+        "margeClientPubliee": false
       },
       {
         "nom": "Le Hibou",
@@ -57,14 +60,17 @@
         "margeClient": 0.15,
         "note": "Rien n'est prélevé côté freelance : vous facturez votre TJM tel quel. La commission est prise côté client, annoncée transparente et plafonnée à 15 %, négociable au volume.",
         "url": "https://www.lehibou.com/",
-        "hote": "lehibou.com"
+        "hote": "lehibou.com",
+        "margeClientPubliee": true
       },
       {
         "nom": "Crème de la Crème",
         "taux": 0.1,
-        "note": "Sélection à l'entrée ; certaines missions grands comptes sont annoncées sans commission. La part éventuellement facturée au client n'est pas publiée.",
+        "note": "Sélection à l'entrée ; certaines missions grands comptes sont annoncées sans commission. La part facturée au client n'est pas publiée — estimée ici à l'ordre de grandeur du marché.",
         "url": "https://www.cremedelacreme.io/",
-        "hote": "cremedelacreme.io"
+        "hote": "cremedelacreme.io",
+        "margeClient": 0.07,
+        "margeClientPubliee": false
       },
       {
         "nom": "Free-Work",

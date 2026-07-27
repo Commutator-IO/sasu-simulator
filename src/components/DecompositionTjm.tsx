@@ -57,7 +57,7 @@ const SEGMENTS: Segment[] = [
     label: 'Marge prise côté client',
     couleur: 'transparent',
     fond: '#e2e8f0',
-    classe: 'border border-dashed border-slate-400 !text-slate-600',
+    classe: 'border border-slate-300 !text-slate-600',
   },
 ];
 
@@ -67,6 +67,8 @@ type Ligne = {
   detail: string;
   total: number;
   parts: Record<string, number>;
+  /** Client-side share is an estimate here, so its block is dashed. */
+  margeEstimee?: boolean;
   compare?: boolean;
 };
 
@@ -82,7 +84,10 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     // figure, so it is named on the body-shop bar, whose model it follows.
     // Grouped by both cuts, not just the published one: a platform that also
     // bills the client is not the same deal as one that may not.
-    const parModele = new Map<string, { taux: number; marge: number; noms: string[] }>();
+    const parModele = new Map<
+      string,
+      { taux: number; marge: number; publiee: boolean; noms: string[] }
+    >();
     const negocies: string[] = [];
     for (const p of PLATEFORMES) {
       if (p.taux < 0) {
@@ -90,15 +95,16 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
         continue;
       }
       const marge = p.margeClient ?? 0;
-      const cle = `${p.taux}|${marge}`;
-      const g = parModele.get(cle) ?? { taux: p.taux, marge, noms: [] };
+      const publiee = p.margeClientPubliee !== false;
+      const cle = `${p.taux}|${marge}|${publiee}`;
+      const g = parModele.get(cle) ?? { taux: p.taux, marge, publiee, noms: [] };
       g.noms.push(p.nom);
       parModele.set(cle, g);
     }
 
     const canaux: Ligne[] = [...parModele.values()]
       .sort((a, b) => a.taux + a.marge - (b.taux + b.marge))
-      .map(({ taux, marge, noms }) => {
+      .map(({ taux, marge, publiee, noms }) => {
         const parts = decomposerTjm(tjm, taux, base, { jours, marge });
         return {
           cle: `t${taux}-${marge}`,
@@ -116,10 +122,11 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
               : taux === 0
                 ? `${noms.join(', ')} — votre facture est intacte`
                 : marge > 0
-                  ? `${noms.join(', ')} — prélève des deux côtés`
-                  : `${noms.join(', ')} — part client non publiée`,
+                  ? `${noms.join(', ')} — ${publiee ? 'prélève des deux côtés' : 'part client estimée, non publiée'}`
+                  : noms.join(', '),
           total: parts.clientPaie,
           parts: { ...parts },
+          margeEstimee: !publiee,
         };
       });
 
@@ -128,9 +135,10 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
       canaux.push({
         cle: 'intermediation',
         titre: 'Intermédiaire, marge non publiée',
-        detail: `${negocies.join(', ')} — votre tarif est intact, le client paie au-dessus`,
+        detail: `${negocies.join(', ')} — votre tarif est intact, marge estimée`,
         total: inter.clientPaie,
         parts: { ...inter },
+        margeEstimee: true,
       });
     }
     canaux.push({
@@ -139,6 +147,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
       detail: 'vous restez freelance, l’ESN revend votre journée',
       total: inter.clientPaie,
       parts: { ...inter },
+      margeEstimee: true,
     });
 
     const cdi = decomposerCdi(tjm, base, { jours });
@@ -149,6 +158,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
         'l’ESN garde de quoi financer sa structure, l’intercontrat et sa marge',
       total: cdi.clientPaie,
       parts: { ...cdi, marge: cdi.marge },
+      margeEstimee: true,
       compare: true,
     });
     return canaux;
@@ -186,7 +196,11 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
                     ].join(' ')}
                     style={{ background: s.fond ?? s.couleur }}
                   />
-                  {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
+                  {s.cle === 'ir'
+                    ? 'Impôts — revenu, puis sociétés'
+                    : s.cle === 'marge'
+                      ? 'Marge côté client (pointillé : estimée)'
+                      : s.label}
                 </span>
               ))}
           </div>
@@ -230,6 +244,9 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
                     className={[
                       'flex items-center justify-center overflow-hidden text-[11px] font-semibold text-white transition-opacity first:rounded-l last:rounded-r',
                       s.classe ?? '',
+                      // Dashed only where the share is an estimate, solid where
+                      // the platform publishes it.
+                      s.cle === 'marge' && l.margeEstimee ? 'border-dashed !border-slate-400' : '',
                     ].join(' ')}
                     style={{
                       width: `${(valeur / echelle) * 100}%`,

@@ -23,8 +23,10 @@ export type Plateforme = {
   taux: number;
   /** Shown instead of the rate when it is not a published percentage. */
   tauxLibelle?: string;
-  /** Share billed to the client on top, when the platform publishes one. */
+  /** Share billed to the client on top of your invoice. */
   margeClient?: number;
+  /** False when that share is an estimate rather than a published rate. */
+  margeClientPubliee?: boolean;
   note: string;
   url?: string | null;
   hote?: string | null;
