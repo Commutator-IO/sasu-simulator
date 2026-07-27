@@ -166,7 +166,11 @@ export function decomposerCdi(
       patronales: 0, salariales: 0, ir: 0, net: 0, avantages: 0,
     };
   }
-  const enveloppe = enveloppeParJour * jours;
+  // The rate is a freelance's; billed through a body shop it fetches more, but
+  // only part of that reaches the consultant's employment cost.
+  const clientPaie = enveloppeParJour * (1 + MARGE_ESN_SALARIE);
+  const coutParJour = clientPaie * PART_COUT_CONSULTANT;
+  const enveloppe = coutParJour * jours;
   const brut = brutMaxPourBudget(enveloppe, base.tauxATMP, base.moisRemuneration);
   const { net, netImposableAvantAbattement } = decomposerSalaire(brut, base.moisRemuneration);
   const imposable = abattementSalaire(netImposableAvantAbattement);
@@ -174,11 +178,10 @@ export function decomposerCdi(
     calculerIR(imposable + base.autresRevenus, base.parts, base.couple) -
     calculerIR(base.autresRevenus, base.parts, base.couple);
 
-  const clientPaie = enveloppeParJour * (1 + MARGE_ESN_SALARIE);
   return {
     clientPaie,
-    marge: clientPaie - enveloppeParJour,
-    coutEmployeur: enveloppeParJour,
+    marge: clientPaie - coutParJour,
+    coutEmployeur: coutParJour,
     patronales: (enveloppe - brut) / jours,
     salariales: (brut - net) / jours,
     ir: ir / jours,
@@ -188,18 +191,25 @@ export function decomposerCdi(
 }
 
 /**
- * What a body shop adds on top of a salaried consultant's cost when billing the
- * client. Published guidance puts it at 20 to 40% of that cost — one worked
- * example bills a consultant costing 340 €/day at 440 €, a 30% margin — so the
- * midpoint is taken here.
- *
- * The client accepts paying more than an equivalent freelance rate because the
- * salaried mode carries the bench, paid leave and notice periods, and comes with
+ * Premium a client accepts for the salaried mode over an equivalent freelance
+ * rate: it carries the bench, paid leave and notice periods, and comes with
  * continuity, replacement and no reclassification risk. Large consulting firms
  * sit well above even this, commonly billing 1 000 to 1 200 € a day for the same
  * seniority.
  */
 export const MARGE_ESN_SALARIE = 0.3;
+
+/**
+ * Share of the billed rate that actually funds the consultant's employment.
+ *
+ * A published breakdown of a 700 €/day billed consultant puts roughly 410 € on
+ * the employer cost, 145 € on structure and bench, and 140 € on gross margin —
+ * a gross salary near 63 400 €. Only about 58% of what the client pays reaches
+ * the consultant's employment cost, which is why the same billed day leaves a
+ * salaried consultant well behind a freelance: the rest funds the sales,
+ * management and non-billable time the freelance carries alone.
+ */
+export const PART_COUT_CONSULTANT = 0.58;
 
 /**
  * Employer-funded extras a salaried job adds on top of pay, valued at an order

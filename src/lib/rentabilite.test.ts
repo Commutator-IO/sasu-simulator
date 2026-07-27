@@ -82,14 +82,22 @@ describe('décomposition d’un TJM', () => {
 });
 
 describe('la même enveloppe prise en CDI', () => {
-  it('répartit exactement le coût employeur', () => {
+  it('répartit exactement ce que paie le client', () => {
     const p = decomposerCdi(700, base, { jours: 200 });
-    expect(p.coutEmployeur).toBeCloseTo(700, 6);
-    expect(p.patronales + p.salariales + p.ir + p.net).toBeCloseTo(700, 6);
-    // Et le client paie ce coût plus la marge de l’ESN.
-    expect(p.marge + p.coutEmployeur).toBeCloseTo(p.clientPaie, 6);
+    // Le client paie au-dessus du tarif freelance…
     expect(p.clientPaie).toBeGreaterThan(700);
+    // …mais seule une part finance l’emploi du consultant.
+    expect(p.coutEmployeur).toBeLessThan(700);
+    expect(p.marge + p.coutEmployeur).toBeCloseTo(p.clientPaie, 6);
+    expect(p.patronales + p.salariales + p.ir + p.net).toBeCloseTo(p.coutEmployeur, 6);
     for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
+  });
+
+  it('laisse nettement moins que le même tarif pris en direct', () => {
+    const cdi = decomposerCdi(700, base, { jours: 200 });
+    const direct = decomposerTjm(700, 0, base, { jours: 200 });
+    // La structure et l’intercontrat que l’ESN porte se paient sur le net.
+    expect(cdi.net).toBeLessThan(direct.net * 0.85);
   });
 
   it('distingue la part employeur de la part salarié', () => {

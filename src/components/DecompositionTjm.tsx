@@ -97,7 +97,8 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     canaux.push({
       cle: 'cdi',
       titre: 'Le même consultant en CDI dans une ESN',
-      detail: 'à gauche ce qui lui revient et ce qu’il paie, à droite la part employeur',
+      detail:
+        'l’ESN garde de quoi financer sa structure, l’intercontrat et sa marge',
       total: cdi.clientPaie,
       parts: { ...cdi, commission: cdi.marge },
       compare: true,
@@ -197,12 +198,13 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
           <>
             Sur {eur(tjm)} conservés par jour, {Math.round(jours)} jours par an, au
             meilleur arbitrage salaire/dividendes. Les marges sont des ordres de
-            grandeur négociés&nbsp;: 10 à 30&nbsp;% en régie freelance, 20 à
-            40&nbsp;% du coût d'un consultant salarié — le client paie plus cher ce
-            mode parce qu'il y achète la continuité, le remplacement et l'absence de
-            risque de requalification. Les grands cabinets de conseil facturent
-            encore au-dessus, couramment 1&nbsp;000 à 1&nbsp;200&nbsp;€ par jour à
-            séniorité comparable.
+            grandeur négociés. En régie freelance l'intermédiaire prend 10 à
+            30&nbsp;%. Pour un consultant salarié, seuls 58&nbsp;% environ de ce que
+            paie le client financent son emploi&nbsp;: le reste couvre la structure,
+            l'intercontrat et la marge — d'où un net sensiblement inférieur à
+            tarif comparable, alors même que le client paie davantage. Les grands
+            cabinets de conseil facturent encore au-dessus, couramment
+            1&nbsp;000 à 1&nbsp;200&nbsp;€ par jour à séniorité comparable.
           </>
         )}
       </p>
