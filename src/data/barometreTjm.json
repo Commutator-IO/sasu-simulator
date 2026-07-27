@@ -39,21 +39,30 @@
       {
         "nom": "Malt",
         "taux": 0.1,
-        "note": "Frais dégressifs : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez.",
+        "note": "Frais dégressifs côté freelance : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez. La plateforme facture aussi le client, de 5 % à 9 % selon son offre.",
         "url": "https://www.malt.fr",
-        "hote": "malt.fr"
+        "hote": "malt.fr",
+        "margeClient": 0.07
       },
       {
         "nom": "Comet",
-        "taux": 0.15,
-        "note": "Plateforme tech (développement, data, produit).",
+        "taux": 0.05,
+        "note": "Plateforme tech (développement, data, produit) : 5 % côté freelance, la commission la plus basse des trois. La part facturée au client existe mais n'est pas publiée.",
         "url": "https://www.comet.co/",
         "hote": "comet.co"
       },
       {
+        "nom": "Le Hibou",
+        "taux": 0.0,
+        "margeClient": 0.15,
+        "note": "Rien n'est prélevé côté freelance : vous facturez votre TJM tel quel. La commission est prise côté client, annoncée transparente et plafonnée à 15 %, négociable au volume.",
+        "url": "https://www.lehibou.com/",
+        "hote": "lehibou.com"
+      },
+      {
         "nom": "Crème de la Crème",
         "taux": 0.1,
-        "note": "Sélection à l'entrée ; certaines missions grands comptes affichées sans commission.",
+        "note": "Sélection à l'entrée ; certaines missions grands comptes sont annoncées sans commission. La part éventuellement facturée au client n'est pas publiée.",
         "url": "https://www.cremedelacreme.io/",
         "hote": "cremedelacreme.io"
       },

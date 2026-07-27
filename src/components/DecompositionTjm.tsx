@@ -40,12 +40,12 @@ const SEGMENTS: Segment[] = [
   { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
   // A published fee, deducted from your own invoice: a known figure, so a solid
   // colour.
-  { cle: 'commission', label: 'Commission prélevée sur vous (publiée)', couleur: '#db2777' },
+  { cle: 'commission', label: 'Commission prélevée sur vous', couleur: '#db2777' },
   // Taken on the client side and not published: an estimate, so neutral and
   // dashed rather than dressed as measured.
   {
     cle: 'marge',
-    label: 'Marge de l’intermédiaire (estimée)',
+    label: 'Marge prise côté client',
     couleur: 'transparent',
     fond: 'var(--color-ink-100)',
     classe: 'border border-dashed border-ink-300 !text-ink-500',
@@ -71,41 +71,71 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     // One bar per published commission. A negative rate flags an intermediary
     // whose margin is negotiated rather than published: it cannot be drawn as a
     // figure, so it is named on the body-shop bar, whose model it follows.
-    const parTaux = new Map<number, string[]>();
+    // Grouped by both cuts, not just the published one: a platform that also
+    // bills the client is not the same deal as one that may not.
+    const parModele = new Map<string, { taux: number; marge: number; noms: string[] }>();
     const negocies: string[] = [];
     for (const p of PLATEFORMES) {
-      if (p.taux < 0) negocies.push(p.nom);
-      else parTaux.set(p.taux, [...(parTaux.get(p.taux) ?? []), p.nom]);
+      if (p.taux < 0) {
+        negocies.push(p.nom);
+        continue;
+      }
+      const marge = p.margeClient ?? 0;
+      const cle = `${p.taux}|${marge}`;
+      const g = parModele.get(cle) ?? { taux: p.taux, marge, noms: [] };
+      g.noms.push(p.nom);
+      parModele.set(cle, g);
     }
 
-    const canaux: Ligne[] = [...parTaux.entries()]
-      .sort((a, b) => a[0] - b[0])
-      .map(([taux, noms]) => {
-        const parts = decomposerTjm(tjm, taux, base, { jours });
+    const canaux: Ligne[] = [...parModele.values()]
+      .sort((a, b) => a.taux + a.marge - (b.taux + b.marge))
+      .map(({ taux, marge, noms }) => {
+        const parts = decomposerTjm(tjm, taux, base, { jours, marge });
         return {
-          cle: `t${taux}`,
-          titre: taux === 0 ? 'Sans intermédiaire' : `Commission ${Math.round(taux * 100)} %`,
-          detail: noms.join(', '),
+          cle: `t${taux}-${marge}`,
+          titre:
+            taux === 0 && marge === 0
+              ? 'Sans intermédiaire'
+              : taux === 0
+                ? `Rien sur vous, ${Math.round(marge * 100)} % au client`
+                : marge > 0
+                  ? `${Math.round(taux * 100)} % sur vous + ${Math.round(marge * 100)} % au client`
+                  : `Commission ${Math.round(taux * 100)} % sur vous`,
+          detail:
+            taux === 0 && marge === 0
+              ? noms.join(', ')
+              : taux === 0
+                ? `${noms.join(', ')} — votre facture est intacte`
+                : marge > 0
+                  ? `${noms.join(', ')} — prélève des deux côtés`
+                  : `${noms.join(', ')} — part client non publiée`,
           total: parts.clientPaie,
           parts: { ...parts },
         };
       });
 
-    const esn = decomposerTjm(tjm, 0, base, { jours, marge: MARGE_ESN_TYPIQUE });
+    const inter = decomposerTjm(tjm, 0, base, { jours, marge: MARGE_ESN_TYPIQUE });
+    if (negocies.length) {
+      canaux.push({
+        cle: 'intermediation',
+        titre: 'Intermédiaire, marge non publiée',
+        detail: `${negocies.join(', ')} — votre tarif est intact, le client paie au-dessus`,
+        total: inter.clientPaie,
+        parts: { ...inter },
+      });
+    }
     canaux.push({
       cle: 'esn',
-      titre: `ESN / régie · marge ${Math.round(MARGE_ESN_TYPIQUE * 100)} %`,
-      detail: negocies.length
-        ? `${negocies.join(', ')} — marge négociée, prise au-dessus de votre tarif`
-        : 'la marge se prend au-dessus de votre tarif',
-      total: esn.clientPaie,
-      parts: { ...esn },
+      titre: `Régie via une ESN · marge ${Math.round(MARGE_ESN_TYPIQUE * 100)} %`,
+      detail: 'vous restez freelance, l’ESN revend votre journée',
+      total: inter.clientPaie,
+      parts: { ...inter },
     });
 
     const cdi = decomposerCdi(tjm, base, { jours });
     canaux.push({
       cle: 'cdi',
-      titre: 'Le même consultant en CDI dans une ESN',
+      titre: 'Salarié en CDI dans une ESN',
       detail:
         'l’ESN garde de quoi financer sa structure, l’intercontrat et sa marge',
       total: cdi.clientPaie,

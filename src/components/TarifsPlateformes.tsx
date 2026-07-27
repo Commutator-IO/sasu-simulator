@@ -15,21 +15,23 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
   const aSaisir = (base: number, taux: number) =>
     Math.round(taux > 0 && taux < 1 ? base / (1 - taux) : base);
 
-  // Platforms charging the same are one row: identical figures repeated three
-  // times read as three choices when they are one.
-  const groupes = [...new Map(PLATEFORMES.map((p) => [p.taux, [] as typeof PLATEFORMES])).keys()]
-    .sort((a, b) => a - b)
-    .map((taux) => {
-      const membres = PLATEFORMES.filter((p) => p.taux === taux);
+  // Grouped on both cuts, as the chart is: charging the client changes the deal
+  // even when the freelance-side fee is the same.
+  const cle = (p: (typeof PLATEFORMES)[number]) => `${p.taux}|${p.margeClient ?? 0}`;
+  const groupes = [...new Set(PLATEFORMES.map(cle))]
+    .map((k) => {
+      const membres = PLATEFORMES.filter((p) => cle(p) === k);
       // A label only stands for the row when every member shares it: one
       // platform's "negotiated margin" must not be read onto its neighbours.
       const libelles = new Set(membres.map((m) => m.tauxLibelle ?? ''));
       return {
-        taux,
+        taux: membres[0].taux,
+        marge: membres[0].margeClient ?? 0,
         membres,
         tauxLibelle: libelles.size === 1 ? membres[0].tauxLibelle : undefined,
       };
-    });
+    })
+    .sort((a, b) => a.taux + a.marge - (b.taux + b.marge));
 
   return (
     <div className="overflow-x-auto">
@@ -50,7 +52,7 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
         </thead>
         <tbody>
           {groupes.map((g) => (
-            <tr key={g.taux} className="border-b border-ink-100 align-top">
+            <tr key={`${g.taux}-${g.marge}`} className="border-b border-ink-100 align-top">
               <td className="py-3 pr-3">
                 <span className="font-medium text-ink-900">
                   {g.membres.map((m) => m.nom).join(', ')}
@@ -78,7 +80,15 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
                 ))}
               </td>
               <td className="tabular px-3 py-3 text-right text-ink-600">
-                {g.tauxLibelle ?? (g.taux <= 0 ? '—' : `${Math.round(g.taux * 100)} %`)}
+                {g.tauxLibelle ??
+                  (g.taux <= 0 && g.marge === 0
+                    ? '—'
+                    : [
+                        g.taux > 0 ? `${Math.round(g.taux * 100)} % sur vous` : null,
+                        g.marge > 0 ? `${Math.round(g.marge * 100)} % au client` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' + '))}
               </td>
               <td className="tabular px-3 py-3 text-right font-semibold text-ink-900">
                 {eur(aSaisir(tjm, g.taux))}
