@@ -1,8 +1,6 @@
-import { useMemo } from 'react';
 import { eur } from '../lib/format';
 import { Segments } from './Champs';
-import { DEFAUTS_ARBITRAGE } from '../lib/arbitrage';
-import { netEnPocheSalaire, seuilRentabilite } from '../lib/rentabilite';
+import type { Seuil } from '../lib/rentabilite';
 import * as P from '../lib/parametres2026';
 
 /**
@@ -18,6 +16,8 @@ export function SeuilRentabilite({
   cible,
   jours,
   tjm,
+  net,
+  seuil,
   onMode,
   onCible,
   onJours,
@@ -27,16 +27,13 @@ export function SeuilRentabilite({
   jours: number;
   /** The user's own day rate, to express the threshold in billable days. */
   tjm: number;
+  /** Take-home the target amounts to; solved by the page and shared with the chart. */
+  net: number;
+  seuil: Seuil;
   onMode: (m: 'net' | 'cdi') => void;
   onCible: (v: number) => void;
   onJours: (v: number) => void;
 }) {
-  const base = DEFAUTS_ARBITRAGE;
-
-  const { net, seuil } = useMemo(() => {
-    const n = mode === 'cdi' ? netEnPocheSalaire(cible, base) : cible;
-    return { net: n, seuil: seuilRentabilite(n, base, { jours, tjm }) };
-  }, [mode, cible, jours, tjm, base]);
 
   const marge = tjm > 0 && seuil.joursNecessaires ? jours - seuil.joursNecessaires : null;
 

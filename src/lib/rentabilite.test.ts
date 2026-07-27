@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAUTS_ARBITRAGE } from './arbitrage';
-import { netEnPocheSalaire, seuilRentabilite } from './rentabilite';
+import { decomposerTjm, netEnPocheSalaire, seuilRentabilite } from './rentabilite';
 import { balayer } from './simulation';
 import * as P from './parametres2026';
 
@@ -20,6 +20,33 @@ describe('équivalent d’un salaire', () => {
 
   it('ne prélève rien sur un salaire nul', () => {
     expect(netEnPocheSalaire(0, base)).toBe(0);
+  });
+});
+
+describe('décomposition d’un TJM', () => {
+  it('répartit exactement le tarif facturé', () => {
+    for (const taux of [0, 0.1, 0.15]) {
+      const p = decomposerTjm(700, taux, base, { jours: 200 });
+      expect(p.commission + p.frais + p.prelevements + p.net).toBeCloseTo(700, 6);
+      expect(p.commission).toBeCloseTo(700 * taux, 6);
+      for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it('laisse moins au freelance quand la commission monte', () => {
+    const sans = decomposerTjm(700, 0, base, { jours: 200 });
+    const avec = decomposerTjm(700, 0.15, base, { jours: 200 });
+    expect(avec.net).toBeLessThan(sans.net);
+    expect(avec.commission).toBeGreaterThan(sans.commission);
+  });
+
+  it('ne renvoie que des zéros pour un tarif nul', () => {
+    expect(decomposerTjm(0, 0.1, base)).toEqual({
+      commission: 0,
+      frais: 0,
+      prelevements: 0,
+      net: 0,
+    });
   });
 });
 

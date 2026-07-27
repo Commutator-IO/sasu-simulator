@@ -63,6 +63,49 @@ export function netEnPocheSalaire(
   return net - (irAvec - irSans);
 }
 
+export type PartTjm = {
+  /** Deducted by the platform on the invoice. */
+  commission: number;
+  /** Running costs of the company. */
+  frais: number;
+  /** Contributions, corporate tax and income tax. */
+  prelevements: number;
+  /** What the freelance is left with. */
+  net: number;
+};
+
+/**
+ * Where one day of billing actually goes, for a platform taking `taux`.
+ *
+ * Expressed per day so day rates can be compared directly: the four parts add
+ * back up to the rate invoiced. Contributions are taken at the best
+ * salary/dividend split, as everywhere else in the app.
+ */
+export function decomposerTjm(
+  tjm: number,
+  taux: number,
+  base: BaseRentabilite,
+  options: { tauxFrais?: number; jours?: number } = {},
+): PartTjm {
+  const tauxFrais = Math.min(Math.max(options.tauxFrais ?? P.TAUX_FRAIS_REFERENCE, 0), 0.9);
+  const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
+  if (tjm <= 0) return { commission: 0, frais: 0, prelevements: 0, net: 0 };
+
+  const commission = tjm * taux;
+  const facture = tjm - commission;
+  const ca = facture * jours;
+  const frais = ca * tauxFrais;
+  const resultat = ca - frais;
+  const net = balayer({ ...base, resultatAvantRemuneration: resultat }).optimum.netEnPoche;
+
+  return {
+    commission,
+    frais: frais / jours,
+    prelevements: Math.max(0, resultat - net) / jours,
+    net: net / jours,
+  };
+}
+
 /** Best take-home achievable at a given profit, whatever the split. */
 function meilleurNet(base: BaseRentabilite, resultat: number, pas: number): number {
   if (resultat <= 0) return 0;

@@ -10,6 +10,8 @@ import { eur } from './lib/format';
 import { ClassementMetiers } from './components/ClassementMetiers';
 import { TarifsPlateformes } from './components/TarifsPlateformes';
 import { SeuilRentabilite } from './components/SeuilRentabilite';
+import { DEFAUTS_ARBITRAGE } from './lib/arbitrage';
+import { netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
 import {
   anneeDecimale,
   EVENEMENTS,
@@ -128,6 +130,17 @@ export default function PagePositionnement() {
   }, [profs, ville, h.niveau, h.tjm2024, h.tjm2025, h.tjm2027, tjmEffectif]);
 
   const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0 || h.tjm2027 > 0;
+
+  // Computed here rather than inside the card, so the chart can draw the same
+  // break-even line without solving it a second time.
+  const { netCible, seuil } = useMemo(() => {
+    const n =
+      h.cibleMode === 'cdi' ? netEnPocheSalaire(h.cible, DEFAUTS_ARBITRAGE) : h.cible;
+    return {
+      netCible: n,
+      seuil: seuilRentabilite(n, DEFAUTS_ARBITRAGE, { jours: h.jours, tjm: tjmEffectif }),
+    };
+  }, [h.cibleMode, h.cible, h.jours, tjmEffectif]);
 
   // Where the market is projected to be next year, for the leading profession,
   // so a target can be read against it rather than in the abstract.
@@ -298,13 +311,15 @@ export default function PagePositionnement() {
                   déduites au prorata.{' '}
                   {trajectoire
                     ? 'Votre trajectoire (2024 → 2026) en trait sombre.'
-                    : 'Votre TJM en trait horizontal.'}
+                    : 'Votre TJM en trait horizontal.'}{' '}
+                  {!seuil.horsAtteinte && 'Le trait doré marque le seuil sous lequel votre objectif n’est plus atteint.'}
                 </p>
                 <div className="mt-5">
                   <EvolutionTjm
                     series={series}
                     evenements={EVENEMENTS}
                     tjmUtilisateur={trajectoire ? undefined : tjmEffectif}
+                    tjmSeuil={seuil.horsAtteinte ? undefined : seuil.tjmNecessaire}
                     finMesures={finDesMesures(profs)}
                   />
                 </div>
@@ -343,6 +358,8 @@ export default function PagePositionnement() {
                     cible={h.cible}
                     jours={h.jours}
                     tjm={tjmEffectif}
+                    net={netCible}
+                    seuil={seuil}
                     onMode={(m) => setH((s) => ({ ...s, cibleMode: m }))}
                     onCible={(v) => setH((s) => ({ ...s, cible: v }))}
                     onJours={(v) => setH((s) => ({ ...s, jours: v }))}
