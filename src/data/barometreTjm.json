@@ -2,12 +2,11 @@
   "meta": {
     "unite": "€/jour, TJM affiché (hors taxes)",
     "notes": [
-      "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié. Les TJM sont donnés HT et hors commission de plateforme — c'est le prix facturé par le freelance, dont l'intermédiaire déduit ensuite ses frais de service.",
-      "Les points passés sont reconstitués depuis des archives web publiques, y compris 2024 et 2025 : ce sont des mesures, pas des estimations. Les captures restent espacées (une à deux par an).",
-      "Une valeur par ville est la moyenne des spécialités publiées pour ce métier, et la même méthode est appliquée à toutes les dates pour que la courbe reste comparable.",
-      "Une valeur par ville est la moyenne des spécialités publiées pour ce métier, et la même méthode est appliquée à toutes les dates pour que la courbe reste comparable. Pour les experts data, cette moyenne porte sur de petits échantillons par spécialité : elle situe un ordre de grandeur, pas un tarif de référence.",
-      "Vous pouvez saisir votre propre TJM en 2024 et 2025 pour comparer votre trajectoire à celle du marché.",
-      "Les échantillons par ville sont petits : à lire comme un ordre de grandeur, pas une mesure."
+      "Chiffres de sources publiques : un baromètre de tarifs est un instantané des profils actifs récents, sans historique publié. Les TJM sont donnés HT et hors commission de plateforme — c'est le prix facturé par le freelance.",
+      "Les points passés sont reconstitués depuis des archives web publiques : ce sont des mesures, pas des estimations. Les captures restent espacées, une à deux par an.",
+      "Une valeur par ville est la moyenne des spécialités publiées pour ce métier, la même méthode étant appliquée à toutes les dates pour que la courbe reste comparable. Ces moyennes portent sur de petits échantillons : à lire comme un ordre de grandeur, pas comme un tarif de référence.",
+      "Les points 2027 et 2028 sont des projections : la tendance des trois dernières années est prolongée à demi-intensité. C'est un ordre de grandeur, pas une prévision.",
+      "Vous pouvez saisir vos propres TJM année par année pour comparer votre trajectoire à celle du marché."
     ],
     "references": [
       {

@@ -16,9 +16,9 @@ function moisAnnee(date: string): string {
  * Day-rate evolution over time. Hand-drawn SVG, scaled through the viewBox — no
  * dependency, like the other charts.
  *
- * Estimated points (2024-2025, not archived) and any segment touching them are
- * drawn dashed with a hollow marker, so they read as a trend, not measured data.
- * The 2023 and 2026 endpoints are real measured points.
+ * Projected points and any segment touching them are drawn dashed with a hollow
+ * marker, so they read as a trend rather than measured data. Everything up to
+ * the last capture is measured.
  */
 
 export type SerieTemporelle = {
