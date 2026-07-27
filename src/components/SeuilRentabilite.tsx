@@ -17,6 +17,7 @@ export function SeuilRentabilite({
   jours,
   tjm,
   net,
+  netPlein,
   seuil,
   onMode,
   onCible,
@@ -29,6 +30,8 @@ export function SeuilRentabilite({
   tjm: number;
   /** Take-home the target amounts to; solved by the page and shared with the chart. */
   net: number;
+  /** Take-home once every planned day is billed. */
+  netPlein: number;
   seuil: Seuil;
   onMode: (m: 'net' | 'cdi') => void;
   onCible: (v: number) => void;
@@ -131,7 +134,16 @@ export function SeuilRentabilite({
                   sur les {Math.round(jours)} que vous visez
                 </>
               )}
-              .
+              .{' '}
+              {/* The threshold says what is needed; this says what is on the
+                  table if the year goes as planned. */}
+              En facturant les {Math.round(jours)} jours, vous atteindriez{' '}
+              <strong className="text-ink-900">{eur(Math.round(netPlein))}</strong>, soit{' '}
+              <strong className={netPlein >= net ? 'text-brand-700' : 'text-gold-700'}>
+                {eur(Math.round(Math.abs(netPlein - net)))}{' '}
+                {netPlein >= net ? 'de plus' : 'de moins'}
+              </strong>{' '}
+              que votre objectif.
             </p>
           )}
 

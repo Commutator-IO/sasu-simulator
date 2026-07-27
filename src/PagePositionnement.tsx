@@ -12,7 +12,7 @@ import { TarifsPlateformes } from './components/TarifsPlateformes';
 import { SeuilRentabilite } from './components/SeuilRentabilite';
 import { DecompositionTjm } from './components/DecompositionTjm';
 import { DEFAUTS_ARBITRAGE } from './lib/arbitrage';
-import { netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
+import { decomposerTjm, netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
 import {
   anneeDecimale,
   EVENEMENTS,
@@ -134,12 +134,16 @@ export default function PagePositionnement() {
 
   // Computed here rather than inside the card, so the chart can draw the same
   // break-even line without solving it a second time.
-  const { netCible, seuil } = useMemo(() => {
+  const { netCible, seuil, netPlein } = useMemo(() => {
     const n =
       h.cibleMode === 'cdi' ? netEnPocheSalaire(h.cible, DEFAUTS_ARBITRAGE) : h.cible;
     return {
       netCible: n,
       seuil: seuilRentabilite(n, DEFAUTS_ARBITRAGE, { jours: h.jours, tjm: tjmEffectif }),
+      // What the same rate yields once every planned day is billed — the
+      // threshold says what is needed, this says what is on the table.
+      netPlein:
+        decomposerTjm(tjmEffectif, 0, DEFAUTS_ARBITRAGE, { jours: h.jours }).net * h.jours,
     };
   }, [h.cibleMode, h.cible, h.jours, tjmEffectif]);
 
@@ -362,6 +366,7 @@ export default function PagePositionnement() {
                     tjm={tjmEffectif}
                     net={netCible}
                     seuil={seuil}
+                    netPlein={netPlein}
                     onMode={(m) => setH((s) => ({ ...s, cibleMode: m }))}
                     onCible={(v) => setH((s) => ({ ...s, cible: v }))}
                     onJours={(v) => setH((s) => ({ ...s, jours: v }))}
