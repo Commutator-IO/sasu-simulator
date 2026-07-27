@@ -125,6 +125,10 @@ export function decomposerTjm(
 }
 
 export type PartCdi = {
+  /** What the client is billed for the salaried consultant. */
+  clientPaie: number;
+  /** Kept by the body shop on top of the consultant's cost. */
+  marge: number;
   /** Employer's total cost — the envelope compared against a day rate. */
   coutEmployeur: number;
   /** Paid by the employer, above the gross: money the employee never sees. */
@@ -157,7 +161,10 @@ export function decomposerCdi(
 ): PartCdi {
   const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
   if (enveloppeParJour <= 0) {
-    return { coutEmployeur: 0, patronales: 0, salariales: 0, ir: 0, net: 0, avantages: 0 };
+    return {
+      clientPaie: 0, marge: 0, coutEmployeur: 0,
+      patronales: 0, salariales: 0, ir: 0, net: 0, avantages: 0,
+    };
   }
   const enveloppe = enveloppeParJour * jours;
   const brut = brutMaxPourBudget(enveloppe, base.tauxATMP, base.moisRemuneration);
@@ -167,7 +174,10 @@ export function decomposerCdi(
     calculerIR(imposable + base.autresRevenus, base.parts, base.couple) -
     calculerIR(base.autresRevenus, base.parts, base.couple);
 
+  const clientPaie = enveloppeParJour * (1 + MARGE_ESN_SALARIE);
   return {
+    clientPaie,
+    marge: clientPaie - enveloppeParJour,
     coutEmployeur: enveloppeParJour,
     patronales: (enveloppe - brut) / jours,
     salariales: (brut - net) / jours,
@@ -176,6 +186,20 @@ export function decomposerCdi(
     avantages: (AVANTAGES_CDI_ANNUELS / jours),
   };
 }
+
+/**
+ * What a body shop adds on top of a salaried consultant's cost when billing the
+ * client. Published guidance puts it at 20 to 40% of that cost — one worked
+ * example bills a consultant costing 340 €/day at 440 €, a 30% margin — so the
+ * midpoint is taken here.
+ *
+ * The client accepts paying more than an equivalent freelance rate because the
+ * salaried mode carries the bench, paid leave and notice periods, and comes with
+ * continuity, replacement and no reclassification risk. Large consulting firms
+ * sit well above even this, commonly billing 1 000 to 1 200 € a day for the same
+ * seniority.
+ */
+export const MARGE_ESN_SALARIE = 0.3;
 
 /**
  * Employer-funded extras a salaried job adds on top of pay, valued at an order

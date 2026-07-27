@@ -86,6 +86,9 @@ describe('la même enveloppe prise en CDI', () => {
     const p = decomposerCdi(700, base, { jours: 200 });
     expect(p.coutEmployeur).toBeCloseTo(700, 6);
     expect(p.patronales + p.salariales + p.ir + p.net).toBeCloseTo(700, 6);
+    // Et le client paie ce coût plus la marge de l’ESN.
+    expect(p.marge + p.coutEmployeur).toBeCloseTo(p.clientPaie, 6);
+    expect(p.clientPaie).toBeGreaterThan(700);
     for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
   });
 
@@ -112,6 +115,8 @@ describe('la même enveloppe prise en CDI', () => {
 
   it('ne renvoie que des zéros pour une enveloppe nulle', () => {
     expect(decomposerCdi(0, base)).toEqual({
+      clientPaie: 0,
+      marge: 0,
       coutEmployeur: 0,
       patronales: 0,
       salariales: 0,
