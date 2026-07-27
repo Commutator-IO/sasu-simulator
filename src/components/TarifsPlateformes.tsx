@@ -10,7 +10,32 @@ import { PLATEFORMES } from '../lib/barometreTjm';
  * T / (1 − c).
  */
 export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number }) {
-  const aSaisir = (base: number, taux: number) => Math.round(taux < 1 ? base / (1 - taux) : base);
+  // A negative rate marks a margin taken client-side and not published: your own
+  // rate is unchanged, so there is nothing to gross up.
+  const aSaisir = (base: number, taux: number) =>
+    taux > 0 && taux < 1 ? base / (1 - taux) : base;
+  // Same arithmetic as the decomposition chart, so the two agree: what you
+  // invoice, then what the client is charged on top of it.
+  const clientPaie = (base: number, taux: number, marge: number) =>
+    marge > 0 && marge < 1 ? aSaisir(base, taux) / (1 - marge) : aSaisir(base, taux);
+
+  // Grouped on both cuts, as the chart is: charging the client changes the deal
+  // even when the freelance-side fee is the same.
+  const cle = (p: (typeof PLATEFORMES)[number]) => `${p.taux}|${p.margeClient ?? 0}`;
+  const groupes = [...new Set(PLATEFORMES.map(cle))]
+    .map((k) => {
+      const membres = PLATEFORMES.filter((p) => cle(p) === k);
+      // A label only stands for the row when every member shares it: one
+      // platform's "negotiated margin" must not be read onto its neighbours.
+      const libelles = new Set(membres.map((m) => m.tauxLibelle ?? ''));
+      return {
+        taux: membres[0].taux,
+        marge: membres[0].margeClient ?? 0,
+        membres,
+        tauxLibelle: libelles.size === 1 ? membres[0].tauxLibelle : undefined,
+      };
+    })
+    .sort((a, b) => a.taux + a.marge - (b.taux + b.marge));
 
   return (
     <div className="overflow-x-auto">
@@ -22,6 +47,9 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
             <th className="pb-2 px-3 text-right font-semibold text-ink-900">
               À saisir aujourd'hui
             </th>
+            <th className="pb-2 px-3 text-right font-semibold text-ink-500">
+              Le client paie
+            </th>
             {cible ? (
               <th className="pb-2 pl-3 text-right font-semibold text-ink-900">
                 À saisir pour 2027
@@ -30,31 +58,54 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
           </tr>
         </thead>
         <tbody>
-          {PLATEFORMES.map((p) => (
-            <tr key={p.nom} className="border-b border-ink-100 align-top">
+          {groupes.map((g) => (
+            <tr key={`${g.taux}-${g.marge}`} className="border-b border-ink-100 align-top">
               <td className="py-3 pr-3">
-                <span className="font-medium text-ink-900">{p.nom}</span>
-                <p className="mt-0.5 text-xs leading-relaxed text-ink-500">{p.note}</p>
-                {p.url && (
-                  <a
-                    href={p.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 inline-block text-xs text-brand-700 underline underline-offset-2 hover:text-brand-800"
-                  >
-                    {p.hote}
-                  </a>
-                )}
+                <span className="font-medium text-ink-900">
+                  {g.membres.map((m) => m.nom).join(', ')}
+                </span>
+                {g.membres.map((m) => (
+                  <p key={m.nom} className="mt-0.5 text-xs leading-relaxed text-ink-500">
+                    {g.membres.length > 1 && (
+                      <span className="font-medium text-ink-600">{m.nom} — </span>
+                    )}
+                    {m.note}
+                    {m.url && (
+                      <>
+                        {' '}
+                        <a
+                          href={m.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-brand-700 underline underline-offset-2 hover:text-brand-800"
+                        >
+                          {m.hote}
+                        </a>
+                      </>
+                    )}
+                  </p>
+                ))}
               </td>
               <td className="tabular px-3 py-3 text-right text-ink-600">
-                {p.tauxLibelle ?? (p.taux === 0 ? '—' : `${Math.round(p.taux * 100)} %`)}
+                {g.tauxLibelle ??
+                  (g.taux <= 0 && g.marge === 0
+                    ? '—'
+                    : [
+                        g.taux > 0 ? `${Math.round(g.taux * 100)} % sur vous` : null,
+                        g.marge > 0 ? `${Math.round(g.marge * 100)} % au client` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' + '))}
               </td>
               <td className="tabular px-3 py-3 text-right font-semibold text-ink-900">
-                {eur(aSaisir(tjm, p.taux))}
+                {eur(Math.round(aSaisir(tjm, g.taux)))}
+              </td>
+              <td className="tabular px-3 py-3 text-right text-ink-500">
+                {g.taux < 0 ? '—' : eur(Math.round(clientPaie(tjm, g.taux, g.marge)))}
               </td>
               {cible ? (
                 <td className="tabular py-3 pl-3 text-right font-semibold text-brand-700">
-                  {eur(aSaisir(cible, p.taux))}
+                  {eur(Math.round(aSaisir(cible, g.taux)))}
                 </td>
               ) : null}
             </tr>

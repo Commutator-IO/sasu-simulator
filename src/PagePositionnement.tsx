@@ -9,6 +9,10 @@ import { JaugeExperience } from './components/JaugeExperience';
 import { eur } from './lib/format';
 import { ClassementMetiers } from './components/ClassementMetiers';
 import { TarifsPlateformes } from './components/TarifsPlateformes';
+import { SeuilRentabilite } from './components/SeuilRentabilite';
+import { DecompositionTjm } from './components/DecompositionTjm';
+import { DEFAUTS_ARBITRAGE } from './lib/arbitrage';
+import { netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
 import {
   anneeDecimale,
   EVENEMENTS,
@@ -128,6 +132,17 @@ export default function PagePositionnement() {
 
   const trajectoire = h.tjm2024 > 0 || h.tjm2025 > 0 || h.tjm2027 > 0;
 
+  // Computed here rather than inside the card, so the chart can draw the same
+  // break-even line without solving it a second time.
+  const { netCible, seuil } = useMemo(() => {
+    const n =
+      h.cibleMode === 'cdi' ? netEnPocheSalaire(h.cible, DEFAUTS_ARBITRAGE) : h.cible;
+    return {
+      netCible: n,
+      seuil: seuilRentabilite(n, DEFAUTS_ARBITRAGE, { jours: h.jours, tjm: tjmEffectif }),
+    };
+  }, [h.cibleMode, h.cible, h.jours, tjmEffectif]);
+
   // Where the market is projected to be next year, for the leading profession,
   // so a target can be read against it rather than in the abstract.
   const marche2027 = (() => {
@@ -151,12 +166,13 @@ export default function PagePositionnement() {
               Données de sources publiques
             </p>
             <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-ink-900 sm:text-5xl">
-              Où se situe votre TJM&nbsp;?
+              Votre TJM vaut-il ce qu'il devrait&nbsp;?
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
-              Superposez l'évolution du tarif jour moyen de plusieurs métiers,
-              ville par ville, situez votre tarif dans sa tranche d'expérience, et
-              tracez votre propre trajectoire.
+              Trois questions, une page&nbsp;: où se situe votre tarif face au
+              marché, quel chiffre d'affaires il vous faut pour en vivre, et ce
+              qu'il en reste vraiment une fois l'intermédiaire, les cotisations et
+              l'impôt passés.
             </p>
           </div>
         </section>
@@ -297,13 +313,15 @@ export default function PagePositionnement() {
                   déduites au prorata.{' '}
                   {trajectoire
                     ? 'Votre trajectoire (2024 → 2026) en trait sombre.'
-                    : 'Votre TJM en trait horizontal.'}
+                    : 'Votre TJM en trait horizontal.'}{' '}
+                  {!seuil.horsAtteinte && 'Le trait doré marque le seuil sous lequel votre objectif n’est plus atteint.'}
                 </p>
                 <div className="mt-5">
                   <EvolutionTjm
                     series={series}
                     evenements={EVENEMENTS}
                     tjmUtilisateur={trajectoire ? undefined : tjmEffectif}
+                    tjmSeuil={seuil.horsAtteinte ? undefined : seuil.tjmNecessaire}
                     finMesures={finDesMesures(profs)}
                   />
                 </div>
@@ -329,6 +347,30 @@ export default function PagePositionnement() {
 
               <div className="card mt-6 p-5 sm:p-8">
                 <h2 className="text-lg font-semibold text-ink-900">
+                  À partir de quel chiffre d'affaires vivez-vous de votre SASU&nbsp;?
+                </h2>
+                <p className="mt-1 text-sm text-ink-500">
+                  Fixez ce que vous voulez gagner — un net en poche, ou le salaire
+                  CDI que vous voulez égaler — et voyez le chiffre d'affaires, le
+                  TJM et le nombre de jours qu'il faut pour y arriver.
+                </p>
+                <div className="mt-5">
+                  <SeuilRentabilite
+                    mode={h.cibleMode}
+                    cible={h.cible}
+                    jours={h.jours}
+                    tjm={tjmEffectif}
+                    net={netCible}
+                    seuil={seuil}
+                    onMode={(m) => setH((s) => ({ ...s, cibleMode: m }))}
+                    onCible={(v) => setH((s) => ({ ...s, cible: v }))}
+                    onJours={(v) => setH((s) => ({ ...s, jours: v }))}
+                  />
+                </div>
+              </div>
+
+              <div className="card mt-6 p-5 sm:p-8">
+                <h2 className="text-lg font-semibold text-ink-900">
                   Ce qu'il faut afficher selon la plateforme
                 </h2>
                 <p className="mt-1 text-sm text-ink-500">
@@ -339,6 +381,19 @@ export default function PagePositionnement() {
                 </p>
                 <div className="mt-5">
                   <TarifsPlateformes tjm={tjmEffectif} cible={h.tjm2027 > 0 ? h.tjm2027 : undefined} />
+                </div>
+
+                <h3 className="mt-10 text-base font-semibold text-ink-900">
+                  Où part votre TJM de {eur(tjmEffectif)}
+                </h3>
+                <p className="mt-1 text-sm text-ink-500">
+                  Vous conservez {eur(tjmEffectif)} par jour quel que soit le canal
+                  — ce qui change, c'est ce que le client paie par-dessus. Chaque
+                  barre montre ce prix client, puis ce qu'il en reste vraiment une
+                  fois les frais, les cotisations et l'impôt payés.
+                </p>
+                <div className="mt-4">
+                  <DecompositionTjm tjm={tjmEffectif} jours={h.jours} />
                 </div>
               </div>
 

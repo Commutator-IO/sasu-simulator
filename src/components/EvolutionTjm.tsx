@@ -57,11 +57,14 @@ export function EvolutionTjm({
   series,
   evenements,
   tjmUtilisateur,
+  tjmSeuil,
   finMesures,
 }: {
   series: SerieTemporelle[];
   evenements: Evenement[];
   tjmUtilisateur?: number;
+  /** Day rate below which the take-home target is out of reach. */
+  tjmSeuil?: number;
   /** Decimal year where measurements stop and projections begin. */
   finMesures?: number;
 }) {
@@ -70,6 +73,7 @@ export function EvolutionTjm({
   const toutesValeurs = series.flatMap((s) =>
     s.points.flatMap((p) => [p.valeur, p.bas, p.haut].filter((v): v is number => v !== undefined)),
   );
+  if (tjmSeuil !== undefined && tjmSeuil > 0) toutesValeurs.push(tjmSeuil);
   if (tjmUtilisateur) toutesValeurs.push(tjmUtilisateur);
   const toutesAnnees = series.flatMap((s) => s.points.map((p) => p.annee));
   const anneesEvt = evenements.map((e) => anneeDecimale(e.date));
@@ -253,6 +257,18 @@ export function EvolutionTjm({
           </g>
         )}
 
+        {/* Break-even: the floor under which the take-home target is missed. */}
+        {tjmSeuil !== undefined && tjmSeuil > 0 && (
+          <g pointerEvents="none">
+            <line x1={GAUCHE} x2={W - DROITE} y1={y(tjmSeuil)} y2={y(tjmSeuil)}
+              stroke="var(--color-gold-500)" strokeWidth="1.5" strokeDasharray="6 4" />
+            <text x={GAUCHE + 4} y={y(tjmSeuil) - 5} className="tabular"
+              fontSize="11" fontWeight="600" fill="var(--color-gold-600)">
+              seuil · {eur(Math.round(tjmSeuil))}
+            </text>
+          </g>
+        )}
+
         {/* User's rate */}
         {tjmUtilisateur !== undefined && tjmUtilisateur > 0 && (
           <>
@@ -300,9 +316,17 @@ export function EvolutionTjm({
             {s.label}
           </span>
         ))}
+        {/* The swatches mirror the strokes: events are dotted, the break-even
+            floor is dashed — both gold, so the pattern is what tells them apart. */}
         <span className="flex items-center gap-1.5">
-          <span className="h-0 w-4 border-t-2 border-dashed border-gold-500" /> Événement
+          <span className="h-0 w-4 border-t-2 border-dotted border-gold-500" /> Événement
         </span>
+        {tjmSeuil !== undefined && tjmSeuil > 0 && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-0 w-4 border-t-2 border-dashed border-gold-500" />
+            Seuil de rentabilité
+          </span>
+        )}
         {series.some((s) => s.points.some((p) => p.projete)) && (
           <span className="flex items-center gap-1.5 text-ink-400">
             <span className="h-2 w-2 rotate-45 border border-ink-400 bg-white" />

@@ -54,6 +54,9 @@ const VERS_COURT: Record<string, string> = {
   tjm2027: 't7',
   niveau: 'nv',
   ville: 'vl',
+  cibleMode: 'cm',
+  cible: 'cb',
+  jours: 'jr',
 };
 
 const VERS_LONG: Record<string, string> = Object.fromEntries(

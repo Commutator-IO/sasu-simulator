@@ -39,43 +39,59 @@
       {
         "nom": "Malt",
         "taux": 0.1,
-        "note": "Frais dégressifs : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez.",
-        "url": "https://help.malt.com/hc/fr/articles/29567589850002-Les-offres-et-frais-de-service-Malt",
-        "hote": "help.malt.com"
+        "note": "Frais dégressifs côté freelance : 5 % après quelques mois avec le même client, 2 % pour un client que vous apportez. La plateforme facture aussi le client, de 5 % à 9 % selon son offre.",
+        "url": "https://www.malt.fr",
+        "hote": "malt.fr",
+        "margeClient": 0.07,
+        "margeClientPubliee": true
       },
       {
         "nom": "Comet",
-        "taux": 0.15,
-        "note": "Plateforme tech (développement, data, produit).",
+        "taux": 0.05,
+        "note": "Plateforme tech (développement, data, produit) : 5 % côté freelance, la commission la plus basse des trois. La part facturée au client n'est pas publiée — estimée ici à l'ordre de grandeur du marché.",
         "url": "https://www.comet.co/",
-        "hote": "comet.co"
+        "hote": "comet.co",
+        "margeClient": 0.07,
+        "margeClientPubliee": false
+      },
+      {
+        "nom": "Le Hibou",
+        "taux": 0.0,
+        "margeClient": 0.15,
+        "note": "Rien n'est prélevé côté freelance : vous facturez votre TJM tel quel. La commission est prise côté client, annoncée transparente et plafonnée à 15 %, négociable au volume.",
+        "url": "https://www.lehibou.com/",
+        "hote": "lehibou.com",
+        "margeClientPubliee": true
       },
       {
         "nom": "Crème de la Crème",
         "taux": 0.1,
-        "note": "Sélection à l'entrée ; certaines missions grands comptes affichées sans commission.",
+        "note": "Sélection à l'entrée ; certaines missions grands comptes sont annoncées sans commission. La part facturée au client n'est pas publiée — estimée ici à l'ordre de grandeur du marché.",
         "url": "https://www.cremedelacreme.io/",
-        "hote": "cremedelacreme.io"
+        "hote": "cremedelacreme.io",
+        "margeClient": 0.07,
+        "margeClientPubliee": false
       },
       {
         "nom": "Free-Work",
-        "taux": 0.0,
-        "note": "Site d'annonces : vous contractez en direct, rien n'est prélevé sur votre facture.",
+        "taux": -1,
+        "note": "Intermédiaire : la mission passe par lui et sa marge se prend côté client, entre votre tarif et le prix facturé. Elle n'est pas publiée — demandez-la.",
         "url": "https://www.free-work.com/fr",
-        "hote": "free-work.com"
+        "hote": "free-work.com",
+        "tauxLibelle": "marge négociée"
       },
       {
         "nom": "Freelance.com",
-        "taux": 0.0,
+        "taux": -1,
         "tauxLibelle": "marge négociée",
-        "note": "Modèle d'intermédiation, proche d'une ESN : rien n'est prélevé sur votre facture, la marge se prend entre votre tarif et le prix payé par le client. Elle n'est pas publiée — demandez le détail avant de signer.",
+        "note": "Intermédiation proche d'une ESN : rien n'est prélevé sur votre facture, la marge se prend entre votre tarif et le prix payé par le client. Elle n'est pas publiée — demandez le détail avant de signer.",
         "url": "https://www.freelance.com/",
         "hote": "freelance.com"
       },
       {
-        "nom": "En direct / régie",
+        "nom": "En direct",
         "taux": 0.0,
-        "note": "Aucun intermédiaire ne prélève : votre TJM facturé est votre TJM perçu.",
+        "note": "Aucun intermédiaire : votre TJM facturé est votre TJM perçu, et le client ne paie rien de plus.",
         "url": null,
         "hote": null
       }
