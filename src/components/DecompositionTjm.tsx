@@ -38,12 +38,11 @@ const SEGMENTS: Segment[] = [
   // On the frontier by design: funded by the employer, received by the employee.
   { cle: 'avantages', label: 'Avantages CDI', couleur: '#1e9970', fond: HACHURE },
   { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
-  { cle: 'commission', label: 'Commission ou marge', couleur: '#db2777' },
-  // Neutral rather than a series colour: on a salaried mission this is the
-  // client's cost alone — it never passes through the consultant's hands.
+  // Neutral rather than a series colour: whichever the channel, the cut is paid
+  // by the client on top of the rate and never passes through your hands.
   {
-    cle: 'margeClient',
-    label: 'Marge ESN, payée par le client',
+    cle: 'commission',
+    label: 'Marge de l’intermédiaire, payée par le client',
     couleur: 'transparent',
     fond: 'var(--color-ink-100)',
     classe: 'border border-dashed border-ink-300 !text-ink-500',
@@ -100,7 +99,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
       titre: 'Le même consultant en CDI dans une ESN',
       detail: 'à gauche ce qui lui revient et ce qu’il paie, à droite la part employeur',
       total: cdi.clientPaie,
-      parts: { ...cdi, margeClient: cdi.marge },
+      parts: { ...cdi, commission: cdi.marge },
       compare: true,
     });
     return canaux;
@@ -119,7 +118,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
   return (
     <figure className="m-0">
       <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-500">
-        {SEGMENTS.filter((s) => s.cle !== 'is' && s.cle !== 'margeClient').map((s) => (
+        {SEGMENTS.filter((s) => s.cle !== 'is' && s.cle !== 'commission').map((s) => (
           <span key={s.cle} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: s.fond ?? s.couleur }} />
             {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
@@ -127,7 +126,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
         ))}
         <span className="flex items-center gap-1.5 text-ink-400">
           <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-ink-300 bg-ink-100" />
-          Marge ESN, payée par le client
+          Marge de l’intermédiaire, payée par le client
         </span>
       </figcaption>
 
