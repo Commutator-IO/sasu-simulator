@@ -17,7 +17,7 @@ import { decomposerCdi, decomposerTjm, MARGE_ESN_TYPIQUE } from '../lib/rentabil
  * is answered by labelling each segment's value directly.
  */
 
-type Segment = { cle: string; label: string; couleur: string };
+type Segment = { cle: string; label: string; couleur: string; fond?: string; classe?: string };
 
 /** Texture, not a hue: the extras sit outside the envelope being divided. */
 const HACHURE =
@@ -35,8 +35,19 @@ const SEGMENTS: Segment[] = [
   // colour does not exist here, and the gap plus its own label separate them.
   { cle: 'is', label: 'Impôt sur les sociétés', couleur: '#7c3aed' },
   { cle: 'frais', label: 'Frais de la société', couleur: '#0ea5e9' },
+  // On the frontier by design: funded by the employer, received by the employee.
+  { cle: 'avantages', label: 'Avantages CDI', couleur: '#1e9970', fond: HACHURE },
   { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
   { cle: 'commission', label: 'Commission ou marge', couleur: '#db2777' },
+  // Neutral rather than a series colour: on a salaried mission this is the
+  // client's cost alone — it never passes through the consultant's hands.
+  {
+    cle: 'margeClient',
+    label: 'Marge ESN, payée par le client',
+    couleur: 'transparent',
+    fond: 'var(--color-ink-100)',
+    classe: 'border border-dashed border-ink-300 !text-ink-500',
+  },
 ];
 
 type Ligne = {
@@ -89,17 +100,17 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
       titre: 'Le même consultant en CDI dans une ESN',
       detail: 'à gauche ce qui lui revient et ce qu’il paie, à droite la part employeur',
       total: cdi.clientPaie,
-      // The margin rides in the commission slot: same entity, same colour.
-      parts: { ...cdi, commission: cdi.marge },
+      parts: { ...cdi, margeClient: cdi.marge },
       compare: true,
     });
     return canaux;
   }, [tjm, jours]);
 
   if (!lignes.length) return null;
-  // Every bar runs to the dearest channel, the shortfall shown as a neutral
-  // block: bars align, and the gap reads as the cut this channel does not take.
-  const echelle = Math.max(...lignes.map((l) => l.total));
+  // Bars are not padded to a common width: their length is what the client pays,
+  // so the salaried mission visibly runs longest. The extras sit outside the
+  // envelope, so the scale leaves room for them.
+  const echelle = Math.max(...lignes.map((l) => l.total + (l.parts.avantages ?? 0)));
   const lu = survol
     ? lignes.find((l) => l.cle === survol.ligne)?.parts[survol.seg]
     : null;
@@ -108,19 +119,15 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
   return (
     <figure className="m-0">
       <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-500">
-        {SEGMENTS.filter((s) => s.cle !== 'is').map((s) => (
+        {SEGMENTS.filter((s) => s.cle !== 'is' && s.cle !== 'margeClient').map((s) => (
           <span key={s.cle} className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: s.couleur }} />
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: s.fond ?? s.couleur }} />
             {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
           </span>
         ))}
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: HACHURE }} />
-          Avantages CDI
-        </span>
         <span className="flex items-center gap-1.5 text-ink-400">
           <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-ink-300 bg-ink-100" />
-          Non prélevé ici
+          Marge ESN, payée par le client
         </span>
       </figcaption>
 
@@ -158,10 +165,16 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
                     onMouseLeave={() => setSurvol(null)}
                     onFocus={() => setSurvol({ ligne: l.cle, seg: s.cle })}
                     onBlur={() => setSurvol(null)}
-                    className="flex items-center justify-center overflow-hidden text-[11px] font-semibold text-white transition-opacity first:rounded-l last:rounded-r"
+                    className={[
+                      'flex items-center justify-center overflow-hidden text-[11px] font-semibold text-white transition-opacity first:rounded-l last:rounded-r',
+                      s.classe ?? '',
+                    ].join(' ')}
                     style={{
                       width: `${(valeur / echelle) * 100}%`,
-                      backgroundColor: s.couleur,
+                      // Extras are small against a day rate; a floor keeps them
+                      // perceptible rather than letting them vanish.
+                      ...(s.cle === 'avantages' ? { minWidth: '10px' } : {}),
+                      background: s.fond ?? s.couleur,
                       opacity: survol && !actif ? 0.55 : 1,
                     }}
                   >
@@ -171,38 +184,6 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
                   </button>
                 );
               })}
-              {l.parts.avantages > 0 && (
-                <span
-                  aria-label={`Avantages du CDI, en plus de l'enveloppe : ${eur(Math.round(l.parts.avantages))} par jour`}
-                  title="Mutuelle et titres-restaurant, part employeur. Hors participation et droits au chômage."
-                  className="flex items-center justify-center overflow-hidden rounded text-[11px] font-semibold text-white"
-                  // Small against a day rate, so a floor keeps it perceptible
-                  // rather than letting it vanish.
-                  style={{
-                    width: `${(l.parts.avantages / echelle) * 100}%`,
-                    minWidth: '10px',
-                    background: HACHURE,
-                  }}
-                >
-                  {l.parts.avantages / echelle > 0.055
-                    ? `+ ${eur(Math.round(l.parts.avantages))}`
-                    : ''}
-                </span>
-              )}
-              {echelle - l.total - (l.parts.avantages ?? 0) > 0.5 && (
-                <span
-                  aria-label={`Non prélevé ici : ${eur(Math.round(echelle - l.total))} par jour de moins que le canal le plus cher`}
-                  title={`${eur(Math.round(echelle - l.total))} que ce canal ne prélève pas`}
-                  className="flex items-center justify-center rounded-r border border-dashed border-ink-300 bg-ink-100 text-[11px] font-medium text-ink-500"
-                  style={{
-                    width: `${((echelle - l.total - (l.parts.avantages ?? 0)) / echelle) * 100}%`,
-                  }}
-                >
-                  {(echelle - l.total) / echelle > 0.09
-                    ? `− ${eur(Math.round(echelle - l.total))}`
-                    : ''}
-                </span>
-              )}
             </div>
           </div>
         ))}
