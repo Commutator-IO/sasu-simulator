@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Montant, Segments } from './components/Champs';
+import { Segments } from './components/Champs';
 import { Entete, Pied } from './components/Cadre';
 import { BoutonPartage } from './components/BoutonPartage';
 import { BoutonReset } from './components/BoutonReset';
@@ -170,7 +170,7 @@ export default function PagePositionnement() {
                 <div className="mt-6 grid gap-5">
                   <div>
                     <p className="field-label">Métiers à comparer</p>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
+                    <div className="mt-1 flex flex-wrap gap-1">
                       {PROFESSIONS.map((p) => {
                         const actif = h.professions.includes(p.cle);
                         return (
@@ -178,62 +178,75 @@ export default function PagePositionnement() {
                             key={p.cle}
                             type="button"
                             aria-pressed={actif}
+                            title={p.libelle}
                             onClick={() => basculerProfession(p.cle)}
                             className={[
-                              'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition',
+                              'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition',
                               actif
                                 ? 'border-brand-500 bg-brand-50 text-brand-700'
                                 : 'border-ink-200 bg-white text-ink-500 hover:border-ink-300 hover:text-ink-800',
                             ].join(' ')}
                           >
                             <span
-                              className="h-2 w-2 rounded-full"
+                              className="h-1.5 w-1.5 rounded-full"
                               style={{ backgroundColor: p.couleur }}
                             />
-                            {p.libelle}
+                            {p.court ?? p.libelle}
                           </button>
                         );
                       })}
                     </div>
                   </div>
-                  <Montant
-                    label="Votre TJM (actuel)"
-                    valeur={h.tjm}
-                    onChange={(v) => setH((s) => ({ ...s, tjm: v }))}
-                    suffixe="€ / jour"
-                    hint="Le tarif journalier que vous affichez ou visez."
-                  />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Montant
-                      label="Votre TJM 2024"
-                      valeur={h.tjm2024}
-                      onChange={(v) => setH((s) => ({ ...s, tjm2024: v }))}
-                      suffixe="€"
-                      hint="Optionnel"
-                    />
-                    <Montant
-                      label="Votre TJM 2025"
-                      valeur={h.tjm2025}
-                      onChange={(v) => setH((s) => ({ ...s, tjm2025: v }))}
-                      suffixe="€"
-                      hint="Optionnel"
-                    />
-                  </div>
-                  <Montant
-                    label="Votre TJM visé en 2027"
-                    valeur={h.tjm2027}
-                    onChange={(v) => setH((s) => ({ ...s, tjm2027: v }))}
-                    suffixe="€ / jour"
-                    hint={
-                      h.tjm2027 > 0 && marche2027
-                        ? `Marché projeté : ${eur(marche2027)} — vous ${
+                  {/* Four rates on one row: the past two and the target read as
+                      a trajectory, and the block costs a quarter of the height. */}
+                  <div>
+                    <p className="field-label">Votre TJM, année par année</p>
+                    <div className="mt-1 grid grid-cols-4 gap-1.5">
+                      {(
+                        [
+                          ['2024', h.tjm2024, (v: number) => ({ tjm2024: v })],
+                          ['2025', h.tjm2025, (v: number) => ({ tjm2025: v })],
+                          ['2026', h.tjm, (v: number) => ({ tjm: v })],
+                          ['2027', h.tjm2027, (v: number) => ({ tjm2027: v })],
+                        ] as const
+                      ).map(([an, valeur, maj]) => (
+                        <label key={an} className="block">
+                          <span
+                            className={[
+                              'block text-center text-[11px] font-medium',
+                              an === '2026' ? 'text-ink-800' : 'text-ink-400',
+                            ].join(' ')}
+                          >
+                            {an}
+                            {an === '2027' ? ' visé' : ''}
+                          </span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={valeur || ''}
+                            placeholder="—"
+                            onChange={(e) => setH((s) => ({ ...s, ...maj(Number(e.target.value)) }))}
+                            className={[
+                              'tabular mt-0.5 w-full rounded-lg border bg-white px-1.5 py-1.5 text-center text-sm',
+                              'focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100',
+                              an === '2026'
+                                ? 'border-ink-300 font-semibold text-ink-900'
+                                : 'border-ink-200 text-ink-700',
+                            ].join(' ')}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <p className="field-hint">
+                      {h.tjm2027 > 0 && marche2027
+                        ? `2027 visé : ${eur(Math.abs(h.tjm2027 - marche2027))} ${
                             h.tjm2027 >= marche2027 ? 'au-dessus' : 'en dessous'
-                          } de ${eur(Math.abs(h.tjm2027 - marche2027))}.`
+                          } du marché projeté (${eur(marche2027)}).`
                         : marche2027
-                          ? `Optionnel. Le marché est projeté à ${eur(marche2027)} l'an prochain.`
-                          : 'Optionnel : votre objectif pour la revalorisation.'
-                    }
-                  />
+                          ? `2026 est votre tarif actuel. Marché projeté en 2027 : ${eur(marche2027)}.`
+                          : '2026 est votre tarif actuel ; les autres années sont optionnelles.'}
+                    </p>
+                  </div>
                   <div>
                     <p className="field-label">Votre expérience</p>
                     <div className="mt-1">

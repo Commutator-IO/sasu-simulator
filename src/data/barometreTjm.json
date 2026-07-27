@@ -283,7 +283,8 @@
           "moyen": 735,
           "haut": 1510
         }
-      ]
+      ],
+      "court": "Data"
     },
     {
       "cle": "developpeur",
@@ -442,7 +443,8 @@
           "moyen": 671,
           "haut": 1210
         }
-      ]
+      ],
+      "court": "Dev"
     },
     {
       "cle": "consultant",
@@ -611,7 +613,8 @@
           "moyen": 894,
           "haut": 2010
         }
-      ]
+      ],
+      "court": "Consultant"
     },
     {
       "cle": "chef-de-projet",
@@ -780,7 +783,8 @@
           "moyen": 778,
           "haut": 1210
         }
-      ]
+      ],
+      "court": "Chef de projet"
     },
     {
       "cle": "marketing",
@@ -939,7 +943,8 @@
           "moyen": 789,
           "haut": 2010
         }
-      ]
+      ],
+      "court": "Marketing"
     },
     {
       "cle": "graphiste",
@@ -1098,7 +1103,8 @@
           "moyen": 482,
           "haut": 810
         }
-      ]
+      ],
+      "court": "Graphiste"
     },
     {
       "cle": "redacteur",
@@ -1267,7 +1273,8 @@
           "moyen": 535,
           "haut": 1210
         }
-      ]
+      ],
+      "court": "Rédacteur"
     },
     {
       "cle": "motion",
@@ -1446,7 +1453,8 @@
           "moyen": 533,
           "haut": 1010
         }
-      ]
+      ],
+      "court": "Motion"
     },
     {
       "cle": "jeux-video",
@@ -1493,7 +1501,8 @@
           "moyen": 468,
           "haut": 810
         }
-      ]
+      ],
+      "court": "Jeux vidéo"
     }
   ]
 }

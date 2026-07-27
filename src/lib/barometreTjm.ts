@@ -48,6 +48,8 @@ type PointExperience = Record<string, string | number>;
 export type Profession = {
   cle: string;
   libelle: string;
+  /** Short form, for the cramped picker; falls back to `libelle`. */
+  court?: string;
   couleur: string;
   villes: PointVille[];
   experience: NiveauExperience[];
