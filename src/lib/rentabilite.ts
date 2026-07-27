@@ -73,8 +73,10 @@ export type PartTjm = {
   frais: number;
   /** Social contributions, employer and employee side. */
   cotisations: number;
-  /** Corporate tax and income tax. */
-  impots: number;
+  /** Corporate tax, borne by the company. */
+  is: number;
+  /** Income tax, borne by the person. */
+  ir: number;
   /** What the freelance is left with. */
   net: number;
 };
@@ -99,7 +101,7 @@ export function decomposerTjm(
   const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
   const tauxInter = Math.min(Math.max(taux, 0), 0.9);
   if (tjm <= 0) {
-    return { clientPaie: 0, commission: 0, frais: 0, cotisations: 0, impots: 0, net: 0 };
+    return { clientPaie: 0, commission: 0, frais: 0, cotisations: 0, is: 0, ir: 0, net: 0 };
   }
 
   const clientPaie = tjm / (1 - tauxInter);
@@ -116,7 +118,8 @@ export function decomposerTjm(
     commission: clientPaie - tjm,
     frais: frais / jours,
     cotisations: Math.max(0, resultat - r.netEnPoche - impots) / jours,
-    impots: impots / jours,
+    is: r.is / jours,
+    ir: r.irTotal / jours,
     net: r.netEnPoche / jours,
   };
 }
@@ -128,8 +131,11 @@ export type PartCdi = {
   patronales: number;
   /** Withheld from the gross, payslip side. */
   salariales: number;
-  impots: number;
+  /** Income tax — a salaried job carries no corporate tax. */
+  ir: number;
   net: number;
+  /** Employer-funded extras, on top of the envelope. */
+  avantages: number;
 };
 
 /**
@@ -151,7 +157,7 @@ export function decomposerCdi(
 ): PartCdi {
   const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
   if (enveloppeParJour <= 0) {
-    return { coutEmployeur: 0, patronales: 0, salariales: 0, impots: 0, net: 0 };
+    return { coutEmployeur: 0, patronales: 0, salariales: 0, ir: 0, net: 0, avantages: 0 };
   }
   const enveloppe = enveloppeParJour * jours;
   const brut = brutMaxPourBudget(enveloppe, base.tauxATMP, base.moisRemuneration);
@@ -165,10 +171,19 @@ export function decomposerCdi(
     coutEmployeur: enveloppeParJour,
     patronales: (enveloppe - brut) / jours,
     salariales: (brut - net) / jours,
-    impots: ir / jours,
+    ir: ir / jours,
     net: (net - ir) / jours,
+    avantages: (AVANTAGES_CDI_ANNUELS / jours),
   };
 }
+
+/**
+ * Employer-funded extras a salaried job adds on top of pay, valued at an order
+ * of magnitude: roughly 60 €/month of health cover and 100 €/month of meal
+ * voucher employer share. Profit-sharing is left out — too variable — and so is
+ * unemployment insurance, whose worth cannot honestly be put in euros here.
+ */
+export const AVANTAGES_CDI_ANNUELS = 12 * (60 + 100);
 
 /**
  * Typical margin a body shop keeps on the client price. It is negotiated and

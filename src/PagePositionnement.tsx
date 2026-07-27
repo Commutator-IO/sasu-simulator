@@ -166,12 +166,13 @@ export default function PagePositionnement() {
               Données de sources publiques
             </p>
             <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-ink-900 sm:text-5xl">
-              Où se situe votre TJM&nbsp;?
+              Votre TJM vaut-il ce qu'il devrait&nbsp;?
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
-              Superposez l'évolution du tarif jour moyen de plusieurs métiers,
-              ville par ville, situez votre tarif dans sa tranche d'expérience, et
-              tracez votre propre trajectoire.
+              Trois questions, une page&nbsp;: où se situe votre tarif face au
+              marché, quel chiffre d'affaires il vous faut pour en vivre, et ce
+              qu'il en reste vraiment une fois l'intermédiaire, les cotisations et
+              l'impôt passés.
             </p>
           </div>
         </section>

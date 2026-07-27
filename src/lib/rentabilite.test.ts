@@ -34,7 +34,7 @@ describe('décomposition d’un TJM', () => {
       const p = decomposerTjm(700, taux, base, { jours: 200 });
       expect(p.clientPaie).toBeCloseTo(700 / (1 - taux), 6);
       expect(
-        p.commission + p.frais + p.cotisations + p.impots + p.net,
+        p.commission + p.frais + p.cotisations + p.is + p.ir + p.net,
       ).toBeCloseTo(p.clientPaie, 6);
       for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
     }
@@ -45,7 +45,8 @@ describe('décomposition d’un TJM', () => {
     for (const c of canaux) {
       expect(c.net).toBeCloseTo(canaux[0].net, 6);
       expect(c.cotisations).toBeCloseTo(canaux[0].cotisations, 6);
-      expect(c.impots).toBeCloseTo(canaux[0].impots, 6);
+      expect(c.is).toBeCloseTo(canaux[0].is, 6);
+      expect(c.ir).toBeCloseTo(canaux[0].ir, 6);
       expect(c.frais).toBeCloseTo(canaux[0].frais, 6);
     }
     // Seule la part de l’intermédiaire — et donc le prix client — bouge.
@@ -55,7 +56,8 @@ describe('décomposition d’un TJM', () => {
 
   it('sépare impôts et cotisations sans en perdre', () => {
     const p = decomposerTjm(700, 0.1, base, { jours: 200 });
-    expect(p.impots).toBeGreaterThan(0);
+    expect(p.is).toBeGreaterThan(0);
+    expect(p.ir).toBeGreaterThan(0);
     expect(p.cotisations).toBeGreaterThan(0);
   });
 
@@ -72,7 +74,8 @@ describe('décomposition d’un TJM', () => {
       commission: 0,
       frais: 0,
       cotisations: 0,
-      impots: 0,
+      is: 0,
+      ir: 0,
       net: 0,
     });
   });
@@ -82,7 +85,7 @@ describe('la même enveloppe prise en CDI', () => {
   it('répartit exactement le coût employeur', () => {
     const p = decomposerCdi(700, base, { jours: 200 });
     expect(p.coutEmployeur).toBeCloseTo(700, 6);
-    expect(p.patronales + p.salariales + p.impots + p.net).toBeCloseTo(700, 6);
+    expect(p.patronales + p.salariales + p.ir + p.net).toBeCloseTo(700, 6);
     for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
   });
 
@@ -91,7 +94,14 @@ describe('la même enveloppe prise en CDI', () => {
     expect(p.patronales).toBeGreaterThan(0);
     expect(p.salariales).toBeGreaterThan(0);
     // Le brut se retrouve : coût employeur moins la part patronale.
-    expect(p.coutEmployeur - p.patronales).toBeCloseTo(p.salariales + p.impots + p.net, 6);
+    expect(p.coutEmployeur - p.patronales).toBeCloseTo(p.salariales + p.ir + p.net, 6);
+  });
+
+  it('valorise les avantages en plus de l’enveloppe', () => {
+    const p = decomposerCdi(700, base, { jours: 200 });
+    expect(p.avantages).toBeGreaterThan(0);
+    // Ils s’ajoutent : ils ne sont pas pris sur le coût employeur réparti.
+    expect(p.patronales + p.salariales + p.ir + p.net).toBeCloseTo(p.coutEmployeur, 6);
   });
 
   it('laisse moins en poche qu’une SASU à enveloppe égale', () => {
@@ -105,8 +115,9 @@ describe('la même enveloppe prise en CDI', () => {
       coutEmployeur: 0,
       patronales: 0,
       salariales: 0,
-      impots: 0,
+      ir: 0,
       net: 0,
+      avantages: 0,
     });
   });
 });

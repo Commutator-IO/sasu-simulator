@@ -19,6 +19,10 @@ import { decomposerCdi, decomposerTjm, MARGE_ESN_TYPIQUE } from '../lib/rentabil
 
 type Segment = { cle: string; label: string; couleur: string };
 
+/** Texture, not a hue: the extras sit outside the envelope being divided. */
+const HACHURE =
+  'repeating-linear-gradient(45deg, #1e9970 0 4px, #6ec4a4 4px 8px)';
+
 // Drawn in this order, so on the salaried bar everything borne by the employee
 // sits on the left and what the employer carries on top of the gross sits on
 // the right — the two sides of a payslip, read left to right.
@@ -26,7 +30,10 @@ const SEGMENTS: Segment[] = [
   { cle: 'net', label: 'Net en poche', couleur: '#1e9970' },
   { cle: 'salariales', label: 'Cotisations salarié', couleur: '#8a5a00' },
   { cle: 'cotisations', label: 'Cotisations sociales', couleur: '#d99b1f' },
-  { cle: 'impots', label: 'Impôts (IS et IR)', couleur: '#7c3aed' },
+  { cle: 'ir', label: 'Impôt sur le revenu', couleur: '#7c3aed' },
+  // Same family as the income tax, so the same hue: a seventh distinguishable
+  // colour does not exist here, and the gap plus its own label separate them.
+  { cle: 'is', label: 'Impôt sur les sociétés', couleur: '#7c3aed' },
   { cle: 'frais', label: 'Frais de la société', couleur: '#0ea5e9' },
   { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
   { cle: 'commission', label: 'Commission ou marge', couleur: '#db2777' },
@@ -100,12 +107,16 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
   return (
     <figure className="m-0">
       <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-500">
-        {SEGMENTS.map((s) => (
+        {SEGMENTS.filter((s) => s.cle !== 'is').map((s) => (
           <span key={s.cle} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: s.couleur }} />
-            {s.label}
+            {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
           </span>
         ))}
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm" style={{ background: HACHURE }} />
+          Avantages CDI
+        </span>
         <span className="flex items-center gap-1.5 text-ink-400">
           <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-ink-300 bg-ink-100" />
           Non prélevé ici
@@ -155,16 +166,36 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
                   >
                     {/* Labelled directly wherever the segment is wide enough — the
                         relief the contrast check asks for. */}
-                    {valeur / echelle > 0.055 ? eur(Math.round(valeur)) : ''}
+                    {valeur / echelle > 0.038 ? eur(Math.round(valeur)) : ''}
                   </button>
                 );
               })}
-              {echelle - l.total > 0.5 && (
+              {l.parts.avantages > 0 && (
+                <span
+                  aria-label={`Avantages du CDI, en plus de l'enveloppe : ${eur(Math.round(l.parts.avantages))} par jour`}
+                  title="Mutuelle et titres-restaurant, part employeur. Hors participation et droits au chômage."
+                  className="flex items-center justify-center overflow-hidden rounded text-[11px] font-semibold text-white"
+                  // Small against a day rate, so a floor keeps it perceptible
+                  // rather than letting it vanish.
+                  style={{
+                    width: `${(l.parts.avantages / echelle) * 100}%`,
+                    minWidth: '10px',
+                    background: HACHURE,
+                  }}
+                >
+                  {l.parts.avantages / echelle > 0.055
+                    ? `+ ${eur(Math.round(l.parts.avantages))}`
+                    : ''}
+                </span>
+              )}
+              {echelle - l.total - (l.parts.avantages ?? 0) > 0.5 && (
                 <span
                   aria-label={`Non prélevé ici : ${eur(Math.round(echelle - l.total))} par jour de moins que le canal le plus cher`}
                   title={`${eur(Math.round(echelle - l.total))} que ce canal ne prélève pas`}
                   className="flex items-center justify-center rounded-r border border-dashed border-ink-300 bg-ink-100 text-[11px] font-medium text-ink-500"
-                  style={{ width: `${((echelle - l.total) / echelle) * 100}%` }}
+                  style={{
+                    width: `${((echelle - l.total - (l.parts.avantages ?? 0)) / echelle) * 100}%`,
+                  }}
                 >
                   {(echelle - l.total) / echelle > 0.09
                     ? `− ${eur(Math.round(echelle - l.total))}`
