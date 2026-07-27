@@ -65,10 +65,14 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     if (tjm <= 0) return [];
     const base = DEFAUTS_ARBITRAGE;
 
-    // One bar per distinct commission, naming the channels that share it.
+    // One bar per published commission. A negative rate flags an intermediary
+    // whose margin is negotiated rather than published: it cannot be drawn as a
+    // figure, so it is named on the body-shop bar, whose model it follows.
     const parTaux = new Map<number, string[]>();
+    const negocies: string[] = [];
     for (const p of PLATEFORMES) {
-      parTaux.set(p.taux, [...(parTaux.get(p.taux) ?? []), p.nom]);
+      if (p.taux < 0) negocies.push(p.nom);
+      else parTaux.set(p.taux, [...(parTaux.get(p.taux) ?? []), p.nom]);
     }
 
     const canaux: Ligne[] = [...parTaux.entries()]
@@ -88,7 +92,9 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
     canaux.push({
       cle: 'esn',
       titre: `ESN / régie · marge ${Math.round(MARGE_ESN_TYPIQUE * 100)} %`,
-      detail: 'la marge se prend au-dessus de votre tarif',
+      detail: negocies.length
+        ? `${negocies.join(', ')} — marge négociée, prise au-dessus de votre tarif`
+        : 'la marge se prend au-dessus de votre tarif',
       total: esn.clientPaie,
       parts: { ...esn },
     });

@@ -10,7 +10,10 @@ import { PLATEFORMES } from '../lib/barometreTjm';
  * T / (1 − c).
  */
 export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number }) {
-  const aSaisir = (base: number, taux: number) => Math.round(taux < 1 ? base / (1 - taux) : base);
+  // A negative rate marks a margin taken client-side and not published: your own
+  // rate is unchanged, so there is nothing to gross up.
+  const aSaisir = (base: number, taux: number) =>
+    Math.round(taux > 0 && taux < 1 ? base / (1 - taux) : base);
 
   // Platforms charging the same are one row: identical figures repeated three
   // times read as three choices when they are one.
@@ -75,7 +78,7 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
                 ))}
               </td>
               <td className="tabular px-3 py-3 text-right text-ink-600">
-                {g.tauxLibelle ?? (g.taux === 0 ? '—' : `${Math.round(g.taux * 100)} %`)}
+                {g.tauxLibelle ?? (g.taux <= 0 ? '—' : `${Math.round(g.taux * 100)} %`)}
               </td>
               <td className="tabular px-3 py-3 text-right font-semibold text-ink-900">
                 {eur(aSaisir(tjm, g.taux))}
