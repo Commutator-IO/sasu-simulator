@@ -398,6 +398,18 @@ Chaque paramètre sourcé.
    depuis Pennylane / QuickBooks → le passer à la projection → arbitrer. La
    donnée réelle rencontre la décision, ce qu'aucune famille ne fait seule.
 
+**Deux usages qui débordent du calcul fiscal**, et qui tirent parti du volet
+marché autant que du moteur :
+
+- **l'aide au devis.** Chiffrer une proposition demande de savoir ce que vaut la
+  journée sur le marché, quel tarif afficher selon le canal et ce qu'il en reste
+  après commission. Les trois réponses sont déjà dans le moteur ; un assistant
+  qui rédige le devis peut les appeler au lieu de les inventer ;
+- **l'appui à la tenue comptable.** Échéances de l'exercice, montants à
+  provisionner, écart entre prévisionnel et réalisé. La limite doit rester
+  explicite : l'outil prépare des chiffres, il ne tient pas la comptabilité et
+  n'engage personne.
+
 **Garde-fous.** Même discipline de veille qu'aujourd'hui — un MCP qui débite un
 barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
 *calcule*, il ne délivre pas de *conseil financier personnalisé*.

@@ -42,6 +42,16 @@ const OUTILS_EXPOSES = [
       'Ce que gardent la plateforme, l’intermédiaire et l’État, selon le canal — freelance en direct, via une plateforme, en régie ou salarié en ESN.',
   },
   {
+    nom: 'Aide à la rédaction d’un devis',
+    detail:
+      'Le tarif à afficher selon le canal, ce qu’il laisse une fois la commission passée, et sa position face au marché — de quoi chiffrer une proposition sans quitter la conversation.',
+  },
+  {
+    nom: 'Appui à la tenue comptable',
+    detail:
+      'Les échéances de l’exercice, les montants à provisionner et le contrôle de cohérence entre le prévisionnel et le réalisé. L’assistant prépare les chiffres ; il ne remplace ni le comptable ni sa signature.',
+  },
+  {
     nom: 'Synthèse consolidée',
     detail: 'Tous les volets réconciliés en un seul scénario cohérent.',
   },
