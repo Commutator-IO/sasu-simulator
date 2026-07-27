@@ -21,6 +21,8 @@ export type Plateforme = {
   nom: string;
   /** Service fee taken on the freelance's invoice, 0 when none. */
   taux: number;
+  /** Shown instead of the rate when it is not a published percentage. */
+  tauxLibelle?: string;
   note: string;
   url?: string | null;
   hote?: string | null;

@@ -65,6 +65,14 @@
         "hote": "free-work.com"
       },
       {
+        "nom": "Freelance.com",
+        "taux": 0.0,
+        "tauxLibelle": "marge négociée",
+        "note": "Modèle d'intermédiation, proche d'une ESN : rien n'est prélevé sur votre facture, la marge se prend entre votre tarif et le prix payé par le client. Elle n'est pas publiée — demandez le détail avant de signer.",
+        "url": "https://www.freelance.com/",
+        "hote": "freelance.com"
+      },
+      {
         "nom": "En direct / régie",
         "taux": 0.0,
         "note": "Aucun intermédiaire ne prélève : votre TJM facturé est votre TJM perçu.",
