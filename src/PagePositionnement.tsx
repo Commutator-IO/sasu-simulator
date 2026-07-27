@@ -9,6 +9,7 @@ import { JaugeExperience } from './components/JaugeExperience';
 import { eur } from './lib/format';
 import { ClassementMetiers } from './components/ClassementMetiers';
 import { TarifsPlateformes } from './components/TarifsPlateformes';
+import { SeuilRentabilite } from './components/SeuilRentabilite';
 import {
   anneeDecimale,
   EVENEMENTS,
@@ -323,6 +324,28 @@ export default function PagePositionnement() {
                     lieu={ville}
                     selection={h.professions}
                     onChoisir={basculerProfession}
+                  />
+                </div>
+              </div>
+
+              <div className="card mt-6 p-5 sm:p-8">
+                <h2 className="text-lg font-semibold text-ink-900">
+                  À partir de quel chiffre d'affaires vivez-vous de votre SASU&nbsp;?
+                </h2>
+                <p className="mt-1 text-sm text-ink-500">
+                  Fixez ce que vous voulez gagner — un net en poche, ou le salaire
+                  CDI que vous voulez égaler — et voyez le chiffre d'affaires, le
+                  TJM et le nombre de jours qu'il faut pour y arriver.
+                </p>
+                <div className="mt-5">
+                  <SeuilRentabilite
+                    mode={h.cibleMode}
+                    cible={h.cible}
+                    jours={h.jours}
+                    tjm={tjmEffectif}
+                    onMode={(m) => setH((s) => ({ ...s, cibleMode: m }))}
+                    onCible={(v) => setH((s) => ({ ...s, cible: v }))}
+                    onJours={(v) => setH((s) => ({ ...s, jours: v }))}
                   />
                 </div>
               </div>

@@ -19,6 +19,11 @@ export type EtatPositionnement = {
   tjm2027: number;
   niveau: string;
   ville: string;
+  /** Break-even: target take-home, or the CDI gross it should match. */
+  cibleMode: 'net' | 'cdi';
+  cible: number;
+  /** Billable days a year, to turn the needed revenue into a day rate. */
+  jours: number;
 };
 
 /** Shared seniority brackets (every profession uses the same keys). */
@@ -32,6 +37,9 @@ export const DEFAUTS_POSITIONNEMENT: EtatPositionnement = {
   tjm2027: 0,
   niveau: '8-15',
   ville: 'national',
+  cibleMode: 'cdi',
+  cible: 60_000,
+  jours: 200,
 };
 
 const CLES = {
@@ -42,6 +50,9 @@ const CLES = {
   tjm2027: 'tjm2027',
   niveau: 'niveau',
   ville: 'ville',
+  cibleMode: 'cibleMode',
+  cible: 'cible',
+  jours: 'jours',
 } as const;
 
 export const CLES_POSITIONNEMENT: string[] = Object.values(CLES);
@@ -75,6 +86,9 @@ export function encoderPositionnement(
   if (e.tjm2027 > 0) params.set(CLES.tjm2027, String(Math.round(e.tjm2027)));
   if (e.niveau !== defauts.niveau) params.set(CLES.niveau, e.niveau);
   if (e.ville !== defauts.ville) params.set(CLES.ville, e.ville);
+  if (e.cibleMode !== defauts.cibleMode) params.set(CLES.cibleMode, e.cibleMode);
+  if (Math.round(e.cible) !== defauts.cible) params.set(CLES.cible, String(Math.round(e.cible)));
+  if (Math.round(e.jours) !== defauts.jours) params.set(CLES.jours, String(Math.round(e.jours)));
   const chaine = params.toString();
   return chaine === '' ? '' : `?${chaine}`;
 }
@@ -93,6 +107,9 @@ export function decoderPositionnement(
     tjm2027: nombre(p.get(CLES.tjm2027), defauts.tjm2027, 0, MAX_MONTANT),
     niveau: lireNiveau(p.get(CLES.niveau), defauts.niveau),
     ville: lireVille(p.get(CLES.ville), professions, defauts.ville),
+    cibleMode: p.get(CLES.cibleMode) === 'net' ? 'net' : defauts.cibleMode,
+    cible: nombre(p.get(CLES.cible), defauts.cible, 0, MAX_MONTANT),
+    jours: nombre(p.get(CLES.jours), defauts.jours, 1, 365),
   };
 }
 
