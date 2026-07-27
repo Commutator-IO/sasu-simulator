@@ -13,7 +13,11 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
   // A negative rate marks a margin taken client-side and not published: your own
   // rate is unchanged, so there is nothing to gross up.
   const aSaisir = (base: number, taux: number) =>
-    Math.round(taux > 0 && taux < 1 ? base / (1 - taux) : base);
+    taux > 0 && taux < 1 ? base / (1 - taux) : base;
+  // Same arithmetic as the decomposition chart, so the two agree: what you
+  // invoice, then what the client is charged on top of it.
+  const clientPaie = (base: number, taux: number, marge: number) =>
+    marge > 0 && marge < 1 ? aSaisir(base, taux) / (1 - marge) : aSaisir(base, taux);
 
   // Grouped on both cuts, as the chart is: charging the client changes the deal
   // even when the freelance-side fee is the same.
@@ -42,6 +46,9 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
             <th className="pb-2 px-3 text-right font-semibold text-ink-900">Commission</th>
             <th className="pb-2 px-3 text-right font-semibold text-ink-900">
               À saisir aujourd'hui
+            </th>
+            <th className="pb-2 px-3 text-right font-semibold text-ink-500">
+              Le client paie
             </th>
             {cible ? (
               <th className="pb-2 pl-3 text-right font-semibold text-ink-900">
@@ -91,11 +98,14 @@ export function TarifsPlateformes({ tjm, cible }: { tjm: number; cible?: number 
                         .join(' + '))}
               </td>
               <td className="tabular px-3 py-3 text-right font-semibold text-ink-900">
-                {eur(aSaisir(tjm, g.taux))}
+                {eur(Math.round(aSaisir(tjm, g.taux)))}
+              </td>
+              <td className="tabular px-3 py-3 text-right text-ink-500">
+                {g.taux < 0 ? '—' : eur(Math.round(clientPaie(tjm, g.taux, g.marge)))}
               </td>
               {cible ? (
                 <td className="tabular py-3 pl-3 text-right font-semibold text-brand-700">
-                  {eur(aSaisir(cible, g.taux))}
+                  {eur(Math.round(aSaisir(cible, g.taux)))}
                 </td>
               ) : null}
             </tr>
