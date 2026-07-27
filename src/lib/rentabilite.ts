@@ -65,10 +65,12 @@ export function netEnPocheSalaire(
 }
 
 export type PartTjm = {
-  /** What the client pays — above the invoiced rate when a body shop resells it. */
+  /** What the client pays, all cuts included. */
   clientPaie: number;
-  /** Kept by the intermediary, whether deducted or added on top. */
+  /** Published fee the platform deducts from your own invoice — a known figure. */
   commission: number;
+  /** Margin the intermediary takes on the client side — an estimate. */
+  marge: number;
   /** Running costs of the company. */
   frais: number;
   /** Social contributions, employer and employee side. */
@@ -95,16 +97,24 @@ export function decomposerTjm(
   tjm: number,
   taux: number,
   base: BaseRentabilite,
-  options: { tauxFrais?: number; jours?: number } = {},
+  options: { tauxFrais?: number; jours?: number; marge?: number } = {},
 ): PartTjm {
   const tauxFrais = Math.min(Math.max(options.tauxFrais ?? P.TAUX_FRAIS_REFERENCE, 0), 0.9);
   const jours = Math.max(options.jours ?? P.JOURS_FACTURES_REFERENCE, 1);
   const tauxInter = Math.min(Math.max(taux, 0), 0.9);
+  const tauxMarge = Math.min(Math.max(options.marge ?? 0, 0), 0.9);
   if (tjm <= 0) {
-    return { clientPaie: 0, commission: 0, frais: 0, cotisations: 0, is: 0, ir: 0, net: 0 };
+    return {
+      clientPaie: 0, commission: 0, marge: 0,
+      frais: 0, cotisations: 0, is: 0, ir: 0, net: 0,
+    };
   }
 
-  const clientPaie = tjm / (1 - tauxInter);
+  // Invoiced so that the published fee still leaves the rate intact, then the
+  // intermediary's own margin sits on top of that invoice.
+  const facture = tjm / (1 - tauxInter);
+  const commission = facture - tjm;
+  const clientPaie = facture / (1 - tauxMarge);
   const ca = tjm * jours;
   const frais = ca * tauxFrais;
   const resultat = ca - frais;
@@ -115,7 +125,8 @@ export function decomposerTjm(
   const impots = r.is + r.irTotal;
   return {
     clientPaie,
-    commission: clientPaie - tjm,
+    commission,
+    marge: clientPaie - facture,
     frais: frais / jours,
     cotisations: Math.max(0, resultat - r.netEnPoche - impots) / jours,
     is: r.is / jours,

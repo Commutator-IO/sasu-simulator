@@ -34,7 +34,7 @@ describe('décomposition d’un TJM', () => {
       const p = decomposerTjm(700, taux, base, { jours: 200 });
       expect(p.clientPaie).toBeCloseTo(700 / (1 - taux), 6);
       expect(
-        p.commission + p.frais + p.cotisations + p.is + p.ir + p.net,
+        p.commission + p.marge + p.frais + p.cotisations + p.is + p.ir + p.net,
       ).toBeCloseTo(p.clientPaie, 6);
       for (const part of Object.values(p)) expect(part).toBeGreaterThanOrEqual(0);
     }
@@ -61,6 +61,19 @@ describe('décomposition d’un TJM', () => {
     expect(p.cotisations).toBeGreaterThan(0);
   });
 
+  it('distingue la commission publiée de la marge estimée', () => {
+    // Malt prélève sur votre facture : c’est un chiffre publié.
+    const plateforme = decomposerTjm(700, 0.1, base, { jours: 200 });
+    expect(plateforme.commission).toBeGreaterThan(0);
+    expect(plateforme.marge).toBe(0);
+    // Une régie prend sa part côté client : elle est estimée, pas prélevée.
+    const regie = decomposerTjm(700, 0, base, { jours: 200, marge: 0.2 });
+    expect(regie.commission).toBe(0);
+    expect(regie.marge).toBeGreaterThan(0);
+    // Dans les deux cas le freelance touche la même chose.
+    expect(regie.net).toBeCloseTo(plateforme.net, 6);
+  });
+
   it('fait payer le client davantage quand la commission monte', () => {
     const sans = decomposerTjm(700, 0, base, { jours: 200 });
     const avec = decomposerTjm(700, 0.15, base, { jours: 200 });
@@ -72,6 +85,7 @@ describe('décomposition d’un TJM', () => {
     expect(decomposerTjm(0, 0.1, base)).toEqual({
       clientPaie: 0,
       commission: 0,
+      marge: 0,
       frais: 0,
       cotisations: 0,
       is: 0,

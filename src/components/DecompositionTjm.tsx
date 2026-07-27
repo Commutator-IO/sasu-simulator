@@ -38,11 +38,14 @@ const SEGMENTS: Segment[] = [
   // On the frontier by design: funded by the employer, received by the employee.
   { cle: 'avantages', label: 'Avantages CDI', couleur: '#1e9970', fond: HACHURE },
   { cle: 'patronales', label: 'Cotisations employeur', couleur: '#d99b1f' },
-  // Neutral rather than a series colour: whichever the channel, the cut is paid
-  // by the client on top of the rate and never passes through your hands.
+  // A published fee, deducted from your own invoice: a known figure, so a solid
+  // colour.
+  { cle: 'commission', label: 'Commission prélevée sur vous (publiée)', couleur: '#db2777' },
+  // Taken on the client side and not published: an estimate, so neutral and
+  // dashed rather than dressed as measured.
   {
-    cle: 'commission',
-    label: 'Marge de l’intermédiaire, payée par le client',
+    cle: 'marge',
+    label: 'Marge de l’intermédiaire (estimée)',
     couleur: 'transparent',
     fond: 'var(--color-ink-100)',
     classe: 'border border-dashed border-ink-300 !text-ink-500',
@@ -88,7 +91,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
         };
       });
 
-    const esn = decomposerTjm(tjm, MARGE_ESN_TYPIQUE, base, { jours });
+    const esn = decomposerTjm(tjm, 0, base, { jours, marge: MARGE_ESN_TYPIQUE });
     canaux.push({
       cle: 'esn',
       titre: `ESN / régie · marge ${Math.round(MARGE_ESN_TYPIQUE * 100)} %`,
@@ -106,7 +109,7 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
       detail:
         'l’ESN garde de quoi financer sa structure, l’intercontrat et sa marge',
       total: cdi.clientPaie,
-      parts: { ...cdi, commission: cdi.marge },
+      parts: { ...cdi, marge: cdi.marge },
       compare: true,
     });
     return canaux;
@@ -125,16 +128,13 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
   return (
     <figure className="m-0">
       <figcaption className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-500">
-        {SEGMENTS.filter((s) => s.cle !== 'is' && s.cle !== 'commission').map((s) => (
+        {SEGMENTS.filter((s) => s.cle !== 'is').map((s) => (
           <span key={s.cle} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: s.fond ?? s.couleur }} />
             {s.cle === 'ir' ? 'Impôts — revenu, puis sociétés' : s.label}
           </span>
         ))}
-        <span className="flex items-center gap-1.5 text-ink-400">
-          <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-ink-300 bg-ink-100" />
-          Marge de l’intermédiaire, payée par le client
-        </span>
+
       </figcaption>
 
       <div className="mt-4 space-y-3">
