@@ -8,9 +8,12 @@ name: Capture mensuelle du baromètre TJM
 #   - repository secret BAROMETRE_URL (the barometer page to read)
 #   - Settings > Actions > General > Workflow permissions:
 #       "Read and write" + "Allow GitHub Actions to create and approve pull requests"
+# The monthly schedule is deliberately off. The source sits behind bot
+# protection: a headless runner gets a 403 challenge page, and the site is
+# entitled to that — working around it is not something this repository will do.
+# The job is kept for manual runs from an environment the source serves; until
+# then the dataset is refreshed by hand and `meta.verifieLe` says when.
 on:
-  schedule:
-    - cron: '17 6 3 * *' # 06:17 UTC on the 3rd of each month (off-peak minute)
   workflow_dispatch:
 
 permissions:

@@ -85,6 +85,41 @@ vivre ailleurs, la veille devient ingérable.
 
 ---
 
+## Fraîcheur des données TJM
+
+**Constat du 28 juillet 2026.** Un contrôle des neuf métiers face à leurs pages
+publiques a montré huit relevés justes à un ou trois euros près — le bruit d'une
+fenêtre glissante de trois mois — et un faux de bout en bout : Experts data
+donnait 680 € au lieu de 666 € en national et 742 € au lieu de 710 € à Paris,
+avec des plafonds de séniorité d'un cran trop haut. La catégorie ne publie plus
+qu'une seule spécialité là où elle en publiait plusieurs, donc les moyennes par
+ville ne reposaient plus sur la même base que la capture. Corrigé, et
+`meta.verifieLe` est désormais affiché sur la page.
+
+**La capture automatique ne peut pas tourner.** La source est derrière une
+protection anti-bot : un runner headless reçoit une page de vérification 403, et
+même en se présentant comme un navigateur ordinaire le site refuse ensuite sur
+les cookies. Le contournement est hors sujet pour ce dépôt. Le workflow est donc
+passé en déclenchement manuel, le script couvre les neuf métiers quand il est
+lancé depuis un environnement que la source sert, et le rafraîchissement se fait
+sinon à la main.
+
+**Les archives ne comblent pas le trou.** Entre mai 2025 et juillet 2026, la
+Wayback Machine n'a aucune capture exploitable des neuf pages : zéro instantané
+pour huit d'entre elles, et un seul pour la neuvième — un 403. Le crawler se fait
+bloquer comme le nôtre. Ce trou de quatorze mois ne se rattrapera pas et il
+continuera de grandir : d'où l'intérêt de dater ce qui est affiché.
+
+**Une réserve de méthode connue.** Le chiffre national vient du bandeau de tête
+(tous profils expérimentés de la catégorie) tandis que les valeurs par ville sont
+la moyenne des spécialités publiées. Les deux ne sont pas calculés sur la même
+base : l'écart va de 5 € à 32 € selon le métier, soit jusqu'à 7 %. Le facteur
+ville utilisé par l'application (`ville / national`) en hérite. Le corriger
+supposerait de stocker aussi la moyenne de la colonne spécialités et de s'en
+servir comme dénominateur, en gardant le bandeau comme ancre de séniorité.
+
+---
+
 ## Glossaire
 
 Un lexique des termes qui reviennent partout dans le simulateur et que

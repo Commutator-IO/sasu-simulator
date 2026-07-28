@@ -125,8 +125,8 @@
     },
     {
       "date": "2026-08",
-      "label": "AI Act : obligations",
-      "explication": "Les obligations principales du règlement européen sur l'IA s'appliquent aux systèmes à haut risque. Elles alimentent la demande en gouvernance, audit et conformité des données — des compétences qui soutiennent les tarifs data et cybersécurité, alors que les tâches de production les plus standardisées sont, elles, de plus en plus automatisées."
+      "label": "AI Act : transparence",
+      "explication": "Seules les obligations de transparence entrent en application : signaler à l'utilisateur qu'il a affaire à une IA. Le Digital Omnibus, en vigueur depuis le 27 juillet 2026, a repoussé les obligations « haut risque » à décembre 2027 pour les systèmes autonomes et à août 2028 pour l'IA embarquée dans des produits réglementés. La demande de gouvernance, d'audit et de conformité qu'elles devaient créer est décalée d'autant."
     }
   ],
   "professions": [
