@@ -276,10 +276,22 @@ const OUTILS_EXPOSES = [
  * month to settle one question, or paid once and kept for those who come
  * back. Nothing renews, so there is nothing to cancel.
  */
+/**
+ * Standard French VAT, charged on top of what the service is worth.
+ *
+ * Both figures are shown: the buyer pays the inclusive one, and a freelance
+ * reading this page reclaims the tax, so the exclusive one is what it really
+ * costs them. Derived rather than written twice, so they cannot drift apart.
+ */
+const TVA = 0.2;
+
+const euros = (v: number) =>
+  v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 const OFFRES = [
   {
     cle: '1 mois',
-    prix: '7 €',
+    ttc: 7,
     duree: '1 mois d’accès',
     accroche: 'Le temps de trancher une question',
     points: [
@@ -291,7 +303,7 @@ const OFFRES = [
   },
   {
     cle: 'à vie',
-    prix: '25 €',
+    ttc: 25,
     duree: 'une fois, accès à vie',
     accroche: 'Pour s’y appuyer sans y repenser',
     points: [
@@ -400,7 +412,7 @@ export default function PageMcp() {
               Deux façons d'entrer, aucune n'étant un abonnement. Ces outils
               servent par à-coups — fixer un tarif, clôturer un exercice, chiffrer
               une proposition — pas tous les mois&nbsp;: on achète l'accès, on ne le
-              loue pas. Prix TTC, TVA comprise. Rien n'est encaissé pour
+              loue pas. Prix TTC, TVA à 20 % comprise, et le HT en dessous. Rien n'est encaissé pour
               l'instant, l'accès ouvrira à la sortie du serveur.
             </p>
 
@@ -421,9 +433,12 @@ export default function PageMcp() {
                   <p className="text-sm text-ink-500">{o.accroche}</p>
                   <p className="mt-3 flex items-baseline gap-2">
                     <span className="tabular text-4xl font-semibold tracking-tight text-ink-900">
-                      {o.prix}
+                      {o.ttc}&nbsp;€
                     </span>
-                    <span className="text-sm text-ink-400">/ {o.duree}</span>
+                    <span className="text-sm text-ink-400">TTC / {o.duree}</span>
+                  </p>
+                  <p className="tabular mt-1 text-xs text-ink-400">
+                    soit {euros(o.ttc / (1 + TVA))}&nbsp;€ HT
                   </p>
                   <ul className="mt-6 space-y-2.5 text-sm text-ink-600">
                     {o.points.map((pt) => (
