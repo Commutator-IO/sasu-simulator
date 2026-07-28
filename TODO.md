@@ -414,14 +414,57 @@ marché autant que du moteur :
 barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
 *calcule*, il ne délivre pas de *conseil financier personnalisé*.
 
-**Modèle envisagé.** Deux accès achetés, non loués : 10 € pour six mois à
-activer quand on veut, ou 30 € à vie. Précédé d'une
+**Modèle envisagé.** Deux accès achetés, non loués : 5 € pour deux semaines à
+activer quand on veut, ou 20 € à vie. Précédé d'une
 page de pré-inscription pour prévenir de la sortie (onglet « Serveur MCP »). Le
 formulaire est pour l'instant inerte — le moyen d'inscription reste à décider —
 et n'expose aucune adresse. Un backend de collecte (Formspree, Buttondown…) ou
 une fonction serverless, ainsi qu'un encaissement (Stripe Payment Link, Lemon
 Squeezy…), restent à choisir avant le lancement. Rien n'est encaissé ni stocké
 tant que ce choix n'est pas fait.
+
+### Quel prestataire de paiement
+
+Deux contraintes commandent le choix, et elles tirent dans le même sens :
+**les montants sont petits** (5 € et 20 €) et **l'acheteur doit être rassuré**
+au moment de sortir sa carte sur un site qu'il ne connaît pas.
+
+**Les frais fixes décident.** À ces prix, le pourcentage compte moins que les
+40 à 50 centimes fixes par transaction :
+
+| | Sur 5 € | Sur 20 € |
+|---|---|---|
+| Stripe (carte européenne, ~1,5 % + 0,25 €) | 0,33 € — **6 %** | 0,55 € — **3 %** |
+| Polar (MoR, ~4 % + 0,40 $) | 0,57 € — 11 % | 1,17 € — 6 % |
+| Lemon Squeezy, Paddle (MoR, 5 % + 0,50 $) | 0,71 € — **14 %** | 1,46 € — 7 % |
+
+Un *merchant of record* prélève donc le double à le triple sur l'offre à 5 €.
+Ce qu'il vend en échange, c'est la TVA gérée à sa place.
+
+**Or cette TVA n'est pas un problème au départ.** Pour des services
+électroniques vendus à des particuliers dans l'UE, le guichet OSS ne devient
+obligatoire qu'au-delà de **10 000 € de ventes transfrontalières par an** —
+soit 2 000 ventes à 5 € ou 500 à 20 €. En dessous, la TVA française suffit.
+Payer 14 % de commission pour éviter une formalité qui ne s'applique pas encore
+serait un mauvais calcul.
+
+**La confiance penche du même côté.** Stripe est le tunnel de paiement le plus
+reconnu en France : la page de paiement est hébergée par Stripe, la carte ne
+transite jamais par le site, et le logo est familier. Un MoR américain émet en
+revanche une facture au nom d'une société inconnue de l'acheteur français, ce
+qui interroge davantage qu'il ne rassure sur un achat à 5 €.
+
+**Recommandation.** **Stripe Payment Links** ou Checkout, pour trois raisons :
+les frais les plus bas sur les petits montants, la page de paiement hébergée
+(donc aucune donnée bancaire à toucher), et Apple Pay / Google Pay en un geste —
+sur un achat à 5 €, la friction coûte plus cher que la commission.
+
+**Ce qu'il faut surveiller.** Le seuil des 10 000 € de ventes transfrontalières :
+une fois approché, soit on s'inscrit au guichet OSS, soit on bascule vers un MoR
+— le surcoût devient alors supportable puisque le volume est là. À noter aussi
+que le paiement introduit une donnée client là où le site n'en a aucune : un
+modèle à clé de licence (une adresse, une clé) garde cette empreinte minimale et
+reste cohérent avec la promesse « rien n'est enregistré » des simulateurs.
 
 **La tension à surveiller.** L'offre à vie finance des coûts récurrents avec un
 paiement unique : l'hébergement du backend et la veille sur les barèmes ne
@@ -430,8 +473,11 @@ couvrent le service rendu aux anciens, ou tant que le coût marginal d'une
 réponse reste proche de zéro. C'est le cas ici — le calcul est bon marché à
 servir — mais cela cesserait si le serveur devait appeler des modèles payants à
 chaque requête. À réexaminer avant d'encaisser le premier euro, et c'est aussi
-ce qui justifie de garder l'option à six mois : elle amortit le risque si
-l'engagement à vie devient intenable.
+ce qui justifie de garder l'option courte : elle amortit le risque si
+l'engagement à vie devient intenable. Le rapport entre les deux — quatre passages
+de deux semaines et l'accès à vie est déjà rentabilisé — pousse volontairement
+vers l'achat unique, qui coûte moins cher à servir qu'une succession de
+réactivations.
 
 ## Autres calculateurs envisageables
 

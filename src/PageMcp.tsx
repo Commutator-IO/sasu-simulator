@@ -44,6 +44,17 @@ const ECHANGES: Echange[] = [
     ],
   },
   {
+    question:
+      'Je te joins mon bilan. Quel salaire me verser cette année, et combien d’impôts au total ?',
+    outil: 'balayer',
+    fichier: 'bilan-2026.pdf',
+    reponse: [
+      'Votre bilan donne **114 200 €** de résultat avant rémunération. C’est le seul chiffre que j’envoie au serveur — le document reste chez moi.',
+      'L’optimum est à **23 367 €** de brut, pour **63 728 €** net en poche.',
+      'Vous paierez **16 316 €** d’IS au titre de l’exercice, puis la flat tax sur **45 240 €** de dividendes nets. Le détail échéance par échéance est dans l’onglet acomptes.',
+    ],
+  },
+  {
     question: 'Je gagnais 60 000 € brut en CDI. Il me faut quoi pour retrouver ça ?',
     outil: 'seuilRentabilite',
     reponse: [
@@ -104,31 +115,31 @@ const OUTILS_EXPOSES = [
  * Two ways in, neither of them a subscription.
  *
  * A freelance reaches for these tools in bursts — fixing a rate, closing a
- * year, pricing a proposal — so access is bought outright rather than rented:
- * months to spend for someone testing the water, or paid once and kept for
- * those who settle in. Nothing renews, so there is nothing to cancel.
+ * year, pricing a proposal — so access is bought outright rather than rented: a
+ * fortnight to settle one question, or paid once and kept for those who come
+ * back. Nothing renews, so there is nothing to cancel.
  */
 const OFFRES = [
   {
-    cle: '6 mois',
-    prix: '10 €',
-    duree: '6 mois d’accès',
-    accroche: 'Pour voir ce que ça donne sur un exercice',
+    cle: '2 semaines',
+    prix: '5 €',
+    duree: '2 semaines d’accès',
+    accroche: 'Le temps de trancher une question',
     points: [
-      'Les six mois s’activent quand vous en avez besoin, dans les deux ans',
-      'Rechargeable : les mois s’ajoutent, ils ne se remplacent pas',
-      'Barèmes à jour pendant toute la durée active',
+      'De quoi arbitrer une rémunération ou chiffrer une proposition',
+      'Les deux semaines s’activent quand vous en avez besoin',
+      'Rechargeable : les périodes s’ajoutent, elles ne se remplacent pas',
     ],
     vedette: false,
   },
   {
     cle: 'à vie',
-    prix: '30 €',
+    prix: '20 €',
     duree: 'une fois, accès à vie',
     accroche: 'Pour s’y appuyer sans y repenser',
     points: [
       'Payé une fois, gardé pour de bon',
-      'Rentable dès la deuxième année',
+      'Rentable dès le quatrième usage',
       'Les barèmes restent à jour aussi longtemps que le service tourne',
     ],
     vedette: true,
@@ -180,13 +191,24 @@ export default function PageMcp() {
             <ConversationMcp echanges={ECHANGES} />
           </div>
 
-          <div className="card mt-6 border-brand-200 bg-brand-50 p-5">
-            <p className="text-sm leading-relaxed text-ink-700">
-              <strong className="text-ink-900">Vous gardez la main.</strong> L'assistant
-              propose un chiffre et la règle qui l'a produit&nbsp;; la décision reste la
-              vôtre, et chaque paramètre est vérifiable sur ce site comme dans le texte
-              officiel qui le fonde.
-            </p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="card border-brand-200 bg-brand-50 p-5">
+              <p className="text-sm leading-relaxed text-ink-700">
+                <strong className="text-ink-900">Vous gardez la main.</strong>{' '}
+                L'assistant propose un chiffre et la règle qui l'a produit&nbsp;; la
+                décision reste la vôtre, et chaque paramètre est vérifiable sur ce
+                site comme dans le texte officiel qui le fonde.
+              </p>
+            </div>
+            <div className="card border-brand-200 bg-brand-50 p-5">
+              <p className="text-sm leading-relaxed text-ink-700">
+                <strong className="text-ink-900">Vos documents ne partent pas.</strong>{' '}
+                Joignez un bilan ou des factures&nbsp;: c'est votre assistant qui les
+                lit, chez lui. Il n'envoie au serveur que les nombres dont le calcul a
+                besoin — un résultat, un chiffre d'affaires — jamais le fichier, ni vos
+                clients, ni le détail des lignes.
+              </p>
+            </div>
           </div>
         </section>
 

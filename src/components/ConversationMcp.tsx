@@ -10,6 +10,8 @@
 export type Echange = {
   question: string;
   outil: string;
+  /** Document the user attached, if any. */
+  fichier?: string;
   reponse: string[];
 };
 
@@ -31,9 +33,17 @@ export function ConversationMcp({ echanges }: { echanges: Echange[] }) {
           </div>
 
           <div className="space-y-3 p-4 sm:p-5">
-            <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-600 px-3.5 py-2.5 text-sm leading-relaxed text-white">
-              {e.question}
-            </p>
+            <div className="ml-auto max-w-[85%] space-y-1.5">
+              {e.fichier && (
+                <p className="ml-auto flex w-fit items-center gap-2 rounded-lg border border-ink-200 bg-white px-2.5 py-1.5 text-xs text-ink-600">
+                  <span aria-hidden="true">📎</span>
+                  <span className="font-medium">{e.fichier}</span>
+                </p>
+              )}
+              <p className="rounded-2xl rounded-br-sm bg-brand-600 px-3.5 py-2.5 text-sm leading-relaxed text-white">
+                {e.question}
+              </p>
+            </div>
 
             <p className="inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-[11px] font-medium text-ink-500">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
