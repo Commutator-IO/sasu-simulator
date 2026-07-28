@@ -1,6 +1,20 @@
 import { useState } from 'react';
 import { Entete, Pied } from './components/Cadre';
-import { ConversationMcp, type Echange } from './components/ConversationMcp';
+import { ConversationMcp } from './components/ConversationMcp';
+import { nb, txt, type Echange } from './lib/conversationMcp';
+import {
+  PLATEFORMES,
+  getProfession,
+  moyenneVille,
+  positionner,
+  serieVille,
+} from './lib/barometreTjm';
+import { DEFAUTS_ARBITRAGE } from './lib/arbitrage';
+import { balayer } from './lib/simulation';
+import { decomposerTjm, netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
+import { DEFAUTS_PROJECTION, calculerProjection, reprojeter } from './lib/projection';
+import { DEFAUTS_ACOMPTES, calculerAcomptes, isExercice } from './lib/acomptes';
+import { eur } from './lib/format';
 import * as P from './lib/parametres2026';
 
 /**
@@ -13,55 +27,198 @@ import * as P from './lib/parametres2026';
  */
 
 /**
- * Figures below are not mocked up: each was produced by running this site's own
- * engine, so an illustration cannot promise an answer the tool would not give.
+ * Six questions, each wired to the engine that already runs this site.
+ *
+ * Nothing here is mocked up: change a figure in a question and the answer is
+ * recomputed by the same functions the server would call, so an illustration
+ * cannot promise an answer the tool would not give.
  */
+const VILLES = ['Paris', 'Lyon', 'Bordeaux', 'Lille', 'Marseille'];
+const NIVEAUX = ['0 à 2 ans', '3 à 7 ans', '8 à 15 ans', '15 ans et +'];
+const MOIS_LETTRE = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+const NOMS_MOIS = [
+  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+];
+
+/** "2023-03" read back as "mars 2023". */
+const moisAn = (date: string) => {
+  const [an, m] = date.split('-').map(Number);
+  return `${NOMS_MOIS[(m || 1) - 1]} ${an}`;
+};
+
+const pct = (t: number) => `${Math.round(t * 100)} %`;
+
 const ECHANGES: Echange[] = [
   {
     question:
-      'Mon TJM est à 700 €. Il tient la route à Paris pour un expert data avec 10 ans de métier ?',
+      'Mon TJM est à {tjm} €. Il tient la route à {ville} pour un expert data sur la tranche {niveau} ?',
+    champs: { tjm: 700, ville: 'Paris', niveau: '8 à 15 ans' },
+    options: { ville: VILLES, niveau: NIVEAUX },
     outil: 'positionnerTjm',
-    reponse: [
-      'À Paris, la tranche 8-15 ans est à **730 €** de moyenne. Vos 700 € vous placent **30 € en dessous**, au **39ᵉ centile** de la fourchette.',
-      'Le marché parisien a culminé à **754 €** début 2023 puis reflué à **732 €** en 2025 : votre tarif suit la tendance plutôt qu’il ne décroche.',
-    ],
+    calculer: (v) => {
+      const tjm = nb(v, 'tjm');
+      const ville = txt(v, 'ville');
+      const p = getProfession('expert-data');
+      const niv = p.experience.find((n) => n.label === txt(v, 'niveau')) ?? p.experience[2];
+      // The brackets are national; a city moves them by the ratio of its own
+      // average to the national one, exactly as the market tab does.
+      const facteur = moyenneVille(p, ville) / moyenneVille(p, 'national');
+      const local = {
+        ...niv,
+        bas: Math.round(niv.bas * facteur),
+        moyen: Math.round(niv.moyen * facteur),
+        haut: Math.round(niv.haut * facteur),
+      };
+      const pos = positionner(tjm, local);
+      const mesures = serieVille(p, ville).filter((s) => !s.projete);
+      const pic = mesures.reduce((a, b) => (b.valeur > a.valeur ? b : a), mesures[0]);
+      const fin = mesures[mesures.length - 1];
+      return {
+        reponse: [
+          `À ${ville}, la tranche ${niv.label} tourne autour de **${eur(local.moyen)}**. Vos ${eur(tjm)} vous placent **${eur(Math.abs(pos.ecartMoyen))} ${pos.ecartMoyen >= 0 ? 'au-dessus' : 'en dessous'}**, au **${Math.round(pos.positionDansPlage * 100)}ᵉ centile** d’une fourchette qui va de ${eur(local.bas)} à ${eur(local.haut)}.`,
+          `Le tarif publié à ${ville} a culminé à **${eur(pic.valeur)}** en ${moisAn(pic.date)} et se tient à **${eur(fin.valeur)}** à la dernière mesure, en ${moisAn(fin.date)}.`,
+        ],
+      };
+    },
   },
   {
     question:
-      'Je dois chiffrer 12 jours via Malt et je veux garder mes 700 € par jour. J’affiche combien ?',
+      'Je dois chiffrer {jours} jours via {plateforme} et je veux garder mes {tjm} € par jour. J’affiche combien ?',
+    champs: { jours: 12, plateforme: 'Malt', tjm: 700 },
+    options: {
+      plateforme: ['Malt', 'Comet', 'Le Hibou', 'Crème de la Crème', 'En direct'],
+    },
     outil: 'decomposerTjm',
-    reponse: [
-      'Affichez **778 €** par jour : la commission de 10 % vous laisse bien vos 700 €.',
-      'Le client verra **836 €** par jour, sa part de service comprise — soit **10 036 €** pour la mission, dont **8 400 €** pour vous.',
-    ],
+    calculer: (v) => {
+      const tjm = nb(v, 'tjm');
+      const jours = nb(v, 'jours');
+      const pf = PLATEFORMES.find((x) => x.nom === txt(v, 'plateforme'));
+      const taux = pf && pf.taux >= 0 ? pf.taux : 0;
+      const marge = pf?.margeClient ?? 0;
+      // Annual billable days are left at the reference: they set the tax split,
+      // not the length of this mission.
+      const part = decomposerTjm(tjm, taux, DEFAUTS_ARBITRAGE, { marge });
+      const facture = tjm + part.commission;
+      const estimee = marge > 0 && !pf?.margeClientPubliee;
+      return {
+        reponse: [
+          taux > 0
+            ? `Affichez **${eur(Math.round(facture))}** par jour : la commission de ${pct(taux)} vous laisse bien vos ${eur(tjm)}.`
+            : `Rien n’est prélevé sur votre facture : affichez vos **${eur(tjm)}** par jour.`,
+          marge > 0
+            ? `Le client verra **${eur(Math.round(part.clientPaie))}** par jour, sa part de service ${estimee ? 'estimée à' : 'de'} ${pct(marge)} comprise — soit **${eur(Math.round(part.clientPaie * jours))}** pour la mission, dont **${eur(Math.round(tjm * jours))}** pour vous.`
+            : `Le client paie ce que vous facturez — soit **${eur(Math.round(facture * jours))}** pour la mission, dont **${eur(Math.round(tjm * jours))}** pour vous.`,
+        ],
+      };
+    },
   },
   {
-    question: 'Quel salaire me verser si je termine l’année à 140 000 € de résultat ?',
+    question: 'Quel salaire me verser si je termine l’année à {resultat} € de résultat ?',
+    champs: { resultat: 140000 },
     outil: 'balayer',
-    reponse: [
-      'L’optimum est à **23 362 €** de brut annuel, pour **77 002 €** net en poche.',
-      'La courbe est plate autour : de **22 185 €** à **26 727 €**, l’écart de net reste sous 100 €. Choisissez dans cette plage selon vos besoins de trésorerie.',
-    ],
+    calculer: (v) => {
+      const b = balayer({
+        ...DEFAUTS_ARBITRAGE,
+        resultatAvantRemuneration: nb(v, 'resultat'),
+      });
+      return {
+        reponse: [
+          `L’optimum est à **${eur(Math.round(b.optimum.brutAnnuel))}** de brut annuel, pour **${eur(Math.round(b.optimum.netEnPoche))}** net en poche.`,
+          `La courbe est plate autour : de **${eur(Math.round(b.plateau.min))}** à **${eur(Math.round(b.plateau.max))}**, l’écart de net reste sous ${eur(b.plateau.tolerance)}. Choisissez dans cette plage selon vos besoins de trésorerie.`,
+        ],
+      };
+    },
   },
   {
     question:
-      'Je te joins mon bilan. Quel salaire me verser cette année, et combien d’impôts au total ?',
-    outil: 'balayer',
-    fichier: 'bilan-2026.pdf',
-    reponse: [
-      'Votre bilan donne **114 200 €** de résultat avant rémunération. C’est le seul chiffre que j’envoie au serveur — le document reste chez moi.',
-      'L’optimum est à **23 367 €** de brut, pour **63 728 €** net en poche.',
-      'Vous paierez **16 316 €** d’IS au titre de l’exercice, puis la flat tax sur **45 240 €** de dividendes nets. Le détail échéance par échéance est dans l’onglet acomptes.',
-    ],
+      'Voici mes factures des six premiers mois. Où j’atterris à fin décembre si ça continue comme ça ?',
+    champs: { m1: 8400, m2: 9600, m3: 9600, m4: 12000, m5: 0, m6: 4200 },
+    outil: 'calculerProjection',
+    fichier: 'factures-jan-juin.zip',
+    calculer: (v) => {
+      const factures = 6;
+      const saisis = Array.from({ length: factures }, (_, i) => nb(v, `m${i + 1}`));
+      const r = calculerProjection({
+        ...DEFAUTS_PROJECTION,
+        facturation: reprojeter([...saisis, ...Array(12 - factures).fill(0)], factures),
+        moisFactures: factures,
+      });
+      const creux = saisis.reduce(
+        (a, m, i) => (m < a.montant ? { montant: m, i } : a),
+        { montant: saisis[0], i: 0 },
+      );
+      return {
+        graphique: r.mois.map((m, i) => ({
+          mois: MOIS_LETTRE[i],
+          valeur: m.montant,
+          projete: m.projete,
+          ...(i < factures ? { cle: `m${i + 1}` } : {}),
+        })),
+        reponse: [
+          `Vos six mois totalisent **${eur(Math.round(r.caFacture))}**, soit **${eur(Math.round(r.moyenneMensuelle))}** de moyenne mensuelle. Je n’ai relevé que ces six montants dans vos factures — ni vos clients, ni les lignes de détail.`,
+          `Au même rythme, vous finiriez à **${eur(Math.round(r.caTotal))}** de chiffre d’affaires, pour un résultat de **${eur(Math.round(r.resultatAvantRemuneration))}** avant votre rémunération.`,
+          `Votre mois le plus faible, **${NOMS_MOIS[creux.i]} à ${eur(Math.round(creux.montant))}**, tire la moyenne vers le bas : c’est lui qui pèse le plus sur la projection.`,
+        ],
+      };
+    },
   },
   {
-    question: 'Je gagnais 60 000 € brut en CDI. Il me faut quoi pour retrouver ça ?',
+    question:
+      'Je te joins mon bilan 2026. Combien d’impôt sur les sociétés au total, et qu’est-ce que je dois provisionner en 2027 ?',
+    champs: { resultat: 96000 },
+    outil: 'calculerAcomptes',
+    fichier: 'bilan-2026.pdf',
+    calculer: (v) => {
+      const benefice = nb(v, 'resultat');
+      const is = isExercice(benefice, 12, true);
+      // The previous exercise is taken as steady: nothing is invented beyond
+      // the one figure read off the balance sheet.
+      const a = calculerAcomptes({
+        ...DEFAUTS_ACOMPTES,
+        beneficeAvantDernier: benefice,
+        beneficePrecedent: benefice,
+        beneficePrevisionnel: benefice,
+        strategie: 'appele',
+      });
+      const acompte = a.echeances[0]?.parDefaut ?? 0;
+      return {
+        reponse: [
+          `Votre bilan donne **${eur(Math.round(benefice))}** de résultat fiscal. C’est le seul chiffre que j’envoie au serveur — le document reste chez vous.`,
+          a.dispense
+            ? `L’IS de l’exercice ressort à **${eur(Math.round(is))}**, sous le seuil de ${eur(3000)} : aucun acompte n’est dû en 2027, tout se règle au solde.`
+            : `L’IS de l’exercice ressort à **${eur(Math.round(is))}** : ${pct(P.IS_TAUX_REDUIT)} jusqu’à ${eur(P.IS_SEUIL_TAUX_REDUIT)} de bénéfice, ${pct(P.IS_TAUX_NORMAL)} au-delà.`,
+          a.dispense
+            ? 'Gardez-le de côté : il tombera en une fois, au solde de mai.'
+            : `À bénéfice stable, provisionnez **${eur(Math.round(acompte))}** à chacune des quatre échéances de 2027 — 15 mars, juin, septembre et décembre. Si l’année décroche, l’onglet acomptes vous laisse les moduler.`,
+        ],
+      };
+    },
+  },
+  {
+    question:
+      'Je gagnais {brut} € brut en CDI. Il me faut quoi pour retrouver ça, à {tjm} € par jour ?',
+    champs: { brut: 60000, tjm: 700, jours: 200 },
     outil: 'seuilRentabilite',
-    reponse: [
-      'Ce salaire laissait **41 138 €** net en poche. Il vous faut **78 610 €** de chiffre d’affaires pour l’égaler.',
-      'Sur 200 jours facturés, cela fait **393 €** par jour. À votre tarif de 700 €, **113 jours** suffisent.',
-      'Attention : à net égal, un CDI vaut davantage — mutuelle, tickets restaurant et droits au chômage ne sont pas comptés ici.',
-    ],
+    calculer: (v) => {
+      const net = netEnPocheSalaire(nb(v, 'brut'), DEFAUTS_ARBITRAGE);
+      const jours = nb(v, 'jours');
+      const s = seuilRentabilite(net, DEFAUTS_ARBITRAGE, { jours, tjm: nb(v, 'tjm') });
+      if (s.horsAtteinte) {
+        return {
+          reponse: [
+            'Cet objectif dépasse ce que le simulateur sait modéliser — vérifiez le montant saisi.',
+          ],
+        };
+      }
+      return {
+        reponse: [
+          `Ce salaire laissait **${eur(Math.round(net))}** net en poche. Il vous faut **${eur(Math.round(s.caNecessaire))}** de chiffre d’affaires pour l’égaler.`,
+          `Sur ${jours} jours facturés, cela fait **${eur(Math.round(s.tjmNecessaire))}** par jour. À votre tarif, **${s.joursNecessaires === null ? '—' : Math.ceil(s.joursNecessaires)} jours** suffisent.`,
+          'Attention : à net égal, un CDI vaut davantage — mutuelle, tickets restaurant et droits au chômage ne sont pas comptés ici.',
+        ],
+      };
+    },
   },
 ];
 
@@ -116,30 +273,30 @@ const OUTILS_EXPOSES = [
  *
  * A freelance reaches for these tools in bursts — fixing a rate, closing a
  * year, pricing a proposal — so access is bought outright rather than rented: a
- * fortnight to settle one question, or paid once and kept for those who come
+ * month to settle one question, or paid once and kept for those who come
  * back. Nothing renews, so there is nothing to cancel.
  */
 const OFFRES = [
   {
-    cle: '2 semaines',
-    prix: '5 €',
-    duree: '2 semaines d’accès',
+    cle: '1 mois',
+    prix: '7 €',
+    duree: '1 mois d’accès',
     accroche: 'Le temps de trancher une question',
     points: [
       'De quoi arbitrer une rémunération ou chiffrer une proposition',
-      'Les deux semaines s’activent quand vous en avez besoin',
+      'Le mois s’active quand vous en avez besoin',
       'Rechargeable : les périodes s’ajoutent, elles ne se remplacent pas',
     ],
     vedette: false,
   },
   {
     cle: 'à vie',
-    prix: '20 €',
+    prix: '25 €',
     duree: 'une fois, accès à vie',
     accroche: 'Pour s’y appuyer sans y repenser',
     points: [
       'Payé une fois, gardé pour de bon',
-      'Rentable dès le quatrième usage',
+      'Rentable dès le quatrième mois d’accès',
       'Les barèmes restent à jour aussi longtemps que le service tourne',
     ],
     vedette: true,
@@ -242,9 +399,9 @@ export default function PageMcp() {
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
               Deux façons d'entrer, aucune n'étant un abonnement. Ces outils
               servent par à-coups — fixer un tarif, clôturer un exercice, chiffrer
-              une proposition — pas toutes les semaines&nbsp;: on achète l'accès, on
-              ne le loue pas. Rien n'est encaissé pour l'instant, l'accès ouvrira à
-              la sortie du serveur.
+              une proposition — pas tous les mois&nbsp;: on achète l'accès, on ne le
+              loue pas. Prix TTC, TVA comprise. Rien n'est encaissé pour
+              l'instant, l'accès ouvrira à la sortie du serveur.
             </p>
 
             <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:max-w-3xl">
@@ -299,9 +456,9 @@ export default function PageMcp() {
                 <h3 className="font-semibold text-ink-900">À quoi sert ce prix</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-600">
                   Un serveur MCP demande un backend qui tourne, contrairement à ce
-                  site qui est statique et gratuit à héberger. Les 10 € couvrent cet
-                  hébergement et le travail de conception — lire les textes, sourcer
-                  chaque paramètre, tenir les barèmes à jour.
+                  site qui est statique et gratuit à héberger. Ces quelques euros
+                  couvrent cet hébergement et le travail de conception — lire les
+                  textes, sourcer chaque paramètre, tenir les barèmes à jour.
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-ink-600">
                   Le prix n'est pas indexé sur ce que l'outil vous fait gagner, et il

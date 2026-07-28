@@ -414,8 +414,11 @@ marché autant que du moteur :
 barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
 *calcule*, il ne délivre pas de *conseil financier personnalisé*.
 
-**Modèle envisagé.** Deux accès achetés, non loués : 5 € pour deux semaines à
-activer quand on veut, ou 20 € à vie. Précédé d'une
+**Modèle envisagé.** Deux accès achetés, non loués : **7 € TTC** pour un mois
+à activer quand on veut, ou **25 € TTC** à vie. Les prix affichés sont
+calculés à l'envers depuis ce qui doit rester, puis arrondis à l'euro
+supérieur : TVA à 20 % reversée et commission Stripe déduites, il reste 5,48 € et
+20,21 € — soit les 5 € et 20 € HT visés, avec un peu de marge. Précédé d'une
 page de pré-inscription pour prévenir de la sortie (onglet « Serveur MCP »). Le
 formulaire est pour l'instant inerte — le moyen d'inscription reste à décider —
 et n'expose aucune adresse. Un backend de collecte (Formspree, Buttondown…) ou
@@ -475,7 +478,7 @@ servir — mais cela cesserait si le serveur devait appeler des modèles payants
 chaque requête. À réexaminer avant d'encaisser le premier euro, et c'est aussi
 ce qui justifie de garder l'option courte : elle amortit le risque si
 l'engagement à vie devient intenable. Le rapport entre les deux — quatre passages
-de deux semaines et l'accès à vie est déjà rentabilisé — pousse volontairement
+d'un mois et l'accès à vie est déjà rentabilisé — pousse volontairement
 vers l'achat unique, qui coûte moins cher à servir qu'une succession de
 réactivations.
 
