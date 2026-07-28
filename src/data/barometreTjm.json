@@ -55,7 +55,7 @@
       },
       {
         "nom": "Le Hibou",
-        "taux": 0.0,
+        "taux": 0,
         "margeClient": 0.15,
         "note": "Rien n'est prélevé côté freelance : vous facturez votre TJM tel quel. La commission est prise côté client, annoncée transparente et plafonnée à 15 %, négociable au volume.",
         "url": "https://www.lehibou.com/",
@@ -89,12 +89,13 @@
       },
       {
         "nom": "En direct",
-        "taux": 0.0,
+        "taux": 0,
         "note": "Aucun intermédiaire : votre TJM facturé est votre TJM perçu, et le client ne paie rien de plus.",
         "url": null,
         "hote": null
       }
-    ]
+    ],
+    "verifieLe": "2026-07-28"
   },
   "evenements": [
     {
@@ -197,84 +198,84 @@
         {
           "date": "2026-07",
           "origine": "live",
-          "national": 680,
-          "Paris": 742,
-          "Lyon": 641,
-          "Bordeaux": 631,
-          "Lille": 604,
-          "Marseille": 653
+          "national": 666,
+          "Paris": 710,
+          "Lyon": 647,
+          "Bordeaux": 629,
+          "Lille": 617,
+          "Marseille": 659
         },
         {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
             "national": [
-              668,
-              703
+              650,
+              685
             ],
             "Paris": [
-              727,
-              757
+              689,
+              717
             ],
             "Lyon": [
-              612,
-              686
+              619,
+              693
             ],
             "Bordeaux": [
-              572,
-              673
+              569,
+              670
             ],
             "Lille": [
-              563,
-              660
+              578,
+              677
             ],
             "Marseille": [
-              594,
-              699
+              600,
+              707
             ]
           },
-          "national": 686,
-          "Paris": 742,
-          "Lyon": 649,
-          "Bordeaux": 623,
-          "Lille": 611,
-          "Marseille": 647
+          "national": 668,
+          "Paris": 703,
+          "Lyon": 656,
+          "Bordeaux": 620,
+          "Lille": 627,
+          "Marseille": 654
         },
         {
           "date": "2028-07",
           "origine": "projection",
           "marge": {
             "national": [
-              643,
-              740
+              624,
+              719
             ],
             "Paris": [
-              701,
-              784
+              658,
+              735
             ],
             "Lyon": [
-              555,
-              768
+              562,
+              777
             ],
             "Bordeaux": [
-              482,
-              764
+              479,
+              759
             ],
             "Lille": [
-              488,
-              765
+              502,
+              787
             ],
             "Marseille": [
-              502,
-              795
+              508,
+              805
             ]
           },
-          "national": 691,
-          "Paris": 742,
-          "Lyon": 657,
-          "Bordeaux": 615,
-          "Lille": 619,
-          "Marseille": 640
+          "national": 671,
+          "Paris": 696,
+          "Lyon": 665,
+          "Bordeaux": 611,
+          "Lille": 637,
+          "Marseille": 648
         }
       ],
       "experience": [
@@ -282,29 +283,29 @@
           "cle": "0-2",
           "label": "0 à 2 ans",
           "bas": 120,
-          "moyen": 360,
+          "moyen": 352,
           "haut": 710
         },
         {
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 520,
+          "moyen": 513,
           "haut": 810
         },
         {
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 300,
-          "moyen": 680,
-          "haut": 1210
+          "moyen": 666,
+          "haut": 1010
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
-          "bas": 350,
-          "moyen": 735,
-          "haut": 1510
+          "bas": 400,
+          "moyen": 732,
+          "haut": 1210
         }
       ],
       "court": "Data"

@@ -13,6 +13,24 @@ import donnees from '../data/barometreTjm.json';
 export const META = donnees.meta;
 
 /**
+ * Day the published figures were last checked against their source, spelled out.
+ *
+ * A stale rate and a current one look exactly alike, so the date is shown rather
+ * than left in the data: it is the only thing that tells a reader which of the
+ * two they are looking at.
+ */
+export const VERIFIE_LE: string | null = (() => {
+  const iso = (donnees.meta as { verifieLe?: string }).verifieLe;
+  if (!iso) return null;
+  const [a, m, j] = iso.split('-').map(Number);
+  const mois = [
+    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+  ];
+  return `${j}${j === 1 ? 'ᵉʳ' : ''} ${mois[m - 1]} ${a}`;
+})();
+
+/**
  * Freelance platforms and the service fee they deduct, so a rate can be set to
  * earn the same across them. Barometer figures are the price invoiced by the
  * freelance, before any such fee.

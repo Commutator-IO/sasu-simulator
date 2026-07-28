@@ -132,6 +132,10 @@ try {
     process.exit(0);
   }
 
+  // Stamp the check date: the page shows it, and a figure whose date stops
+  // moving is the only visible sign that the capture has stopped running.
+  donnees.meta.verifieLe = maintenant.toISOString().slice(0, 10);
+
   prof.villes.push({ date: mois, origine: 'live', national, ...parVille });
   // A profession only carries a per-bracket history when its page publishes one.
   if (Array.isArray(prof.experienceHistorique)) {

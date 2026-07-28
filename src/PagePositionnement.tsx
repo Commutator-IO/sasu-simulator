@@ -22,6 +22,7 @@ import {
   moyenneVille,
   PROFESSIONS,
   REFERENCES,
+  VERIFIE_LE,
   serieVille,
   villesCommunes,
   type NiveauExperience,
@@ -320,6 +321,11 @@ export default function PagePositionnement() {
                     : 'Votre TJM en trait horizontal.'}{' '}
                   {!seuil.horsAtteinte && 'Le trait doré marque le seuil sous lequel votre objectif n’est plus atteint.'}
                 </p>
+                {VERIFIE_LE && (
+                  <p className="field-hint mt-1">
+                    Dernier relevé à la source&nbsp;: {VERIFIE_LE}.
+                  </p>
+                )}
                 <div className="mt-5">
                   <EvolutionTjm
                     series={series}
@@ -533,6 +539,15 @@ function Regles() {
         <p className="mt-2 max-w-2xl leading-relaxed text-ink-300">
           Comment ces chiffres sont réunis, et ce qu'ils valent.
         </p>
+        {/* A stale figure and a current one look alike; only the date separates
+            them, so it is stated rather than left in the data. */}
+        {VERIFIE_LE && (
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm text-ink-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+            Chiffres relevés à la source le{' '}
+            <strong className="font-medium text-white">{VERIFIE_LE}</strong>
+          </p>
+        )}
         <ul className="mt-8 max-w-3xl space-y-3">
           {META.notes.map((n) => (
             <li key={n} className="flex gap-3 text-sm leading-relaxed text-ink-300">
