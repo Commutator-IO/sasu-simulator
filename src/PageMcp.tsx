@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Entete, Pied } from './components/Cadre';
+import { ConversationMcp, type Echange } from './components/ConversationMcp';
 import * as P from './lib/parametres2026';
 
 /**
@@ -10,6 +11,48 @@ import * as P from './lib/parametres2026';
  * people will register is still to be decided — so it collects and sends
  * nothing, and no contact address is exposed.
  */
+
+/**
+ * Figures below are not mocked up: each was produced by running this site's own
+ * engine, so an illustration cannot promise an answer the tool would not give.
+ */
+const ECHANGES: Echange[] = [
+  {
+    question:
+      'Mon TJM est à 700 €. Il tient la route à Paris pour un expert data avec 10 ans de métier ?',
+    outil: 'positionnerTjm',
+    reponse: [
+      'À Paris, la tranche 8-15 ans est à **730 €** de moyenne. Vos 700 € vous placent **30 € en dessous**, au **39ᵉ centile** de la fourchette.',
+      'Le marché parisien a culminé à **754 €** début 2023 puis reflué à **732 €** en 2025 : votre tarif suit la tendance plutôt qu’il ne décroche.',
+    ],
+  },
+  {
+    question:
+      'Je dois chiffrer 12 jours via Malt et je veux garder mes 700 € par jour. J’affiche combien ?',
+    outil: 'decomposerTjm',
+    reponse: [
+      'Affichez **778 €** par jour : la commission de 10 % vous laisse bien vos 700 €.',
+      'Le client verra **836 €** par jour, sa part de service comprise — soit **10 036 €** pour la mission, dont **8 400 €** pour vous.',
+    ],
+  },
+  {
+    question: 'Quel salaire me verser si je termine l’année à 140 000 € de résultat ?',
+    outil: 'balayer',
+    reponse: [
+      'L’optimum est à **23 362 €** de brut annuel, pour **77 002 €** net en poche.',
+      'La courbe est plate autour : de **22 185 €** à **26 727 €**, l’écart de net reste sous 100 €. Choisissez dans cette plage selon vos besoins de trésorerie.',
+    ],
+  },
+  {
+    question: 'Je gagnais 60 000 € brut en CDI. Il me faut quoi pour retrouver ça ?',
+    outil: 'seuilRentabilite',
+    reponse: [
+      'Ce salaire laissait **41 138 €** net en poche. Il vous faut **78 610 €** de chiffre d’affaires pour l’égaler.',
+      'Sur 200 jours facturés, cela fait **393 €** par jour. À votre tarif de 700 €, **113 jours** suffisent.',
+      'Attention : à net égal, un CDI vaut davantage — mutuelle, tickets restaurant et droits au chômage ne sont pas comptés ici.',
+    ],
+  },
+];
 
 const OUTILS_EXPOSES = [
   {
@@ -98,24 +141,48 @@ export default function PageMcp() {
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-500 sm:text-lg">
               Un <strong>serveur MCP</strong> (Model Context Protocol) exposera le
-              moteur de ces simulateurs à Claude, ChatGPT et consorts. Vous
-              demandez « quel salaire pour 140 000 € de résultat ? », ou «&nbsp;mon
-              TJM tient-il face au marché, et que me faut-il pour égaler mon
-              ancien CDI ? », et l'assistant répond — chiffré, sourcé, sans quitter
-              votre conversation, et en enchaînant avec vos données comptables
-              réelles.
+              moteur de ces simulateurs à Claude, ChatGPT et consorts. Vous posez
+              la question dans vos mots&nbsp;; l'assistant appelle le bon calcul et
+              répond chiffré et sourcé, sans quitter votre conversation — et en
+              enchaînant, si vous le voulez, avec vos données comptables réelles.
+            </p>
+          </div>
+        </section>
+
+        {/* Ce qu'on pourra lui demander */}
+        <section className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
+          <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
+            Ce que vous pourrez lui demander
+          </h2>
+          <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
+            Vos questions telles que vous les posez. L'assistant appelle le calcul
+            qui convient et rend un chiffre, pas une approximation — les montants
+            ci-dessous sortent du moteur de ce site, ils ne sont pas maquettés.
+          </p>
+
+          <div className="mt-8">
+            <ConversationMcp echanges={ECHANGES} />
+          </div>
+
+          <div className="card mt-6 border-brand-200 bg-brand-50 p-5">
+            <p className="text-sm leading-relaxed text-ink-700">
+              <strong className="text-ink-900">Vous gardez la main.</strong> L'assistant
+              propose un chiffre et la règle qui l'a produit&nbsp;; la décision reste la
+              vôtre, et chaque paramètre est vérifiable sur ce site comme dans le texte
+              officiel qui le fonde.
             </p>
           </div>
         </section>
 
         {/* Ce que le serveur expose */}
-        <section className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
+        <section className="border-t border-ink-200/70">
+          <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
           <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
-            Ce que l'assistant pourra faire
+            Les calculs derrière ces réponses
           </h2>
           <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-            Les mêmes calculs que le site, appelables en langage naturel — avec les
-            mêmes sources officielles derrière chaque paramètre.
+            Les mêmes que le site, appelables en langage naturel — avec les mêmes
+            sources officielles derrière chaque paramètre.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {OUTILS_EXPOSES.map((o) => (
@@ -124,6 +191,7 @@ export default function PageMcp() {
                 <p className="mt-1.5 text-sm leading-relaxed text-ink-500">{o.detail}</p>
               </div>
             ))}
+          </div>
           </div>
         </section>
 
