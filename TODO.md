@@ -414,13 +414,24 @@ marché autant que du moteur :
 barème périmé à une IA est pire qu'un site périmé. Et la ligne à tenir : l'outil
 *calcule*, il ne délivre pas de *conseil financier personnalisé*.
 
-**Modèle envisagé.** Accès payant (3 mois / 10 €, 1 an / 30 €), précédé d'une
+**Modèle envisagé.** Deux accès achetés, non loués : 10 € pour six mois à
+activer quand on veut, ou 30 € à vie. Précédé d'une
 page de pré-inscription pour prévenir de la sortie (onglet « Serveur MCP »). Le
 formulaire est pour l'instant inerte — le moyen d'inscription reste à décider —
 et n'expose aucune adresse. Un backend de collecte (Formspree, Buttondown…) ou
 une fonction serverless, ainsi qu'un encaissement (Stripe Payment Link, Lemon
 Squeezy…), restent à choisir avant le lancement. Rien n'est encaissé ni stocké
 tant que ce choix n'est pas fait.
+
+**La tension à surveiller.** L'offre à vie finance des coûts récurrents avec un
+paiement unique : l'hébergement du backend et la veille sur les barèmes ne
+s'arrêtent pas après la vente. Elle ne tient que tant que les nouveaux achats
+couvrent le service rendu aux anciens, ou tant que le coût marginal d'une
+réponse reste proche de zéro. C'est le cas ici — le calcul est bon marché à
+servir — mais cela cesserait si le serveur devait appeler des modèles payants à
+chaque requête. À réexaminer avant d'encaisser le premier euro, et c'est aussi
+ce qui justifie de garder l'option à six mois : elle amortit le risque si
+l'engagement à vie devient intenable.
 
 ## Autres calculateurs envisageables
 

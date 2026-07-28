@@ -101,23 +101,39 @@ const OUTILS_EXPOSES = [
 ];
 
 /**
- * One price, and time you spend when you need it.
+ * Two ways in, neither of them a subscription.
  *
- * A freelance uses these tools in bursts — fixing a rate, closing a year,
- * pricing a proposal — not every week. A subscription would bill the quiet
- * months, so access is sold as months to activate rather than a period that
- * runs down whether you open it or not.
+ * A freelance reaches for these tools in bursts — fixing a rate, closing a
+ * year, pricing a proposal — so access is bought outright rather than rented:
+ * months to spend for someone testing the water, or paid once and kept for
+ * those who settle in. Nothing renews, so there is nothing to cancel.
  */
-const OFFRE = {
-  prix: '10 €',
-  duree: '6 mois d’accès',
-  points: [
-    'Les six mois s’activent quand vous en avez besoin, dans les deux ans',
-    'Rechargeable à tout moment : les mois s’ajoutent, ils ne se remplacent pas',
-    'Aucune reconduction automatique, rien à résilier',
-    'Barèmes tenus à jour pendant toute la durée active',
-  ],
-};
+const OFFRES = [
+  {
+    cle: '6 mois',
+    prix: '10 €',
+    duree: '6 mois d’accès',
+    accroche: 'Pour voir ce que ça donne sur un exercice',
+    points: [
+      'Les six mois s’activent quand vous en avez besoin, dans les deux ans',
+      'Rechargeable : les mois s’ajoutent, ils ne se remplacent pas',
+      'Barèmes à jour pendant toute la durée active',
+    ],
+    vedette: false,
+  },
+  {
+    cle: 'à vie',
+    prix: '30 €',
+    duree: 'une fois, accès à vie',
+    accroche: 'Pour s’y appuyer sans y repenser',
+    points: [
+      'Payé une fois, gardé pour de bon',
+      'Rentable dès la deuxième année',
+      'Les barèmes restent à jour aussi longtemps que le service tourne',
+    ],
+    vedette: true,
+  },
+];
 
 export default function PageMcp() {
   const [email, setEmail] = useState('');
@@ -199,43 +215,64 @@ export default function PageMcp() {
         <section className="border-y border-ink-200/70 bg-ink-50">
           <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
             <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
-              Tarif prévu
+              Tarifs prévus
             </h2>
             <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-              Un seul prix, et du temps que vous dépensez quand vous en avez
-              besoin. Ces outils servent par à-coups — fixer un tarif, clôturer un
-              exercice, chiffrer une proposition — pas toutes les semaines&nbsp;: un
-              abonnement vous ferait payer les mois creux. Rien n'est encaissé pour
-              l'instant, l'accès ouvrira à la sortie du serveur.
+              Deux façons d'entrer, aucune n'étant un abonnement. Ces outils
+              servent par à-coups — fixer un tarif, clôturer un exercice, chiffrer
+              une proposition — pas toutes les semaines&nbsp;: on achète l'accès, on
+              ne le loue pas. Rien n'est encaissé pour l'instant, l'accès ouvrira à
+              la sortie du serveur.
             </p>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:max-w-4xl">
-              <div className="card flex flex-col p-6 sm:p-8">
-                <p className="flex items-baseline gap-2">
-                  <span className="tabular text-4xl font-semibold tracking-tight text-ink-900">
-                    {OFFRE.prix}
-                  </span>
-                  <span className="text-sm text-ink-400">/ {OFFRE.duree}</span>
-                </p>
-                <ul className="mt-6 space-y-2.5 text-sm text-ink-600">
-                  {OFFRE.points.map((p) => (
-                    <li key={p} className="flex gap-2">
-                      <span className="shrink-0 text-brand-500">✓</span>
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={() =>
-                    document.getElementById('alerte')?.scrollIntoView({ behavior: 'smooth' })
-                  }
-                  className="mt-8 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:max-w-3xl">
+              {OFFRES.map((o) => (
+                <div
+                  key={o.cle}
+                  className={[
+                    'card relative flex flex-col p-6 sm:p-8',
+                    o.vedette ? 'ring-2 ring-brand-500' : '',
+                  ].join(' ')}
                 >
-                  Être prévenu de la sortie
-                </button>
-              </div>
+                  {o.vedette && (
+                    <span className="absolute -top-3 left-6 rounded-full bg-brand-600 px-3 py-1 text-xs font-medium text-white">
+                      Le plus avantageux
+                    </span>
+                  )}
+                  <p className="text-sm text-ink-500">{o.accroche}</p>
+                  <p className="mt-3 flex items-baseline gap-2">
+                    <span className="tabular text-4xl font-semibold tracking-tight text-ink-900">
+                      {o.prix}
+                    </span>
+                    <span className="text-sm text-ink-400">/ {o.duree}</span>
+                  </p>
+                  <ul className="mt-6 space-y-2.5 text-sm text-ink-600">
+                    {o.points.map((pt) => (
+                      <li key={pt} className="flex gap-2">
+                        <span className="shrink-0 text-brand-500">✓</span>
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      document.getElementById('alerte')?.scrollIntoView({ behavior: 'smooth' })
+                    }
+                    className={[
+                      'mt-8 rounded-xl px-4 py-3 text-sm font-semibold transition',
+                      o.vedette
+                        ? 'bg-brand-600 text-white hover:bg-brand-700'
+                        : 'border border-ink-200 text-ink-800 hover:border-brand-400 hover:text-brand-700',
+                    ].join(' ')}
+                  >
+                    Être prévenu de la sortie
+                  </button>
+                </div>
+              ))}
+            </div>
 
+            <div className="mt-6 lg:max-w-3xl">
               <div className="rounded-2xl border border-ink-200 bg-white/60 p-6 sm:p-8">
                 <h3 className="font-semibold text-ink-900">À quoi sert ce prix</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-600">
@@ -245,9 +282,10 @@ export default function PageMcp() {
                   chaque paramètre, tenir les barèmes à jour.
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-ink-600">
-                  Le prix n'est pas indexé sur ce que l'outil vous fait gagner. Il
-                  reste à une dizaine d'euros, et les simulateurs du site restent
-                  gratuits et sans compte.
+                  Le prix n'est pas indexé sur ce que l'outil vous fait gagner, et il
+                  n'est pas récurrent&nbsp;: un outil qu'on ouvre trois fois dans
+                  l'année ne justifie pas un prélèvement tous les mois. Les
+                  simulateurs du site, eux, restent gratuits et sans compte.
                 </p>
               </div>
             </div>
