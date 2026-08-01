@@ -105,7 +105,8 @@
       "themes": [
         "tjm",
         "ca"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2022-07",
@@ -114,7 +115,8 @@
       "themes": [
         "tjm",
         "ca"
-      ]
+      ],
+      "effet": "baisse"
     },
     {
       "date": "2022-11",
@@ -130,7 +132,8 @@
       "explication": "Des dizaines de milliers de profils tech libérés par les grands groupes grossissent l'offre freelance. C'est le moment où les courbes plafonnent, puis refluent pour plusieurs métiers.",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "baisse"
     },
     {
       "date": "2024-05",
@@ -138,7 +141,8 @@
       "explication": "Les projets IA bondissent de 170 % en France en 2024 et les ingénieurs IA facturent en moyenne 22 % de plus que les autres profils tech & data. Le marché devient à deux vitesses : les spécialités rares tiennent leurs tarifs, les profils généralistes subissent la pression.",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2026-08",
@@ -146,7 +150,8 @@
       "explication": "Seules les obligations de transparence entrent en application : signaler à l'utilisateur qu'il a affaire à une IA. Le Digital Omnibus, en vigueur depuis le 27 juillet 2026, a repoussé les obligations « haut risque » à décembre 2027 pour les systèmes autonomes et à août 2028 pour l'IA embarquée dans des produits réglementés. La demande de gouvernance, d'audit et de conformité qu'elles devaient créer est décalée d'autant.",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "baisse"
     }
   ],
   "professions": [
@@ -1560,7 +1565,8 @@
       "themes": [
         "ca",
         "obligations"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2026-09-11",
@@ -1571,7 +1577,8 @@
       "hote": "europa.eu",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2026-10",
@@ -1580,7 +1587,8 @@
       "explication": "Le texte ferait passer le nombre d'entités soumises à des obligations de cybersécurité d'environ 500 à 15 000. Adopté au Sénat en mars 2025, il a été reporté plusieurs fois et son examen est attendu à la rentrée. Tant qu'il n'est pas voté, il retient la demande cyber plus qu'il ne la crée : les budgets attendent le texte.",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2026-10",
@@ -1590,7 +1598,8 @@
       "themes": [
         "ca",
         "impots"
-      ]
+      ],
+      "effet": "baisse"
     },
     {
       "date": "2027-04-18",
@@ -1602,7 +1611,8 @@
       "themes": [
         "ca",
         "tjm"
-      ]
+      ],
+      "effet": "baisse"
     },
     {
       "date": "2027-09-01",
@@ -1614,7 +1624,8 @@
       "themes": [
         "ca",
         "obligations"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2027-12-02",
@@ -1625,7 +1636,8 @@
       "hote": "freshfields.com",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "hausse"
     },
     {
       "date": "2027-12-11",
@@ -1636,7 +1648,8 @@
       "hote": "europa.eu",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "hausse"
     }
   ]
 }

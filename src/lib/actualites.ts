@@ -15,6 +15,9 @@ export type Categorie = 'fiscal' | 'reglementaire' | 'marche';
 /** The site's own subjects, so a reader can narrow the feed to their question. */
 export type Theme = 'tjm' | 'ca' | 'salaire' | 'impots' | 'obligations';
 
+/** Direction a market item points the day rate in. */
+export type Effet = 'hausse' | 'baisse';
+
 export const LIBELLE_THEME: Record<Theme, string> = {
   tjm: 'TJM',
   ca: "Chiffre d'affaires",
@@ -38,6 +41,13 @@ export type Actualite = {
   hote?: string;
   /** Which of the site's subjects the item bears on. */
   themes: Theme[];
+  /**
+   * Which way it pushes day rates, when that is clear. Left unset where the
+   * effect genuinely cuts both ways — the release of ChatGPT lifted some
+   * skills and commoditised others — since forcing an arrow onto that would
+   * assert something the evidence does not carry.
+   */
+  effet?: Effet;
   /** True for a date that has not passed: the feed marks it rather than hides it. */
   aVenir?: boolean;
 };
@@ -79,6 +89,12 @@ export type Rendezvous = {
   /** Path of the tool that computes it, when there is one. */
   outil?: string;
   /**
+   * Names the reader's choice this entry depends on. VAT and property tax are
+   * the only duties whose dates follow the company rather than the law alone;
+   * `calendrierOptions` decides what to do with each marker.
+   */
+  option?: string;
+  /**
    * Set on the duties that fall every month rather than once a year. They have
    * no place on the annual line — twelve DSN would bury the four instalments —
    * so only the next one is resolved and shown.
@@ -87,6 +103,8 @@ export type Rendezvous = {
     jourDuMois: number;
     /** Closing day when the deadline is a window rather than a day. */
     jourFin?: number;
+    /** Months it falls in, 1-indexed. Absent means every month. */
+    mois?: number[];
     /** Short form, for the cramped timeline row. */
     court: string;
     /** Shown alongside when the duty only applies under some regimes. */
@@ -115,40 +133,54 @@ export const CALENDRIER = ((brut as { calendrier?: Rendezvous[] }).calendrier ??
 export function jalonsAutourDeCeJour(
   aujourdhui = new Date(),
   combien = 2,
-): { passees: Rendezvous[]; aVenir: Rendezvous[] } {
-  const fixes = CALENDRIER.filter((r) => r.jour).sort((a, b) =>
-    a.jour! < b.jour! ? -1 : 1,
-  );
+  calendrier: Rendezvous[] = CALENDRIER,
+): { passees: Rendezvous[][]; aVenir: Rendezvous[][] } {
+  // Grouped by day: two duties falling on the same 15 June are one moment in
+  // the year, and two nodes carrying the same date read as a mistake.
+  const parJour = new Map<string, Rendezvous[]>();
+  for (const r of calendrier.filter((x) => x.jour)) {
+    parJour.set(r.jour!, [...(parJour.get(r.jour!) ?? []), r]);
+  }
+  const fixes = [...parJour.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([jour, rdvs]) => ({ jour, rdvs }));
   if (!fixes.length) return { passees: [], aVenir: [] };
 
   const jour = `${String(aujourdhui.getMonth() + 1).padStart(2, '0')}-${String(
     aujourdhui.getDate(),
   ).padStart(2, '0')}`;
-  const suivant = fixes.findIndex((r) => r.jour! > jour);
+  const suivant = fixes.findIndex((f) => f.jour > jour);
   // Everything behind us if none is ahead — December's is then the latest.
   const coupe = suivant === -1 ? fixes.length : suivant;
 
   // Modulo, so the two before January's first are the tail of the year before.
   const a = (i: number) => fixes[((i % fixes.length) + fixes.length) % fixes.length];
   return {
-    passees: Array.from({ length: combien }, (_, k) => a(coupe - combien + k)),
-    aVenir: Array.from({ length: combien }, (_, k) => a(coupe + k)),
+    passees: Array.from({ length: combien }, (_, k) => a(coupe - combien + k).rdvs),
+    aVenir: Array.from({ length: combien }, (_, k) => a(coupe + k).rdvs),
   };
 }
 
 /** The next fall of each monthly duty, written out. Only the next one. */
-export function prochainesRecurrences(aujourdhui = new Date()): {
-  rdv: Rendezvous;
-  quand: string;
-}[] {
-  return CALENDRIER.filter((r) => r.recurrence).map((r) => {
-    const { jourDuMois, jourFin } = r.recurrence!;
-    // Past this month's window, the next one is next month's.
-    const depasse = aujourdhui.getDate() > (jourFin ?? jourDuMois);
-    const mois = (aujourdhui.getMonth() + (depasse ? 1 : 0)) % 12;
-    const jours = jourFin ? `${jourDuMois}–${jourFin}` : `${jourDuMois}`;
-    return { rdv: r, quand: `${jours} ${MOIS[mois]}` };
-  });
+export function prochainesRecurrences(
+  aujourdhui = new Date(),
+  calendrier: Rendezvous[] = CALENDRIER,
+): { rdv: Rendezvous; quand: string }[] {
+  return calendrier
+    .filter((r) => r.recurrence)
+    .map((r) => {
+      const { jourDuMois, jourFin, mois: moisAdmis } = r.recurrence!;
+      // Past this month's window, the next one is next month's — then walk
+      // forward to the next month the duty actually falls in, for a quarterly
+      // filer whose next date may be two months out.
+      const depasse = aujourdhui.getDate() > (jourFin ?? jourDuMois);
+      let m = aujourdhui.getMonth() + (depasse ? 1 : 0);
+      if (moisAdmis?.length) {
+        for (let k = 0; k < 12 && !moisAdmis.includes((m % 12) + 1); k++) m++;
+      }
+      const jours = jourFin ? `${jourDuMois}–${jourFin}` : `${jourDuMois}`;
+      return { rdv: r, quand: `${jours} ${MOIS[m % 12]}` };
+    });
 }
 
 export const MIS_A_JOUR_LE: string | null = (() => {
@@ -198,6 +230,7 @@ export const ACTUALITES: Actualite[] = [
       titre: e.label,
       detail: e.explication ?? '',
       themes: (e.themes ?? []) as Theme[],
+      effet: e.effet as Effet | undefined,
     }),
   ),
   ...ECHEANCES.map(
@@ -210,6 +243,7 @@ export const ACTUALITES: Actualite[] = [
       url: e.url,
       hote: e.hote,
       themes: (e.themes ?? []) as Theme[],
+      effet: e.effet as Effet | undefined,
     }),
   ),
 ]

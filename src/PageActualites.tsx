@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Entete, Pied } from './components/Cadre';
+import { Segments } from './components/Champs';
 import { TimelineAnnee } from './components/TimelineAnnee';
 import { VERIFIE_LE } from './lib/barometreTjm';
 import {
+  calendrierPour,
+  decoderCalendrier,
+  encoderCalendrier,
+  DEFAUTS_CALENDRIER,
+  REGIMES_TVA,
+  type OptionsCalendrier,
+} from './lib/calendrierOptions';
+import { CLE_CALENDRIER, litStockage, sauvegarderRecherche } from './lib/persistance';
+import {
   ACTUALITES,
-  CALENDRIER,
   jalonsAutourDeCeJour,
   prochainesRecurrences,
   LIBELLE_CATEGORIE,
@@ -43,14 +52,24 @@ export default function PageActualites() {
   const aVenir = retenues.filter((a) => a.aVenir).reverse();
   const passees = retenues.filter((a) => !a.aVenir);
 
+  // VAT and property tax follow the company, not the law alone, so the reader
+  // states their case once and it is remembered.
+  const [options, setOptions] = useState<OptionsCalendrier>(() =>
+    decoderCalendrier(litStockage(CLE_CALENDRIER), DEFAUTS_CALENDRIER),
+  );
+  useEffect(() => {
+    sauvegarderRecherche(CLE_CALENDRIER, encoderCalendrier(options));
+  }, [options]);
+
+  const calendrier = calendrierPour(options);
   const rendezvous = choisis.length
-    ? CALENDRIER.filter((r) => r.themes.some((t) => choisis.includes(t)))
-    : CALENDRIER;
+    ? calendrier.filter((r) => r.themes.some((t) => choisis.includes(t)))
+    : calendrier;
 
   // Computed once per render from the runtime clock: the page is static, so
   // this is the only thing that keeps it speaking about today.
-  const jalons = jalonsAutourDeCeJour();
-  const recurrentes = prochainesRecurrences();
+  const jalons = jalonsAutourDeCeJour(new Date(), 2, calendrier);
+  const recurrentes = prochainesRecurrences(new Date(), calendrier);
 
   const basculer = (t: Theme) =>
     setChoisis((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
@@ -84,8 +103,9 @@ export default function PageActualites() {
             <div className="mt-8 rounded-2xl border border-ink-200 bg-white p-5 sm:p-6">
               <p className="field-label">Où en est votre exercice</p>
               <p className="mt-1 mb-5 text-sm text-ink-500">
-                Les deux échéances qui viennent de passer, et les deux
-                suivantes.
+                Une SASU paie son impôt avant de savoir ce qu'elle doit&nbsp;: les
+                acomptes courent toute l'année et la régularisation ne vient
+                qu'après la clôture.
               </p>
               <TimelineAnnee
                 passees={jalons.passees}
@@ -145,8 +165,7 @@ export default function PageActualites() {
                 À venir
               </h2>
               <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-                Des dates déjà fixées, dont l'effet reste à constater. La plus
-                proche en premier.
+                Des dates déjà fixées, dont l'effet reste à constater.
               </p>
               <Fil entrees={aVenir} />
             </div>
@@ -186,7 +205,30 @@ export default function PageActualites() {
                 est clos au 31 décembre. Elles ne sont pas dans le fil&nbsp;: une
                 date qui revient tous les ans n'est jamais une nouvelle.
               </p>
-              <ul className="m-0 mt-6 list-none divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200 bg-white p-0">
+              <div className="mt-6 grid gap-4 rounded-2xl border border-ink-200 bg-white p-5 sm:grid-cols-3 sm:p-6">
+                <Segments
+                  label="Votre TVA"
+                  valeur={options.tva}
+                  options={REGIMES_TVA}
+                  onChange={(tva) => setOptions((o) => ({ ...o, tva }))}
+                />
+                <Bascule
+                  label="Année de création"
+                  actif={options.premiereAnnee}
+                  hint="La CFE n'est pas due, mais la 1447-C reste à déposer."
+                  onChange={(premiereAnnee) =>
+                    setOptions((o) => ({ ...o, premiereAnnee }))
+                  }
+                />
+                <Bascule
+                  label="CFE ≥ 3 000 € l'an dernier"
+                  actif={options.acompteCfe}
+                  hint="Un acompte de 50 % est alors appelé au 15 juin."
+                  onChange={(acompteCfe) => setOptions((o) => ({ ...o, acompteCfe }))}
+                />
+              </div>
+
+              <ul className="m-0 mt-4 list-none divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200 bg-white p-0">
                 {rendezvous.map((r) => (
                   <li
                     key={r.titre}
@@ -259,6 +301,32 @@ export default function PageActualites() {
   );
 }
 
+/** A yes/no in the shape of the Segments control, so the row reads as one. */
+function Bascule({
+  label,
+  actif,
+  hint,
+  onChange,
+}: {
+  label: string;
+  actif: boolean;
+  hint?: string;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <Segments
+      label={label}
+      valeur={actif}
+      options={[
+        { valeur: false, label: 'Non' },
+        { valeur: true, label: 'Oui' },
+      ]}
+      onChange={onChange}
+      hint={hint}
+    />
+  );
+}
+
 /** The feed itself: a rule down the left, one dated entry per row. */
 function Fil({ entrees }: { entrees: Actualite[] }) {
   return (
@@ -286,6 +354,29 @@ function Fil({ entrees }: { entrees: Actualite[] }) {
                   className="rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700"
                 >
                   {LIBELLE_THEME[t]}
+                  {/* The arrow rides the TJM chip rather than standing alone:
+                      it is a market signal, and only that theme carries one. */}
+                  {t === 'tjm' && a.effet && (
+                    <span
+                      title={
+                        a.effet === 'hausse'
+                          ? 'Plutôt porteur pour les tarifs'
+                          : 'Plutôt défavorable aux tarifs'
+                      }
+                      className={
+                        a.effet === 'hausse'
+                          ? 'ml-1 text-brand-700'
+                          : 'ml-1 text-gold-700'
+                      }
+                    >
+                      {a.effet === 'hausse' ? '↑' : '↓'}
+                      <span className="sr-only">
+                        {a.effet === 'hausse'
+                          ? ' — plutôt porteur pour les tarifs'
+                          : ' — plutôt défavorable aux tarifs'}
+                      </span>
+                    </span>
+                  )}
                 </span>
               ))}
             </div>

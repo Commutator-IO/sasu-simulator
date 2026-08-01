@@ -14,7 +14,8 @@
       "hote": "freshfields.com",
       "themes": [
         "tjm"
-      ]
+      ],
+      "effet": "baisse"
     },
     {
       "date": "2026-02-19",
@@ -122,6 +123,18 @@
       "detail": "Le seul acompte qui régularise : il rattrape le calcul du 15 mars."
     },
     {
+      "quand": "15 juin",
+      "jour": "06-15",
+      "titre": "Acompte de cotisation foncière des entreprises",
+      "detail": "50 % de la CFE mise en recouvrement l'an dernier. Appelé seulement si elle atteignait 3 000 €, et pas si vous êtes mensualisé.",
+      "themes": [
+        "impots"
+      ],
+      "option": "cfeAcompte",
+      "url": "https://www.impots.gouv.fr/professionnel/cet-cfe-et-cvae",
+      "hote": "impots.gouv.fr"
+    },
+    {
       "quand": "Délai fixé par les statuts",
       "titre": "Approbation des comptes",
       "themes": [
@@ -167,7 +180,8 @@
         "impots"
       ],
       "url": "https://www.impots.gouv.fr/professionnel/cet-cfe-et-cvae",
-      "hote": "impots.gouv.fr"
+      "hote": "impots.gouv.fr",
+      "option": "cfeSolde"
     },
     {
       "quand": "31 décembre de l'année de création",
@@ -178,7 +192,8 @@
         "obligations"
       ],
       "url": "https://www.impots.gouv.fr/professionnel/questions/devrai-je-acquitter-une-cfe-lannee-de-la-creation-de-mon-entreprise",
-      "hote": "impots.gouv.fr"
+      "hote": "impots.gouv.fr",
+      "option": "cfeCreation"
     },
     {
       "quand": "Le 15 du mois suivant le versement",
@@ -202,7 +217,8 @@
         "jourFin": 24,
         "court": "TVA",
         "condition": "si vous déclarez au mois"
-      }
+      },
+      "option": "tva"
     }
   ]
 }

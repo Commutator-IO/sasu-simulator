@@ -17,17 +17,18 @@ export function TimelineAnnee({
   aVenir,
   recurrentes = [],
 }: {
-  passees: Rendezvous[];
-  aVenir: Rendezvous[];
+  /** One entry per date, since several duties can share a day. */
+  passees: Rendezvous[][];
+  aVenir: Rendezvous[][];
   recurrentes?: { rdv: Rendezvous; quand: string }[];
 }) {
   if (!passees.length && !aVenir.length) return null;
 
   const cases = [
-    ...passees.map((r) => ({ r, etat: 'passe' as const })),
-    { r: null, etat: 'ici' as const },
-    ...aVenir.map((r) => ({ r, etat: 'avenir' as const })),
-  ];
+    ...passees.map((g) => ({ g, etat: 'passe' as const })),
+    { g: null, etat: 'ici' as const },
+    ...aVenir.map((g) => ({ g, etat: 'avenir' as const })),
+  ].filter((c) => c.etat === 'ici' || c.g!.length > 0);
 
   return (
     <div className="relative">
@@ -37,9 +38,9 @@ export function TimelineAnnee({
         className="absolute top-[0.3125rem] right-0 left-0 h-px bg-ink-200"
       />
       <ol className="relative m-0 flex list-none gap-2 overflow-x-auto p-0 pb-1 sm:gap-3">
-        {cases.map(({ r, etat }, i) => (
+        {cases.map(({ g, etat }, i) => (
           <li
-            key={r ? r.titre : `ici-${i}`}
+            key={g ? g[0].titre : `ici-${i}`}
             className="flex min-w-[7.5rem] flex-1 flex-col items-center text-center"
           >
             <span
@@ -68,7 +69,7 @@ export function TimelineAnnee({
                     etat === 'passe' ? 'text-ink-400' : 'text-ink-900',
                   ].join(' ')}
                 >
-                  {r!.quand}
+                  {g![0].quand}
                 </span>
                 <span
                   className={[
@@ -76,7 +77,7 @@ export function TimelineAnnee({
                     etat === 'passe' ? 'text-ink-400' : 'text-ink-600',
                   ].join(' ')}
                 >
-                  {r!.titre}
+                  {g!.map((r) => r.titre).join(' · ')}
                 </span>
               </>
             )}

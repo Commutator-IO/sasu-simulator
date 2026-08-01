@@ -87,6 +87,8 @@ export type Evenement = {
   date: string;
   /** Which of the site's subjects it bears on. */
   themes?: string[];
+  /** Which way it pushed day rates. Absent when the effect cut both ways. */
+  effet?: string;
   label: string;
   /** Why this milestone moved day rates — shown in the economic references. */
   explication?: string;
@@ -107,6 +109,8 @@ export type Echeance = {
   quand: string;
   /** Which of the site's subjects it bears on. */
   themes?: string[];
+  /** Which way it should push day rates. Absent when it cuts both ways. */
+  effet?: string;
   titre: string;
   explication: string;
   url?: string;
