@@ -22,6 +22,7 @@ export default defineConfig({
         synthese: resolve(import.meta.dirname, 'synthese/index.html'),
         mcp: resolve(import.meta.dirname, 'mcp/index.html'),
         tjm: resolve(import.meta.dirname, 'tjm/index.html'),
+        actualites: resolve(import.meta.dirname, 'actualites/index.html'),
       },
     },
   },

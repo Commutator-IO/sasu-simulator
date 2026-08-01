@@ -101,32 +101,52 @@
     {
       "date": "2020-03",
       "label": "Pandémie de COVID-19",
-      "explication": "Arrêt brutal des projets au printemps, puis bascule massive vers le numérique. Après quelques mois de gel, la demande tech repart plus fort qu'avant et tire les tarifs vers le haut."
+      "explication": "Arrêt brutal des projets au printemps, puis bascule massive vers le numérique. Après quelques mois de gel, la demande tech repart plus fort qu'avant et tire les tarifs vers le haut.",
+      "themes": [
+        "tjm",
+        "ca"
+      ]
     },
     {
       "date": "2022-07",
       "label": "Hausse des taux BCE",
-      "explication": "La fin de l'argent bon marché resserre les budgets d'innovation. Les entreprises arbitrent leurs projets et la pression sur les tarifs commence, d'abord sur les profils les moins rares."
+      "explication": "La fin de l'argent bon marché resserre les budgets d'innovation. Les entreprises arbitrent leurs projets et la pression sur les tarifs commence, d'abord sur les profils les moins rares.",
+      "themes": [
+        "tjm",
+        "ca"
+      ]
     },
     {
       "date": "2022-11",
       "label": "Sortie de ChatGPT",
-      "explication": "Bascule de l'attention et des budgets vers l'IA générative. Certaines compétences deviennent très recherchées, d'autres se banalisent : le marché commence à se scinder en deux."
+      "explication": "Bascule de l'attention et des budgets vers l'IA générative. Certaines compétences deviennent très recherchées, d'autres se banalisent : le marché commence à se scinder en deux.",
+      "themes": [
+        "tjm"
+      ]
     },
     {
       "date": "2023-01",
       "label": "Licenciements tech massifs",
-      "explication": "Des dizaines de milliers de profils tech libérés par les grands groupes grossissent l'offre freelance. C'est le moment où les courbes plafonnent, puis refluent pour plusieurs métiers."
+      "explication": "Des dizaines de milliers de profils tech libérés par les grands groupes grossissent l'offre freelance. C'est le moment où les courbes plafonnent, puis refluent pour plusieurs métiers.",
+      "themes": [
+        "tjm"
+      ]
     },
     {
       "date": "2024-05",
       "label": "IA générative en entreprise",
-      "explication": "Les projets IA bondissent de 170 % en France en 2024 et les ingénieurs IA facturent en moyenne 22 % de plus que les autres profils tech & data. Le marché devient à deux vitesses : les spécialités rares tiennent leurs tarifs, les profils généralistes subissent la pression."
+      "explication": "Les projets IA bondissent de 170 % en France en 2024 et les ingénieurs IA facturent en moyenne 22 % de plus que les autres profils tech & data. Le marché devient à deux vitesses : les spécialités rares tiennent leurs tarifs, les profils généralistes subissent la pression.",
+      "themes": [
+        "tjm"
+      ]
     },
     {
       "date": "2026-08",
       "label": "AI Act : transparence",
-      "explication": "Seules les obligations de transparence entrent en application : signaler à l'utilisateur qu'il a affaire à une IA. Le Digital Omnibus, en vigueur depuis le 27 juillet 2026, a repoussé les obligations « haut risque » à décembre 2027 pour les systèmes autonomes et à août 2028 pour l'IA embarquée dans des produits réglementés. La demande de gouvernance, d'audit et de conformité qu'elles devaient créer est décalée d'autant."
+      "explication": "Seules les obligations de transparence entrent en application : signaler à l'utilisateur qu'il a affaire à une IA. Le Digital Omnibus, en vigueur depuis le 27 juillet 2026, a repoussé les obligations « haut risque » à décembre 2027 pour les systèmes autonomes et à août 2028 pour l'IA embarquée dans des produits réglementés. La demande de gouvernance, d'audit et de conformité qu'elles devaient créer est décalée d'autant.",
+      "themes": [
+        "tjm"
+      ]
     }
   ],
   "professions": [
@@ -1527,6 +1547,96 @@
         }
       ],
       "court": "Jeux vidéo"
+    }
+  ],
+  "echeances": [
+    {
+      "date": "2026-09-01",
+      "quand": "1ᵉʳ septembre 2026",
+      "titre": "Facturation électronique : réception obligatoire",
+      "explication": "Toute entreprise assujettie à la TVA doit pouvoir recevoir une facture électronique via une plateforme agréée ; les grandes entreprises et les ETI doivent aussi émettre les leurs. Côté demande, c'est une vague de chantiers d'intégration chez les donneurs d'ordre — ERP, comptabilité, flux de données — qui occupe les profils tech et data.",
+      "url": "https://www.impots.gouv.fr/professionnel/je-decouvre-la-facturation-electronique",
+      "hote": "impots.gouv.fr",
+      "themes": [
+        "ca",
+        "obligations"
+      ]
+    },
+    {
+      "date": "2026-09-11",
+      "quand": "11 septembre 2026",
+      "titre": "Cyber Resilience Act : signalement des vulnérabilités",
+      "explication": "Première échéance contraignante du règlement européen : les fabricants de produits numériques doivent signaler les vulnérabilités activement exploitées. Elle remet la sécurité produit à l'ordre du jour avant les obligations principales de fin 2027.",
+      "url": "https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act",
+      "hote": "europa.eu",
+      "themes": [
+        "tjm"
+      ]
+    },
+    {
+      "date": "2026-10",
+      "quand": "Automne 2026",
+      "titre": "Loi Résilience : la transposition de NIS2",
+      "explication": "Le texte ferait passer le nombre d'entités soumises à des obligations de cybersécurité d'environ 500 à 15 000. Adopté au Sénat en mars 2025, il a été reporté plusieurs fois et son examen est attendu à la rentrée. Tant qu'il n'est pas voté, il retient la demande cyber plus qu'il ne la crée : les budgets attendent le texte.",
+      "themes": [
+        "tjm"
+      ]
+    },
+    {
+      "date": "2026-10",
+      "quand": "Octobre 2026",
+      "titre": "Projet de loi de finances pour 2027",
+      "explication": "Présenté au Parlement début octobre, avec 30 à 50 milliards d'euros d'économies visées et un débat qui tombe en pleine campagne présidentielle. C'est le moment où les enveloppes de prestation des grands comptes et du secteur public se ferment ou se rouvrent.",
+      "themes": [
+        "ca",
+        "impots"
+      ]
+    },
+    {
+      "date": "2027-04-18",
+      "quand": "18 avril et 2 mai 2027",
+      "titre": "Élection présidentielle",
+      "explication": "Dates arrêtées en Conseil des ministres le 1ᵉʳ juillet 2026. Une échéance électorale gèle classiquement les décisions d'investissement au premier semestre : les missions longues se signent après le scrutin, rarement avant.",
+      "url": "https://www.touteleurope.eu/vie-politique-des-etats-membres/election-presidentielle-francaise-2027-les-scrutins-se-tiendront-les-dimanches-18-avril-et-2-mai/",
+      "hote": "touteleurope.eu",
+      "themes": [
+        "ca",
+        "tjm"
+      ]
+    },
+    {
+      "date": "2027-09-01",
+      "quand": "1ᵉʳ septembre 2027",
+      "titre": "Facturation électronique : émission par les PME et TPE",
+      "explication": "Deuxième palier : toutes les entreprises, indépendants compris, doivent émettre leurs factures via une plateforme agréée. Celle-ci vous concerne directement, pas seulement vos clients.",
+      "url": "https://www.impots.gouv.fr/professionnel/je-decouvre-la-facturation-electronique",
+      "hote": "impots.gouv.fr",
+      "themes": [
+        "ca",
+        "obligations"
+      ]
+    },
+    {
+      "date": "2027-12-02",
+      "quand": "2 décembre 2027",
+      "titre": "AI Act : obligations des systèmes à haut risque",
+      "explication": "Date repoussée par le Digital Omnibus, en vigueur depuis le 27 juillet 2026 : les obligations « haut risque » des systèmes autonomes passent d'août 2026 à décembre 2027, et à août 2028 pour l'IA embarquée dans des produits réglementés. La demande de gouvernance, d'audit et de conformité qu'elles devaient créer est décalée d'autant.",
+      "url": "https://www.freshfields.com/en/our-thinking/blogs/technology-quotient/eu-ai-act-unpacked-34-the-final-digital-omnibus-on-ai-key-amendments-to-the-a-102nber",
+      "hote": "freshfields.com",
+      "themes": [
+        "tjm"
+      ]
+    },
+    {
+      "date": "2027-12-11",
+      "quand": "11 décembre 2027",
+      "titre": "Cyber Resilience Act : obligations principales",
+      "explication": "Exigences essentielles de cybersécurité, gestion des vulnérabilités sur la durée de vie du produit et évaluation de conformité pour tout produit numérique mis sur le marché européen. Les sanctions vont jusqu'à 15 millions d'euros ou 2,5 % du chiffre d'affaires mondial.",
+      "url": "https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act",
+      "hote": "europa.eu",
+      "themes": [
+        "tjm"
+      ]
     }
   ]
 }

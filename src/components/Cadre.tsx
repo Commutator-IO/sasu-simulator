@@ -18,6 +18,7 @@ const OUTILS: { chemin: string; libelle: string; aVenir?: boolean }[] = [
   // Sits after the synthesis: it informs the day rate rather than continuing
   // the turnover-to-dividends sequence.
   { chemin: '/tjm/', libelle: 'TJM du marché' },
+  { chemin: '/actualites/', libelle: 'Actualités' },
   { chemin: '/mcp/', libelle: 'Serveur MCP', aVenir: true },
 ];
 

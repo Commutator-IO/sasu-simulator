@@ -1,0 +1,170 @@
+{
+  "notes": [
+    "Ce fichier ne contient que ce qui n'a pas déjà une place datée ailleurs : les textes fiscaux et réglementaires derrière les paramètres du simulateur. Les jalons de marché et les échéances à venir vivent dans barometreTjm.json et sont repris tels quels par le fil, pour qu'une correction faite là-bas se propage ici.",
+    "Chaque entrée porte la date du texte, pas celle de sa lecture. La date de vérification des chiffres est, elle, dans barometreTjm.json."
+  ],
+  "entrees": [
+    {
+      "date": "2026-07-27",
+      "quand": "27 juillet 2026",
+      "categorie": "reglementaire",
+      "titre": "Le Digital Omnibus sur l'IA entre en vigueur",
+      "detail": "Le règlement de simplification repousse les obligations « haut risque » de l'AI Act : décembre 2027 pour les systèmes autonomes de l'annexe III, août 2028 pour l'IA embarquée dans des produits déjà réglementés. Le motif affiché est le retard pris sur les normes harmonisées et la désignation des autorités nationales. Conséquence pour le marché : la vague de missions gouvernance et conformité que la date d'août 2026 devait déclencher est décalée d'un an et demi.",
+      "url": "https://www.freshfields.com/en/our-thinking/blogs/technology-quotient/eu-ai-act-unpacked-34-the-final-digital-omnibus-on-ai-key-amendments-to-the-a-102nber",
+      "hote": "freshfields.com",
+      "themes": [
+        "tjm"
+      ]
+    },
+    {
+      "date": "2026-02-19",
+      "quand": "19 février 2026",
+      "categorie": "fiscal",
+      "titre": "Loi de finances pour 2026 : barème de l'impôt sur le revenu",
+      "detail": "Les tranches applicables aux revenus 2025 sont revalorisées de 0,9 % : 0 %, 11 %, 30 %, 41 % et 45 %. C'est ce barème que le simulateur applique, y compris pour l'option d'imposition des dividendes au barème progressif.",
+      "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F1419",
+      "hote": "service-public.gouv.fr",
+      "themes": [
+        "impots",
+        "salaire"
+      ]
+    },
+    {
+      "date": "2026-01-01",
+      "quand": "1ᵉʳ janvier 2026",
+      "categorie": "fiscal",
+      "titre": "La CSG sur le capital mobilier passe de 9,2 % à 10,6 %",
+      "detail": "L'article 12 de la LFSS 2026 porte les prélèvements sociaux sur les revenus du capital mobilier à 18,6 %, donc la flat tax de 30 % à 31,4 %. Les revenus d'activité, l'assurance-vie et les revenus fonciers ne sont pas touchés. C'est le paramètre qui déplace le point de bascule entre flat tax et barème progressif, de plusieurs dizaines de milliers d'euros de résultat.",
+      "url": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051917000",
+      "hote": "legifrance.gouv.fr",
+      "themes": [
+        "impots",
+        "salaire"
+      ]
+    },
+    {
+      "date": "2026-01-01",
+      "quand": "1ᵉʳ janvier 2026",
+      "categorie": "fiscal",
+      "titre": "La réduction générale dégressive unique remplace la réduction de taux",
+      "detail": "La RGDU se substitue aux anciens allègements, et les mandataires sociaux en sont exclus. Un président de SASU ne bénéficie donc d'aucun allègement sur les bas salaires : c'est une des raisons pour lesquelles l'optimum de rémunération ne descend pas au niveau du Smic.",
+      "url": "https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/taux-cotisations-secteur-prive.html",
+      "hote": "urssaf.fr",
+      "themes": [
+        "salaire"
+      ]
+    },
+    {
+      "date": "2026-01-01",
+      "quand": "1ᵉʳ janvier 2026",
+      "categorie": "fiscal",
+      "titre": "Plafond de la sécurité sociale et barèmes Agirc-Arrco 2026",
+      "detail": "Le Pass fixe les tranches de cotisation, et les barèmes Agirc-Arrco la retraite complémentaire : T1 7,87 %, T2 21,59 %, CEG 2,15 % et 2,70 %, CET 0,35 %, répartis à 60 % employeur et 40 % salarié. Ce sont ces seuils qui créent les coudes de la courbe salaire / net en poche.",
+      "url": "https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/plafonds.html",
+      "hote": "urssaf.fr",
+      "themes": [
+        "salaire"
+      ]
+    }
+  ],
+  "misAJourLe": "2026-08-01",
+  "calendrier": [
+    {
+      "quand": "Chaque mois, le 15",
+      "titre": "DSN de la rémunération du président",
+      "themes": [
+        "salaire"
+      ],
+      "detail": "La déclaration sociale nominative porte le salaire du mois précédent et déclenche le prélèvement des cotisations. Elle est due même pour un mois à zéro."
+    },
+    {
+      "quand": "15 mars",
+      "titre": "1ᵉʳ acompte d'impôt sur les sociétés",
+      "themes": [
+        "impots"
+      ],
+      "outil": "/acomptes/",
+      "detail": "Relevé n° 2571. Cette échéance tombe avant l'approbation des comptes : elle est donc calculée sur l'avant-dernier exercice, et le deuxième acompte régularise l'écart."
+    },
+    {
+      "quand": "2ᵉ jour ouvré suivant le 1ᵉʳ mai",
+      "titre": "Déclaration de résultats",
+      "themes": [
+        "impots",
+        "obligations"
+      ],
+      "detail": "La liasse fiscale (formulaire 2065 et ses annexes) pour l'exercice clos au 31 décembre."
+    },
+    {
+      "quand": "15 mai",
+      "titre": "Solde d'impôt sur les sociétés",
+      "themes": [
+        "impots"
+      ],
+      "outil": "/acomptes/",
+      "detail": "Relevé n° 2572 : la différence entre l'impôt réellement dû et les acomptes déjà versés. Un excédent est remboursé, un manque est appelé."
+    },
+    {
+      "quand": "15 juin",
+      "titre": "2ᵉ acompte d'impôt sur les sociétés",
+      "themes": [
+        "impots"
+      ],
+      "outil": "/acomptes/",
+      "detail": "Le seul acompte qui porte une régularisation : il rattrape ce que le 15 mars avait calculé sur un exercice trop ancien."
+    },
+    {
+      "quand": "Délai fixé par les statuts",
+      "titre": "Approbation des comptes",
+      "themes": [
+        "ca",
+        "obligations"
+      ],
+      "detail": "Le délai de six mois après la clôture, souvent cité, s'impose aux SARL et aux SA. Une SAS ou une SASU le fixe librement dans ses statuts : vérifiez les vôtres plutôt que la règle générale. C'est cette décision qui autorise la distribution de dividendes."
+    },
+    {
+      "quand": "1 mois après l'approbation, 2 mois en ligne",
+      "titre": "Dépôt des comptes au greffe",
+      "themes": [
+        "obligations"
+      ],
+      "detail": "Comptes annuels et procès-verbal. Le dépôt par voie électronique ouvre un mois de plus."
+    },
+    {
+      "quand": "15 septembre",
+      "titre": "3ᵉ acompte d'impôt sur les sociétés",
+      "themes": [
+        "impots"
+      ],
+      "outil": "/acomptes/",
+      "detail": "Un quart de l'impôt de référence, comme le quatrième. C'est ici qu'une année meilleure que prévu commence à coûter cher si les acomptes n'ont pas été relevés."
+    },
+    {
+      "quand": "15 décembre",
+      "titre": "4ᵉ acompte d'impôt sur les sociétés",
+      "themes": [
+        "impots"
+      ],
+      "outil": "/acomptes/",
+      "detail": "Dernière échéance de l'exercice. Sous-estimer volontairement expose à une majoration ; le simulateur en chiffre le coût."
+    },
+    {
+      "quand": "Le 15 du mois suivant le versement",
+      "titre": "Prélèvements sur dividendes",
+      "themes": [
+        "impots",
+        "salaire"
+      ],
+      "detail": "Déclaration 2777-D et versement de la flat tax retenue à la source sur les dividendes mis en paiement le mois précédent."
+    },
+    {
+      "quand": "Selon votre régime de TVA",
+      "titre": "Déclaration de TVA",
+      "themes": [
+        "ca",
+        "obligations"
+      ],
+      "detail": "Mensuelle au réel normal, trimestrielle en dessous des seuils, annuelle au réel simplifié. La date exacte dépend du département et de la forme juridique."
+    }
+  ]
+}

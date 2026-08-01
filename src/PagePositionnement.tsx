@@ -11,6 +11,7 @@ import { ClassementMetiers } from './components/ClassementMetiers';
 import { TarifsPlateformes } from './components/TarifsPlateformes';
 import { SeuilRentabilite } from './components/SeuilRentabilite';
 import { DecompositionTjm } from './components/DecompositionTjm';
+import { EcheancesTjm } from './components/EcheancesTjm';
 import { DEFAUTS_ARBITRAGE } from './lib/arbitrage';
 import { decomposerTjm, netEnPocheSalaire, seuilRentabilite } from './lib/rentabilite';
 import {
@@ -22,6 +23,7 @@ import {
   moyenneVille,
   PROFESSIONS,
   REFERENCES,
+  ECHEANCES,
   VERIFIE_LE,
   serieVille,
   villesCommunes,
@@ -424,6 +426,7 @@ export default function PagePositionnement() {
         </section>
 
         <ReperesEconomiques />
+        <Echeances />
         <Regles />
       </main>
 
@@ -524,6 +527,33 @@ function ReperesEconomiques() {
             </ul>
           </>
         )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Deadlines already dated, but not yet passed.
+ *
+ * Kept out of the chart on purpose: its markers explain a bend that has already
+ * happened, and a vertical line cannot say whether a rule will create demand or
+ * hold it back. Both appear below, in the order they fall.
+ */
+function Echeances() {
+  if (!ECHEANCES.length) return null;
+  return (
+    <section id="echeances" className="scroll-mt-20 border-t border-ink-200/70 bg-ink-50">
+      <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
+        <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
+          Ce qui arrive
+        </h2>
+        <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
+          Des échéances déjà datées, qui peuvent peser sur la demande d'ici fin
+          2027. Elles ne sont pas tracées sur le graphique&nbsp;: rien ne s'est
+          encore produit, et une même date peut nourrir la demande comme la
+          retenir.
+        </p>
+        <EcheancesTjm echeances={ECHEANCES} />
       </div>
     </section>
   );

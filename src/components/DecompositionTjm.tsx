@@ -107,7 +107,10 @@ export function DecompositionTjm({ tjm, jours }: { tjm: number; jours: number })
       .map(({ taux, marge, publiee, noms }) => {
         const parts = decomposerTjm(tjm, taux, base, { jours, marge });
         return {
-          cle: `t${taux}-${marge}`,
+          // `publiee` splits the groups above, so it has to be in the key too:
+          // two channels charging the same rates are still two rows, and the
+          // hover resolves a row by this key.
+          cle: `t${taux}-${marge}-${publiee}`,
           titre:
             taux === 0 && marge === 0
               ? 'Sans intermédiaire'

@@ -85,11 +85,35 @@ export const PROFESSIONS = donnees.professions as Profession[];
 
 export type Evenement = {
   date: string;
+  /** Which of the site's subjects it bears on. */
+  themes?: string[];
   label: string;
   /** Why this milestone moved day rates — shown in the economic references. */
   explication?: string;
 };
 export const EVENEMENTS = donnees.evenements as Evenement[];
+
+/**
+ * A dated deadline ahead, kept off the chart on purpose.
+ *
+ * The chart's markers explain a curve that has already moved. These have not
+ * happened yet, so plotting them would dress up a forecast as a measurement —
+ * they are read as a list instead, in the order they fall.
+ */
+export type Echeance = {
+  /** "YYYY-MM-DD", or "YYYY-MM" when only the month is settled. Sorts the feed. */
+  date: string;
+  /** Written out, since some are a season rather than a day. */
+  quand: string;
+  /** Which of the site's subjects it bears on. */
+  themes?: string[];
+  titre: string;
+  explication: string;
+  url?: string;
+  hote?: string;
+};
+export const ECHEANCES = ((donnees as { echeances?: Echeance[] }).echeances ??
+  []) as Echeance[];
 
 /** Published market studies backing the milestones above. */
 export type Reference = { titre: string; detail: string; url?: string; hote?: string };

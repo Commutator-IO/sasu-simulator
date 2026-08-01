@@ -16,6 +16,7 @@ dupliquer, et c'est ce qui rend les suivants peu coûteux à ajouter.
 | Acomptes d'IS | Combien verser à chaque échéance, et le coût d'une sous-estimation |
 | Synthèse | Les volets réconciliés en un scénario, imprimable pour le comptable |
 | TJM du marché | Où se situe un tarif, ce qu'il faut pour en vivre, ce qu'il en reste |
+| Actualités | Le fil daté des textes et jalons derrière chaque paramètre, et le calendrier récurrent |
 | Serveur MCP | Page d'attente : le moteur exposé aux assistants IA (à venir) |
 
 L'état de chaque outil tient dans son URL, ce qui permet de passer de l'un à
