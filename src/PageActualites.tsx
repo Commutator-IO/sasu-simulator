@@ -6,6 +6,7 @@ import {
   ACTUALITES,
   CALENDRIER,
   jalonsAutourDeCeJour,
+  prochainesRecurrences,
   LIBELLE_CATEGORIE,
   LIBELLE_THEME,
   MIS_A_JOUR_LE,
@@ -49,6 +50,7 @@ export default function PageActualites() {
   // Computed once per render from the runtime clock: the page is static, so
   // this is the only thing that keeps it speaking about today.
   const jalons = jalonsAutourDeCeJour();
+  const recurrentes = prochainesRecurrences();
 
   const basculer = (t: Theme) =>
     setChoisis((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
@@ -85,7 +87,11 @@ export default function PageActualites() {
                 Les deux échéances qui viennent de passer, et les deux
                 suivantes.
               </p>
-              <TimelineAnnee passees={jalons.passees} aVenir={jalons.aVenir} />
+              <TimelineAnnee
+                passees={jalons.passees}
+                aVenir={jalons.aVenir}
+                recurrentes={recurrentes}
+              />
             </div>
 
             <div className="mt-8">

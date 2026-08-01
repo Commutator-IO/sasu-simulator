@@ -7,15 +7,19 @@ import type { Rendezvous } from '../lib/actualites';
  * that second question is the one someone opening the page in September
  * actually has. Four entries around today answer it without being read.
  *
- * Only the fixed dates appear. A monthly return has no single point to sit on,
- * and placing one would say something untrue about when it falls.
+ * The annual line carries only the yearly milestones. The monthly duties sit on
+ * their own row underneath, and only at their next fall: twelve payroll returns
+ * strung along the same axis would bury the four instalments that give the year
+ * its shape.
  */
 export function TimelineAnnee({
   passees,
   aVenir,
+  recurrentes = [],
 }: {
   passees: Rendezvous[];
   aVenir: Rendezvous[];
+  recurrentes?: { rdv: Rendezvous; quand: string }[];
 }) {
   if (!passees.length && !aVenir.length) return null;
 
@@ -79,6 +83,31 @@ export function TimelineAnnee({
           </li>
         ))}
       </ol>
+
+      {recurrentes.length > 0 && (
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-ink-100 pt-4">
+          <span className="text-xs font-medium text-ink-400">
+            Prochaine échéance mensuelle
+          </span>
+          {recurrentes.map(({ rdv, quand }) => (
+            <span
+              key={rdv.titre}
+              className="inline-flex items-baseline gap-1.5 rounded-full bg-ink-50 px-2.5 py-1"
+              title={rdv.titre}
+            >
+              <span className="text-xs font-semibold text-ink-700">
+                {rdv.recurrence!.court}
+              </span>
+              <span className="tabular text-xs text-ink-600">{quand}</span>
+              {rdv.recurrence!.condition && (
+                <span className="text-[11px] text-ink-400">
+                  {rdv.recurrence!.condition}
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

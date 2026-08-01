@@ -78,6 +78,20 @@ export type Rendezvous = {
   themes: Theme[];
   /** Path of the tool that computes it, when there is one. */
   outil?: string;
+  /**
+   * Set on the duties that fall every month rather than once a year. They have
+   * no place on the annual line — twelve DSN would bury the four instalments —
+   * so only the next one is resolved and shown.
+   */
+  recurrence?: {
+    jourDuMois: number;
+    /** Closing day when the deadline is a window rather than a day. */
+    jourFin?: number;
+    /** Short form, for the cramped timeline row. */
+    court: string;
+    /** Shown alongside when the duty only applies under some regimes. */
+    condition?: string;
+  };
 };
 
 export const CALENDRIER = ((brut as { calendrier?: Rendezvous[] }).calendrier ??
@@ -120,6 +134,21 @@ export function jalonsAutourDeCeJour(
     passees: Array.from({ length: combien }, (_, k) => a(coupe - combien + k)),
     aVenir: Array.from({ length: combien }, (_, k) => a(coupe + k)),
   };
+}
+
+/** The next fall of each monthly duty, written out. Only the next one. */
+export function prochainesRecurrences(aujourdhui = new Date()): {
+  rdv: Rendezvous;
+  quand: string;
+}[] {
+  return CALENDRIER.filter((r) => r.recurrence).map((r) => {
+    const { jourDuMois, jourFin } = r.recurrence!;
+    // Past this month's window, the next one is next month's.
+    const depasse = aujourdhui.getDate() > (jourFin ?? jourDuMois);
+    const mois = (aujourdhui.getMonth() + (depasse ? 1 : 0)) % 12;
+    const jours = jourFin ? `${jourDuMois}–${jourFin}` : `${jourDuMois}`;
+    return { rdv: r, quand: `${jours} ${MOIS[mois]}` };
+  });
 }
 
 export const MIS_A_JOUR_LE: string | null = (() => {

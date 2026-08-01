@@ -75,7 +75,11 @@
       "themes": [
         "salaire"
       ],
-      "detail": "Porte le salaire du mois précédent et déclenche le prélèvement des cotisations. Due même pour un mois à zéro."
+      "detail": "Porte le salaire du mois précédent et déclenche le prélèvement des cotisations. Due même pour un mois à zéro.",
+      "recurrence": {
+        "jourDuMois": 15,
+        "court": "DSN"
+      }
     },
     {
       "quand": "15 mars",
@@ -155,6 +159,28 @@
       "detail": "Dernière échéance de l'exercice. Sous-estimer expose à une majoration, que le simulateur chiffre."
     },
     {
+      "quand": "15 décembre",
+      "jour": "12-15",
+      "titre": "Solde de cotisation foncière des entreprises",
+      "detail": "Due dans la commune de domiciliation, même sans local dédié : c'est alors la cotisation minimum, assise sur le chiffre d'affaires. Un acompte de 50 % s'ajoute au 15 juin si la CFE de l'an dernier atteignait 3 000 €.",
+      "themes": [
+        "impots"
+      ],
+      "url": "https://www.impots.gouv.fr/professionnel/cet-cfe-et-cvae",
+      "hote": "impots.gouv.fr"
+    },
+    {
+      "quand": "31 décembre de l'année de création",
+      "titre": "Déclaration initiale de CFE (1447-C)",
+      "detail": "L'année de création est exonérée, mais la déclaration reste à déposer : c'est elle qui établit la CFE des années suivantes. Aucun avis papier n'est envoyé, tout passe par l'espace professionnel.",
+      "themes": [
+        "impots",
+        "obligations"
+      ],
+      "url": "https://www.impots.gouv.fr/professionnel/questions/devrai-je-acquitter-une-cfe-lannee-de-la-creation-de-mon-entreprise",
+      "hote": "impots.gouv.fr"
+    },
+    {
       "quand": "Le 15 du mois suivant le versement",
       "titre": "Prélèvements sur dividendes",
       "themes": [
@@ -170,7 +196,13 @@
         "ca",
         "obligations"
       ],
-      "detail": "Mensuelle au réel normal, trimestrielle sous les seuils, annuelle au réel simplifié."
+      "detail": "Mensuelle au réel normal, trimestrielle sous les seuils, annuelle au réel simplifié.",
+      "recurrence": {
+        "jourDuMois": 15,
+        "jourFin": 24,
+        "court": "TVA",
+        "condition": "si vous déclarez au mois"
+      }
     }
   ]
 }
