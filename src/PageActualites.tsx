@@ -34,7 +34,12 @@ export default function PageActualites() {
   const retenues = choisis.length
     ? ACTUALITES.filter((a) => a.themes.some((t) => choisis.includes(t)))
     : ACTUALITES;
-  const aVenir = retenues.filter((a) => a.aVenir);
+  // Opposite orders, because they answer opposite questions. What is coming
+  // reads soonest first — that is the one you have to prepare. What already
+  // happened reads most recent first, since the latest change is the one that
+  // set the figures in force. `filter` returns a fresh array, so reversing it
+  // leaves the shared feed untouched.
+  const aVenir = retenues.filter((a) => a.aVenir).reverse();
   const passees = retenues.filter((a) => !a.aVenir);
 
   const rendezvous = choisis.length
@@ -134,7 +139,8 @@ export default function PageActualites() {
                 À venir
               </h2>
               <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
-                Des dates déjà fixées, dont l'effet reste à constater.
+                Des dates déjà fixées, dont l'effet reste à constater. La plus
+                proche en premier.
               </p>
               <Fil entrees={aVenir} />
             </div>
