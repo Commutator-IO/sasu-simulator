@@ -121,6 +121,61 @@ servir comme dénominateur, en gardant le bandeau comme ancre de séniorité.
 
 ---
 
+## Ce qu'il y a à prendre au courtage
+
+Le courtage en crédit et en assurance résout le même problème que ce site :
+un particulier face à un marché opaque, un intermédiaire au milieu, et une
+rémunération qu'il faut bien finir par expliquer. Ces métiers ont vingt ans
+d'avance sur la mise en forme du sujet, et plusieurs de leurs conventions se
+transposent sans effort.
+
+**Le TAEG, et son équivalent ici.** C'est l'idée la plus forte à reprendre. Le
+législateur a imposé aux prêteurs un chiffre unique, comparable d'une offre à
+l'autre, qui absorbe *tout* le coût — intérêts, frais de dossier, assurance,
+garantie. Avant lui, chacun comparait ce qui l'arrangeait. Le pendant pour un
+freelance existe déjà dans le moteur mais n'est pas nommé : **ce qui reste
+réellement en poche par jour facturé**, commission de plateforme, frais,
+cotisations et impôt déduits. À 600 € de TJM, c'est 303 €. Un « TJM net
+effectif » affiché comme un taux, identique quel que soit le canal, rendrait
+comparables des offres qui ne le sont pas aujourd'hui — et c'est exactement ce
+que le graphique de décomposition démontre déjà sans le résumer en un nombre.
+
+**Le baromètre des taux.** Les courtiers en crédit publient chaque mois un
+barème par durée et par région, avec trois colonnes : taux ordinaire, taux
+moyen, meilleur taux. Le baromètre TJM a la même structure (bas / moyen / haut
+par tranche de séniorité) mais ne l'exploite pas pareil : le courtage y ajoute
+une flèche de tendance et un commentaire de marché mensuel, ce qui transforme
+une donnée en rendez-vous de lecture. La page Actualités vient d'emprunter la
+flèche.
+
+**Le devoir de conseil formalisé.** Un courtier en assurance doit remettre une
+fiche écrite qui retrace le besoin exprimé, les options examinées et la raison
+du choix. C'est une contrainte réglementaire, mais c'est surtout un excellent
+format : la synthèse imprimable du site en est déjà proche et gagnerait à
+assumer cette forme — ce que vous avez demandé, ce qui a été comparé, ce qui
+est recommandé et pourquoi.
+
+**La transparence de la rémunération.** Depuis la directive distribution
+d'assurances, l'intermédiaire doit dire s'il est payé par commission ou par
+honoraires, et sur quelle base. C'est précisément le sujet du graphique « Où
+part votre TJM » : la comparaison est déjà faite, mais elle gagnerait à
+reprendre le vocabulaire établi — commission prélevée *sur* le prestataire
+contre marge prise *sur* le client — plutôt qu'à le réinventer.
+
+**L'alerte.** « Prévenez-moi quand les taux passent sous X » est le mécanisme de
+rétention du courtage. L'équivalent — être prévenu quand le TJM médian de son
+métier bouge, ou quand une échéance approche — n'a pas de coût de calcul et
+donne une raison de revenir. À rapprocher de la liste d'attente du serveur MCP,
+qui cherche déjà un moyen de collecte.
+
+**Ce qu'il ne faut pas reprendre.** Le modèle économique. Le courtage vit de
+l'apport d'affaires, donc de la rémunération par ceux-là mêmes qu'il compare —
+et c'est la raison pour laquelle un comparateur finit presque toujours par
+classer selon ce qui le paie. La note sur le comparateur de comptables dit déjà
+la même chose : la crédibilité ne survivrait pas à un classement acheté.
+
+---
+
 ## Glossaire
 
 Un lexique des termes qui reviennent partout dans le simulateur et que

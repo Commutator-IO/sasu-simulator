@@ -193,6 +193,8 @@ type SegmentProps<T extends string | number | boolean> = {
   options: { valeur: T; label: string }[];
   onChange: (v: T) => void;
   hint?: string;
+  /** Extra classes on the wrapper, for a control that needs more grid room. */
+  classe?: string;
 };
 
 export function Segments<T extends string | number | boolean>({
@@ -201,11 +203,14 @@ export function Segments<T extends string | number | boolean>({
   options,
   onChange,
   hint,
+  classe,
 }: SegmentProps<T>) {
   return (
-    <div>
+    <div className={classe}>
       {label && <span className="field-label">{label}</span>}
-      <div className="flex rounded-xl border border-ink-200 bg-ink-100/60 p-1">
+      {/* Wraps rather than overflows: a four-option control has no room on a
+          narrow column, and clipped labels are worse than two rows. */}
+      <div className="flex flex-wrap rounded-xl border border-ink-200 bg-ink-100/60 p-1">
         {options.map((o) => {
           const actif = o.valeur === valeur;
           return (
@@ -215,7 +220,7 @@ export function Segments<T extends string | number | boolean>({
               aria-pressed={actif}
               onClick={() => onChange(o.valeur)}
               className={[
-                'flex-1 rounded-lg px-3 py-2 text-sm font-medium transition',
+                'flex-1 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition',
                 actif
                   ? 'bg-white text-ink-900 shadow-sm'
                   : 'text-ink-500 hover:text-ink-800',

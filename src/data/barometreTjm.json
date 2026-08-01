@@ -16,6 +16,12 @@
         "hote": "malt.fr"
       },
       {
+        "titre": "Stack Overflow Developer Survey",
+        "detail": "Enquête annuelle mondiale auprès des développeurs, publiée depuis 2011 : rémunération par technologie, par expérience et par pays, et surtout structure de l'emploi. La part des développeurs professionnels se déclarant indépendants ou à leur compte est passée d'environ 9,5 % en 2020 à 18 % en 2024 — l'explication par l'offre de la pression sur les tarifs que montre ce baromètre.",
+        "url": "https://survey.stackoverflow.co/2025/work/",
+        "hote": "survey.stackoverflow.co"
+      },
+      {
         "titre": "Freelancing in Europe (Malt / BCG)",
         "detail": "État des lieux du marché européen du freelancing. La part des missions réalisées pour les grands comptes progresse fortement en France : la demande se structure plutôt qu'elle ne disparaît.",
         "url": "https://www.malt.fr/resources/guide/freelancing-in-europe-2024",

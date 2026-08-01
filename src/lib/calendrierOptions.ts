@@ -43,13 +43,24 @@ const TVA: Record<
     quand: 'Entre le 15 et le 24 du mois suivant',
     detail:
       'Déclaration CA3 au réel normal, tous les mois. La date exacte dans cette fenêtre dépend de votre situation et figure dans votre espace professionnel.',
-    recurrence: { jourDuMois: 15, jourFin: 24, court: 'TVA' },
+    recurrence: {
+      jourDuMois: 15,
+      jourFin: 24,
+      court: 'TVA',
+      legende: 'la CA3, tous les mois',
+    },
   },
   trimestrielle: {
     quand: 'Entre le 15 et le 24 suivant la fin du trimestre',
     detail:
       'Déclaration CA3 trimestrielle : en janvier, avril, juillet et octobre. La date exacte dans cette fenêtre figure dans votre espace professionnel.',
-    recurrence: { jourDuMois: 15, jourFin: 24, court: 'TVA', mois: [1, 4, 7, 10] },
+    recurrence: {
+      jourDuMois: 15,
+      jourFin: 24,
+      court: 'TVA',
+      mois: [1, 4, 7, 10],
+      legende: 'la CA3, à chaque trimestre',
+    },
   },
   annuelle: {
     quand: 'Avec la déclaration de résultats',

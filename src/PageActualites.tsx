@@ -205,9 +205,10 @@ export default function PageActualites() {
                 est clos au 31 décembre. Elles ne sont pas dans le fil&nbsp;: une
                 date qui revient tous les ans n'est jamais une nouvelle.
               </p>
-              <div className="mt-6 grid gap-4 rounded-2xl border border-ink-200 bg-white p-5 sm:grid-cols-3 sm:p-6">
+              <div className="mt-6 grid gap-4 rounded-2xl border border-ink-200 bg-white p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
                 <Segments
                   label="Votre TVA"
+                  classe="sm:col-span-2"
                   valeur={options.tva}
                   options={REGIMES_TVA}
                   onChange={(tva) => setOptions((o) => ({ ...o, tva }))}

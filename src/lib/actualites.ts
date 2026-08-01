@@ -107,6 +107,8 @@ export type Rendezvous = {
     mois?: number[];
     /** Short form, for the cramped timeline row. */
     court: string;
+    /** What the dots stand for, spelled out under the strip. */
+    legende?: string;
     /** Shown alongside when the duty only applies under some regimes. */
     condition?: string;
   };
@@ -160,6 +162,15 @@ export function jalonsAutourDeCeJour(
     aVenir: Array.from({ length: combien }, (_, k) => a(coupe + k).rdvs),
   };
 }
+
+/** Months a recurring duty falls in, 1-indexed. Empty when it is not one. */
+export function moisDeRecurrence(r: Rendezvous): number[] {
+  if (!r.recurrence) return [];
+  return r.recurrence.mois ?? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+}
+
+/** Month initials, for the twelve-month strip. */
+export const INITIALES_MOIS = MOIS.map((m) => m[0].toUpperCase());
 
 /** The next fall of each monthly duty, written out. Only the next one. */
 export function prochainesRecurrences(

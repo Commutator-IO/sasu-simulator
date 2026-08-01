@@ -79,7 +79,8 @@
       "detail": "Porte le salaire du mois précédent et déclenche le prélèvement des cotisations. Due même pour un mois à zéro.",
       "recurrence": {
         "jourDuMois": 15,
-        "court": "DSN"
+        "court": "DSN",
+        "legende": "la paie du président, tous les mois"
       }
     },
     {
@@ -216,7 +217,8 @@
         "jourDuMois": 15,
         "jourFin": 24,
         "court": "TVA",
-        "condition": "si vous déclarez au mois"
+        "condition": "si vous déclarez au mois",
+        "legende": "la CA3, tous les mois"
       },
       "option": "tva"
     }
