@@ -1,184 +1,165 @@
+import { useEffect, useRef } from 'react';
 import {
   INITIALES_MOIS,
   moisDeRecurrence,
+  prochainesRecurrences,
   type Rendezvous,
 } from '../lib/actualites';
 
 /**
- * One hue per recurring duty. Two categories only, taken from the palette the
- * site already uses, so the strip needs no colour of its own.
+ * The company's year on one axis.
+ *
+ * Everything sits on the same twelve months: the annual milestones that give
+ * the year its shape, and the returns that come back every month. Two strips
+ * one above the other read as two scales for the same year — the whole point
+ * of putting them together is that they share a time axis.
+ *
+ * Only the monthly duties still ahead are drawn. Behind you they are filed and
+ * done with, and a dot for a settled return would compete with the ones that
+ * still need doing.
  */
-const TEINTES: Record<string, { plein: string; passe: string; texte: string }> = {
-  DSN: { plein: 'bg-brand-500', passe: 'bg-brand-200', texte: 'text-brand-700' },
-  TVA: { plein: 'bg-gold-500', passe: 'bg-gold-200', texte: 'text-gold-700' },
-};
-const TEINTE_DEFAUT = {
-  plein: 'bg-ink-400',
-  passe: 'bg-ink-200',
-  texte: 'text-ink-600',
-};
 
-/**
- * Where you stand in the company's year: two duties behind, two ahead.
- *
- * A list of eleven obligations answers "what is owed" but not "what now" — and
- * that second question is the one someone opening the page in September
- * actually has. Four entries around today answer it without being read.
- *
- * The annual line carries only the yearly milestones. The monthly duties sit on
- * their own row underneath, and only at their next fall: twelve payroll returns
- * strung along the same axis would bury the four instalments that give the year
- * its shape.
- */
+/** One hue per recurring duty, taken from the palette the site already uses. */
+const TEINTES: Record<string, { fond: string; texte: string }> = {
+  DSN: { fond: 'bg-brand-500', texte: 'text-brand-700' },
+  TVA: { fond: 'bg-gold-500', texte: 'text-gold-700' },
+};
+const TEINTE_DEFAUT = { fond: 'bg-ink-400', texte: 'text-ink-600' };
+
 export function TimelineAnnee({
-  passees,
-  aVenir,
-  recurrentes = [],
-  moisCourant = new Date().getMonth() + 1,
+  calendrier,
+  aujourdhui = new Date(),
 }: {
-  /** One entry per date, since several duties can share a day. */
-  passees: Rendezvous[][];
-  aVenir: Rendezvous[][];
-  recurrentes?: { rdv: Rendezvous; quand: string }[];
-  /** Current month, 1-indexed, so months already run are shown as spent. */
-  moisCourant?: number;
+  calendrier: Rendezvous[];
+  aujourdhui?: Date;
 }) {
-  if (!passees.length && !aVenir.length) return null;
+  const moisCourant = aujourdhui.getMonth() + 1;
 
-  const cases = [
-    ...passees.map((g) => ({ g, etat: 'passe' as const })),
-    { g: null, etat: 'ici' as const },
-    ...aVenir.map((g) => ({ g, etat: 'avenir' as const })),
-  ].filter((c) => c.etat === 'ici' || c.g!.length > 0);
+  // Annual milestones, by the month they fall in.
+  const annuels = new Map<number, Rendezvous[]>();
+  for (const r of calendrier.filter((x) => x.jour)) {
+    const m = Number(r.jour!.slice(0, 2));
+    annuels.set(m, [...(annuels.get(m) ?? []), r]);
+  }
+
+  const recurrents = calendrier.filter((r) => r.recurrence);
+  const legende = prochainesRecurrences(aujourdhui, calendrier);
+
+  // On a narrow screen the year does not fit, and it would otherwise open on
+  // January — the part that is behind you. Centre on the current month instead,
+  // by setting scrollLeft rather than scrollIntoView, which would drag the page.
+  const piste = useRef<HTMLDivElement>(null);
+  const marqueur = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    const p = piste.current;
+    const m = marqueur.current;
+    if (!p || !m || p.scrollWidth <= p.clientWidth) return;
+    p.scrollLeft = Math.max(0, m.offsetLeft - p.clientWidth / 2 + m.offsetWidth / 2);
+  }, [moisCourant]);
+
+  if (!annuels.size && !recurrents.length) return null;
 
   return (
-    <div className="relative">
-      {/* The rule sits behind the dots, at their centre. */}
-      <div
-        aria-hidden="true"
-        className="absolute top-[0.3125rem] right-0 left-0 h-px bg-ink-200"
-      />
-      <ol className="relative m-0 flex list-none gap-2 overflow-x-auto p-0 pb-1 sm:gap-3">
-        {cases.map(({ g, etat }, i) => (
-          <li
-            key={g ? g[0].titre : `ici-${i}`}
-            className="flex min-w-[7.5rem] flex-1 flex-col items-center text-center"
-          >
-            <span
-              aria-hidden="true"
-              className={[
-                'h-2.5 w-2.5 shrink-0 rounded-full',
-                etat === 'passe' && 'bg-ink-300',
-                etat === 'ici' && 'bg-brand-600 ring-4 ring-brand-100',
-                etat === 'avenir' && 'border-2 border-brand-500 bg-white',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            />
-            {etat === 'ici' ? (
-              <>
-                <span className="mt-2 text-xs font-semibold text-brand-700">
-                  Aujourd’hui
-                </span>
-                <span className="text-[11px] text-ink-400">vous êtes ici</span>
-              </>
-            ) : (
-              <>
-                <span
-                  className={[
-                    'tabular mt-2 text-xs font-semibold',
-                    etat === 'passe' ? 'text-ink-400' : 'text-ink-900',
-                  ].join(' ')}
+    <div>
+      <div ref={piste} className="overflow-x-auto">
+        <div className="relative min-w-[34rem] pt-1">
+          {/* The rule runs through the marker band, so every dot sits on it. */}
+          <div
+            aria-hidden="true"
+            className="absolute top-[2.05rem] right-0 left-0 h-px bg-ink-200"
+          />
+          <ol className="relative m-0 flex list-none gap-1 p-0">
+            {INITIALES_MOIS.map((lettre, i) => {
+              const mois = i + 1;
+              const jalons = annuels.get(mois) ?? [];
+              const courant = mois === moisCourant;
+              const aVenir = recurrents.filter(
+                (r) => mois >= moisCourant && moisDeRecurrence(r).includes(mois),
+              );
+              return (
+                <li
+                  key={mois}
+                  ref={courant ? marqueur : undefined}
+                  className="flex flex-1 flex-col items-center"
                 >
-                  {g![0].quand}
-                </span>
-                <span
-                  className={[
-                    'text-[11px] leading-snug',
-                    etat === 'passe' ? 'text-ink-400' : 'text-ink-600',
-                  ].join(' ')}
-                >
-                  {g!.map((r) => r.titre).join(' · ')}
-                </span>
-              </>
-            )}
-          </li>
-        ))}
-      </ol>
-
-      {recurrentes.length > 0 && (
-        <div className="mt-5 border-t border-ink-100 pt-4">
-          {/* The annual line above shows moments; this shows a rhythm. A duty
-              that returns every month is a different kind of fact, and a dot
-              per month says it without a sentence. */}
-          <div className="overflow-x-auto">
-            <div className="min-w-[20rem]">
-              <div className="flex gap-1">
-                {INITIALES_MOIS.map((lettre, i) => (
                   <span
-                    key={i}
                     className={[
-                      'flex-1 text-center text-[10px]',
-                      i + 1 === moisCourant
-                        ? 'font-semibold text-ink-900'
-                        : 'text-ink-400',
+                      'text-[11px]',
+                      courant ? 'font-semibold text-brand-700' : 'text-ink-400',
                     ].join(' ')}
                   >
                     {lettre}
                   </span>
-                ))}
-              </div>
-              {recurrentes.map(({ rdv }) => {
-                const mois = moisDeRecurrence(rdv);
-                const teinte = TEINTES[rdv.recurrence!.court] ?? TEINTE_DEFAUT;
-                return (
-                  <div key={rdv.titre} className="mt-1.5 flex gap-1">
-                    {INITIALES_MOIS.map((_, i) => {
-                      const du = mois.includes(i + 1);
-                      return (
-                        <span key={i} className="flex flex-1 justify-center">
-                          <span
-                            className={[
-                              'h-2 w-2 rounded-full',
-                              !du
-                                ? 'bg-transparent'
-                                : i + 1 < moisCourant
-                                  ? teinte.passe
-                                  : teinte.plein,
-                            ].join(' ')}
-                          />
-                        </span>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
-            {recurrentes.map(({ rdv, quand }) => {
-              const teinte = TEINTES[rdv.recurrence!.court] ?? TEINTE_DEFAUT;
-              return (
-                <span
-                  key={rdv.titre}
-                  className="inline-flex items-center gap-1.5 text-[11px] text-ink-500"
-                >
-                  <span className={`h-2 w-2 shrink-0 rounded-full ${teinte.plein}`} />
-                  <span className={`font-semibold ${teinte.texte}`}>
-                    {rdv.recurrence!.court}
+                  <span
+                    className={[
+                      'mt-1 flex h-5 w-full items-center justify-center gap-1 rounded',
+                      courant ? 'bg-brand-50' : '',
+                    ].join(' ')}
+                  >
+                    {jalons.map((r) => (
+                      <span
+                        key={r.titre}
+                        title={`${r.quand} — ${r.titre}`}
+                        className={[
+                          'h-2.5 w-2.5 shrink-0 rounded-full',
+                          mois < moisCourant
+                            ? 'bg-ink-300'
+                            : 'border-2 border-brand-600 bg-white',
+                        ].join(' ')}
+                      />
+                    ))}
+                    {aVenir.map((r) => (
+                      <span
+                        key={r.titre}
+                        title={`${r.quand} — ${r.titre}`}
+                        className={[
+                          'h-1.5 w-1.5 shrink-0 rounded-full',
+                          (TEINTES[r.recurrence!.court] ?? TEINTE_DEFAUT).fond,
+                        ].join(' ')}
+                      />
+                    ))}
                   </span>
-                  <span>
-                    {rdv.recurrence!.legende ?? rdv.titre} — prochaine&nbsp;:{' '}
-                    {quand}
-                    {rdv.recurrence!.condition && `, ${rdv.recurrence!.condition}`}
+                  <span
+                    className={[
+                      'mt-1 text-center text-[10px] leading-tight',
+                      courant ? 'font-medium text-brand-700' : 'text-ink-500',
+                    ].join(' ')}
+                  >
+                    {courant
+                      ? 'aujourd’hui'
+                      : jalons.map((r) => r.court ?? r.quand).join(' · ')}
                   </span>
-                </span>
+                </li>
               );
             })}
-          </div>
+          </ol>
         </div>
-      )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-ink-100 pt-4">
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-ink-500">
+          <span className="h-2.5 w-2.5 shrink-0 rounded-full border-2 border-brand-600 bg-white" />
+          échéance annuelle à venir
+        </span>
+        {legende.map(({ rdv, quand }) => {
+          const teinte = TEINTES[rdv.recurrence!.court] ?? TEINTE_DEFAUT;
+          return (
+            <span
+              key={rdv.titre}
+              className="inline-flex items-center gap-1.5 text-[11px] text-ink-500"
+            >
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${teinte.fond}`} />
+              <span className={`font-semibold ${teinte.texte}`}>
+                {rdv.recurrence!.court}
+              </span>
+              <span>
+                {rdv.recurrence!.legende ?? rdv.titre} — prochaine&nbsp;: {quand}
+                {rdv.recurrence!.condition && `, ${rdv.recurrence!.condition}`}
+              </span>
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

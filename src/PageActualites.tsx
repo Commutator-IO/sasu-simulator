@@ -14,8 +14,6 @@ import {
 import { CLE_CALENDRIER, litStockage, sauvegarderRecherche } from './lib/persistance';
 import {
   ACTUALITES,
-  jalonsAutourDeCeJour,
-  prochainesRecurrences,
   LIBELLE_CATEGORIE,
   LIBELLE_THEME,
   MIS_A_JOUR_LE,
@@ -66,10 +64,6 @@ export default function PageActualites() {
     ? calendrier.filter((r) => r.themes.some((t) => choisis.includes(t)))
     : calendrier;
 
-  // Computed once per render from the runtime clock: the page is static, so
-  // this is the only thing that keeps it speaking about today.
-  const jalons = jalonsAutourDeCeJour(new Date(), 2, calendrier);
-  const recurrentes = prochainesRecurrences(new Date(), calendrier);
 
   const basculer = (t: Theme) =>
     setChoisis((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
@@ -107,11 +101,7 @@ export default function PageActualites() {
                 acomptes courent toute l'année et la régularisation ne vient
                 qu'après la clôture.
               </p>
-              <TimelineAnnee
-                passees={jalons.passees}
-                aVenir={jalons.aVenir}
-                recurrentes={recurrentes}
-              />
+              <TimelineAnnee calendrier={calendrier} />
             </div>
 
             <div className="mt-8">

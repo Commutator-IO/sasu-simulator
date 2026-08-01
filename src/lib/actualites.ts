@@ -76,6 +76,8 @@ const FISCALES = (brut as { entrees: Actualite[] }).entrees;
 export type Rendezvous = {
   /** Written out; some are a rule ("le délai fixé par les statuts") not a date. */
   quand: string;
+  /** Short form for the twelve-month axis, where a full title has no room. */
+  court?: string;
   /**
    * "MM-DD", where it falls in the year — for placing it on the timeline only.
    * `quand` stays the authority on what is displayed, since a couple of these
@@ -124,45 +126,6 @@ export const CALENDRIER = ((brut as { calendrier?: Rendezvous[] }).calendrier ??
  * last added or corrected, which is what tells a reader whether the page is
  * still tended.
  */
-/**
- * The two duties just passed and the two just ahead, from today's place in the
- * year — wrapping around the turn of it, so early January looks back at
- * December rather than at nothing.
- *
- * Only the fixed dates take part. A monthly return or a deadline the articles
- * set has no single point to sit on, and inventing one would misinform.
- */
-export function jalonsAutourDeCeJour(
-  aujourdhui = new Date(),
-  combien = 2,
-  calendrier: Rendezvous[] = CALENDRIER,
-): { passees: Rendezvous[][]; aVenir: Rendezvous[][] } {
-  // Grouped by day: two duties falling on the same 15 June are one moment in
-  // the year, and two nodes carrying the same date read as a mistake.
-  const parJour = new Map<string, Rendezvous[]>();
-  for (const r of calendrier.filter((x) => x.jour)) {
-    parJour.set(r.jour!, [...(parJour.get(r.jour!) ?? []), r]);
-  }
-  const fixes = [...parJour.entries()]
-    .sort(([a], [b]) => (a < b ? -1 : 1))
-    .map(([jour, rdvs]) => ({ jour, rdvs }));
-  if (!fixes.length) return { passees: [], aVenir: [] };
-
-  const jour = `${String(aujourdhui.getMonth() + 1).padStart(2, '0')}-${String(
-    aujourdhui.getDate(),
-  ).padStart(2, '0')}`;
-  const suivant = fixes.findIndex((f) => f.jour > jour);
-  // Everything behind us if none is ahead — December's is then the latest.
-  const coupe = suivant === -1 ? fixes.length : suivant;
-
-  // Modulo, so the two before January's first are the tail of the year before.
-  const a = (i: number) => fixes[((i % fixes.length) + fixes.length) % fixes.length];
-  return {
-    passees: Array.from({ length: combien }, (_, k) => a(coupe - combien + k).rdvs),
-    aVenir: Array.from({ length: combien }, (_, k) => a(coupe + k).rdvs),
-  };
-}
-
 /** Months a recurring duty falls in, 1-indexed. Empty when it is not one. */
 export function moisDeRecurrence(r: Rendezvous): number[] {
   if (!r.recurrence) return [];
