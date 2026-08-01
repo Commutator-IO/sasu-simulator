@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Entete, Pied } from './components/Cadre';
+import { TimelineAnnee } from './components/TimelineAnnee';
 import { VERIFIE_LE } from './lib/barometreTjm';
 import {
   ACTUALITES,
   CALENDRIER,
+  jalonsAutourDeCeJour,
   LIBELLE_CATEGORIE,
   LIBELLE_THEME,
   MIS_A_JOUR_LE,
@@ -39,6 +41,10 @@ export default function PageActualites() {
     ? CALENDRIER.filter((r) => r.themes.some((t) => choisis.includes(t)))
     : CALENDRIER;
 
+  // Computed once per render from the runtime clock: the page is static, so
+  // this is the only thing that keeps it speaking about today.
+  const jalons = jalonsAutourDeCeJour();
+
   const basculer = (t: Theme) =>
     setChoisis((s) => (s.includes(t) ? s.filter((x) => x !== t) : [...s, t]));
 
@@ -67,6 +73,15 @@ export default function PageActualites() {
               {MIS_A_JOUR_LE && VERIFIE_LE && ' '}
               {VERIFIE_LE && <>Données de marché relevées à la source le {VERIFIE_LE}.</>}
             </p>
+
+            <div className="mt-8 rounded-2xl border border-ink-200 bg-white p-5 sm:p-6">
+              <p className="field-label">Où en est votre exercice</p>
+              <p className="mt-1 mb-5 text-sm text-ink-500">
+                Les deux échéances qui viennent de passer, et les deux
+                suivantes.
+              </p>
+              <TimelineAnnee passees={jalons.passees} aVenir={jalons.aVenir} />
+            </div>
 
             <div className="mt-8">
               <p className="field-label">Filtrer par sujet</p>
@@ -152,45 +167,48 @@ export default function PageActualites() {
           <section className="border-t border-ink-200/70 bg-white">
             <div className="mx-auto max-w-6xl px-5 py-14 sm:py-16">
               <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
-                Le calendrier qui revient chaque année
+                Le calendrier récurrent
               </h2>
               <p className="mt-2 max-w-2xl leading-relaxed text-ink-500">
                 Les échéances d'une SASU à l'impôt sur les sociétés dont l'exercice
                 est clos au 31 décembre. Elles ne sont pas dans le fil&nbsp;: une
                 date qui revient tous les ans n'est jamais une nouvelle.
               </p>
-              <ul className="mt-8 grid gap-4 sm:grid-cols-2">
+              <ul className="m-0 mt-6 list-none divide-y divide-ink-100 overflow-hidden rounded-2xl border border-ink-200 bg-white p-0">
                 {rendezvous.map((r) => (
-                  <li key={r.titre} className="card p-5">
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="tabular rounded-md bg-gold-100 px-2 py-0.5 text-xs font-semibold text-gold-700">
-                        {r.quand}
-                      </span>
-                      {r.themes.map((t) => (
-                        <span
-                          key={t}
-                          className="rounded-md bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700"
-                        >
-                          {LIBELLE_THEME[t]}
+                  <li
+                    key={r.titre}
+                    className="flex flex-col gap-x-5 px-4 py-2.5 sm:flex-row"
+                  >
+                    <span className="tabular shrink-0 text-sm font-semibold text-ink-900 sm:w-48">
+                      {r.quand}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <span className="text-sm font-medium text-ink-900">
+                          {r.titre}
                         </span>
-                      ))}
-                    </div>
-                    <h3 className="mt-1.5 text-sm font-semibold text-ink-900">
-                      {r.titre}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                      {r.detail}
-                    </p>
-                    {r.outil && (
-                      <p className="mt-3">
-                        <a
-                          href={r.outil}
-                          className="text-sm font-medium text-brand-700 underline underline-offset-4 hover:text-brand-800"
-                        >
-                          Le calculer
-                        </a>
+                        {r.themes.map((t) => (
+                          <span
+                            key={t}
+                            className="rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700"
+                          >
+                            {LIBELLE_THEME[t]}
+                          </span>
+                        ))}
+                        {r.outil && (
+                          <a
+                            href={r.outil}
+                            className="text-xs font-medium text-brand-700 underline underline-offset-4 hover:text-brand-800"
+                          >
+                            le calculer
+                          </a>
+                        )}
                       </p>
-                    )}
+                      <p className="text-sm leading-snug text-ink-500">
+                        {r.detail}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>

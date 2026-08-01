@@ -66,6 +66,13 @@ const FISCALES = (brut as { entrees: Actualite[] }).entrees;
 export type Rendezvous = {
   /** Written out; some are a rule ("le délai fixé par les statuts") not a date. */
   quand: string;
+  /**
+   * "MM-DD", where it falls in the year — for placing it on the timeline only.
+   * `quand` stays the authority on what is displayed, since a couple of these
+   * are a working-day rule rather than a fixed date. Absent when the duty has
+   * no single moment: a monthly return, a deadline set by the articles.
+   */
+  jour?: string;
   titre: string;
   detail: string;
   themes: Theme[];
@@ -83,6 +90,38 @@ export const CALENDRIER = ((brut as { calendrier?: Rendezvous[] }).calendrier ??
  * last added or corrected, which is what tells a reader whether the page is
  * still tended.
  */
+/**
+ * The two duties just passed and the two just ahead, from today's place in the
+ * year — wrapping around the turn of it, so early January looks back at
+ * December rather than at nothing.
+ *
+ * Only the fixed dates take part. A monthly return or a deadline the articles
+ * set has no single point to sit on, and inventing one would misinform.
+ */
+export function jalonsAutourDeCeJour(
+  aujourdhui = new Date(),
+  combien = 2,
+): { passees: Rendezvous[]; aVenir: Rendezvous[] } {
+  const fixes = CALENDRIER.filter((r) => r.jour).sort((a, b) =>
+    a.jour! < b.jour! ? -1 : 1,
+  );
+  if (!fixes.length) return { passees: [], aVenir: [] };
+
+  const jour = `${String(aujourdhui.getMonth() + 1).padStart(2, '0')}-${String(
+    aujourdhui.getDate(),
+  ).padStart(2, '0')}`;
+  const suivant = fixes.findIndex((r) => r.jour! > jour);
+  // Everything behind us if none is ahead — December's is then the latest.
+  const coupe = suivant === -1 ? fixes.length : suivant;
+
+  // Modulo, so the two before January's first are the tail of the year before.
+  const a = (i: number) => fixes[((i % fixes.length) + fixes.length) % fixes.length];
+  return {
+    passees: Array.from({ length: combien }, (_, k) => a(coupe - combien + k)),
+    aVenir: Array.from({ length: combien }, (_, k) => a(coupe + k)),
+  };
+}
+
 export const MIS_A_JOUR_LE: string | null = (() => {
   const iso = (brut as { misAJourLe?: string }).misAJourLe;
   if (!iso) return null;

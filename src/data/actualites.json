@@ -75,43 +75,47 @@
       "themes": [
         "salaire"
       ],
-      "detail": "La déclaration sociale nominative porte le salaire du mois précédent et déclenche le prélèvement des cotisations. Elle est due même pour un mois à zéro."
+      "detail": "Porte le salaire du mois précédent et déclenche le prélèvement des cotisations. Due même pour un mois à zéro."
     },
     {
       "quand": "15 mars",
+      "jour": "03-15",
       "titre": "1ᵉʳ acompte d'impôt sur les sociétés",
       "themes": [
         "impots"
       ],
       "outil": "/acomptes/",
-      "detail": "Relevé n° 2571. Cette échéance tombe avant l'approbation des comptes : elle est donc calculée sur l'avant-dernier exercice, et le deuxième acompte régularise l'écart."
+      "detail": "Relevé n° 2571, calculé sur l'avant-dernier exercice : les comptes ne sont pas encore approuvés."
     },
     {
       "quand": "2ᵉ jour ouvré suivant le 1ᵉʳ mai",
+      "jour": "05-05",
       "titre": "Déclaration de résultats",
       "themes": [
         "impots",
         "obligations"
       ],
-      "detail": "La liasse fiscale (formulaire 2065 et ses annexes) pour l'exercice clos au 31 décembre."
+      "detail": "La liasse fiscale — formulaire 2065 et annexes — de l'exercice clos au 31 décembre."
     },
     {
       "quand": "15 mai",
+      "jour": "05-15",
       "titre": "Solde d'impôt sur les sociétés",
       "themes": [
         "impots"
       ],
       "outil": "/acomptes/",
-      "detail": "Relevé n° 2572 : la différence entre l'impôt réellement dû et les acomptes déjà versés. Un excédent est remboursé, un manque est appelé."
+      "detail": "Relevé n° 2572 : l'écart entre l'impôt dû et les acomptes versés. Un excédent est remboursé."
     },
     {
       "quand": "15 juin",
+      "jour": "06-15",
       "titre": "2ᵉ acompte d'impôt sur les sociétés",
       "themes": [
         "impots"
       ],
       "outil": "/acomptes/",
-      "detail": "Le seul acompte qui porte une régularisation : il rattrape ce que le 15 mars avait calculé sur un exercice trop ancien."
+      "detail": "Le seul acompte qui régularise : il rattrape le calcul du 15 mars."
     },
     {
       "quand": "Délai fixé par les statuts",
@@ -120,7 +124,7 @@
         "ca",
         "obligations"
       ],
-      "detail": "Le délai de six mois après la clôture, souvent cité, s'impose aux SARL et aux SA. Une SAS ou une SASU le fixe librement dans ses statuts : vérifiez les vôtres plutôt que la règle générale. C'est cette décision qui autorise la distribution de dividendes."
+      "detail": "Les six mois après la clôture s'imposent aux SARL et aux SA ; une SASU fixe le délai dans ses statuts. C'est cette décision qui autorise la distribution."
     },
     {
       "quand": "1 mois après l'approbation, 2 mois en ligne",
@@ -128,25 +132,27 @@
       "themes": [
         "obligations"
       ],
-      "detail": "Comptes annuels et procès-verbal. Le dépôt par voie électronique ouvre un mois de plus."
+      "detail": "Comptes annuels et procès-verbal. La voie électronique ouvre un mois de plus."
     },
     {
       "quand": "15 septembre",
+      "jour": "09-15",
       "titre": "3ᵉ acompte d'impôt sur les sociétés",
       "themes": [
         "impots"
       ],
       "outil": "/acomptes/",
-      "detail": "Un quart de l'impôt de référence, comme le quatrième. C'est ici qu'une année meilleure que prévu commence à coûter cher si les acomptes n'ont pas été relevés."
+      "detail": "Un quart de l'impôt de référence. C'est ici qu'une bonne année non anticipée commence à coûter."
     },
     {
       "quand": "15 décembre",
+      "jour": "12-15",
       "titre": "4ᵉ acompte d'impôt sur les sociétés",
       "themes": [
         "impots"
       ],
       "outil": "/acomptes/",
-      "detail": "Dernière échéance de l'exercice. Sous-estimer volontairement expose à une majoration ; le simulateur en chiffre le coût."
+      "detail": "Dernière échéance de l'exercice. Sous-estimer expose à une majoration, que le simulateur chiffre."
     },
     {
       "quand": "Le 15 du mois suivant le versement",
@@ -155,7 +161,7 @@
         "impots",
         "salaire"
       ],
-      "detail": "Déclaration 2777-D et versement de la flat tax retenue à la source sur les dividendes mis en paiement le mois précédent."
+      "detail": "Déclaration 2777-D et versement de la flat tax retenue sur les dividendes du mois précédent."
     },
     {
       "quand": "Selon votre régime de TVA",
@@ -164,7 +170,7 @@
         "ca",
         "obligations"
       ],
-      "detail": "Mensuelle au réel normal, trimestrielle en dessous des seuils, annuelle au réel simplifié. La date exacte dépend du département et de la forme juridique."
+      "detail": "Mensuelle au réel normal, trimestrielle sous les seuils, annuelle au réel simplifié."
     }
   ]
 }
