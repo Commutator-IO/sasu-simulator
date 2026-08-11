@@ -188,7 +188,19 @@ export function Pied() {
     <footer className="border-t border-ink-200/70 bg-white">
       <div className="mx-auto max-w-6xl px-5 py-10 text-sm text-ink-400">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
-          <p>Boîte à outils fiscale pour les SASU — barèmes {P.ANNEE}.</p>
+          {/* The way back to the parent site, so this tool is not a dead end.
+              Same tab on purpose: returning is navigation, not a side trip —
+              unlike the repository links opposite. */}
+          <p>
+            Boîte à outils fiscale pour les SASU — barèmes {P.ANNEE}. Un outil{' '}
+            <a
+              href="https://www.commutator.io"
+              className="underline underline-offset-4 transition hover:text-ink-900"
+            >
+              Commutator
+            </a>
+            .
+          </p>
           <p className="flex flex-wrap gap-x-5 gap-y-1">
             <LienSignaler className="transition hover:text-ink-900">
               Signaler une erreur
