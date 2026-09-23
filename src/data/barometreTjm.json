@@ -101,7 +101,7 @@
         "hote": null
       }
     ],
-    "verifieLe": "2026-08-22"
+    "verifieLe": "2026-09-23"
   },
   "evenements": [
     {
@@ -247,40 +247,50 @@
           "Marseille": 658
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 666,
+          "Paris": 711,
+          "Lyon": 639,
+          "Bordeaux": 633,
+          "Lille": 614,
+          "Marseille": 656
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
             "national": [
-              650,
-              685
+              649,
+              684
             ],
             "Paris": [
               691,
               719
             ],
             "Lyon": [
-              614,
-              688
+              610,
+              684
             ],
             "Bordeaux": [
-              575,
-              678
+              574,
+              677
             ],
             "Lille": [
-              576,
-              675
+              573,
+              672
             ],
             "Marseille": [
-              600,
-              707
+              599,
+              706
             ]
           },
-          "national": 668,
+          "national": 667,
           "Paris": 705,
-          "Lyon": 651,
-          "Bordeaux": 627,
-          "Lille": 625,
-          "Marseille": 654
+          "Lyon": 647,
+          "Bordeaux": 626,
+          "Lille": 622,
+          "Marseille": 653
         },
         {
           "date": "2028-07",
@@ -291,32 +301,32 @@
               717
             ],
             "Paris": [
-              660,
-              737
+              661,
+              738
             ],
             "Lyon": [
-              559,
-              772
+              556,
+              767
             ],
             "Bordeaux": [
-              485,
-              769
+              484,
+              768
             ],
             "Lille": [
-              500,
-              785
+              497,
+              780
             ],
             "Marseille": [
-              510,
-              807
+              509,
+              806
             ]
           },
           "national": 669,
-          "Paris": 698,
-          "Lyon": 661,
-          "Bordeaux": 619,
-          "Lille": 635,
-          "Marseille": 650
+          "Paris": 699,
+          "Lyon": 657,
+          "Bordeaux": 618,
+          "Lille": 631,
+          "Marseille": 649
         }
       ],
       "experience": [
@@ -331,7 +341,7 @@
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 513,
+          "moyen": 512,
           "haut": 810
         },
         {
@@ -345,7 +355,7 @@
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 400,
-          "moyen": 731,
+          "moyen": 729,
           "haut": 1210
         }
       ],
@@ -417,6 +427,16 @@
           "Marseille": 529
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 575,
+          "Paris": 593,
+          "Lyon": 555,
+          "Bordeaux": 553,
+          "Lille": 550,
+          "Marseille": 529
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
@@ -425,8 +445,8 @@
               589
             ],
             "Paris": [
-              580,
-              603
+              581,
+              604
             ],
             "Lyon": [
               546,
@@ -437,8 +457,8 @@
               568
             ],
             "Lille": [
-              542,
-              569
+              540,
+              567
             ],
             "Marseille": [
               526,
@@ -446,10 +466,10 @@
             ]
           },
           "national": 576,
-          "Paris": 591,
+          "Paris": 592,
           "Lyon": 557,
           "Bordeaux": 556,
-          "Lille": 556,
+          "Lille": 554,
           "Marseille": 534
         },
         {
@@ -465,28 +485,28 @@
               623
             ],
             "Lyon": [
-              528,
-              591
+              527,
+              590
             ],
             "Bordeaux": [
-              528,
-              594
+              529,
+              595
             ],
             "Lille": [
-              524,
-              601
+              521,
+              598
             ],
             "Marseille": [
-              518,
-              563
+              517,
+              562
             ]
           },
           "national": 578,
           "Paris": 590,
-          "Lyon": 559,
-          "Bordeaux": 560,
-          "Lille": 561,
-          "Marseille": 540
+          "Lyon": 558,
+          "Bordeaux": 561,
+          "Lille": 558,
+          "Marseille": 539
         }
       ],
       "experience": [
@@ -501,7 +521,7 @@
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 435,
+          "moyen": 436,
           "haut": 710
         },
         {
@@ -515,7 +535,7 @@
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 300,
-          "moyen": 671,
+          "moyen": 672,
           "haut": 1210
         }
       ],
@@ -597,6 +617,16 @@
           "Marseille": 642
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 711,
+          "Paris": 717,
+          "Lyon": 645,
+          "Bordeaux": 621,
+          "Lille": 627,
+          "Marseille": 641
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
@@ -605,32 +635,32 @@
               728
             ],
             "Paris": [
-              688,
-              729
+              689,
+              730
             ],
             "Lyon": [
-              615,
-              650
+              618,
+              653
             ],
             "Bordeaux": [
               602,
               634
             ],
             "Lille": [
-              598,
-              643
+              599,
+              644
             ],
             "Marseille": [
-              621,
-              663
+              620,
+              662
             ]
           },
           "national": 703,
-          "Paris": 708,
-          "Lyon": 633,
+          "Paris": 709,
+          "Lyon": 636,
           "Bordeaux": 618,
-          "Lille": 620,
-          "Marseille": 642
+          "Lille": 621,
+          "Marseille": 641
         },
         {
           "date": "2028-07",
@@ -641,32 +671,32 @@
               764
             ],
             "Paris": [
-              642,
-              756
+              643,
+              757
             ],
             "Lyon": [
-              573,
-              672
+              577,
+              676
             ],
             "Bordeaux": [
-              572,
-              661
+              571,
+              660
             ],
             "Lille": [
-              551,
-              677
+              553,
+              679
             ],
             "Marseille": [
-              584,
-              702
+              583,
+              701
             ]
           },
           "national": 694,
-          "Paris": 698,
-          "Lyon": 622,
-          "Bordeaux": 615,
-          "Lille": 613,
-          "Marseille": 642
+          "Paris": 699,
+          "Lyon": 626,
+          "Bordeaux": 614,
+          "Lille": 615,
+          "Marseille": 641
         }
       ],
       "experience": [
@@ -674,28 +704,28 @@
           "cle": "0-2",
           "label": "0 à 2 ans",
           "bas": 120,
-          "moyen": 388,
+          "moyen": 386,
           "haut": 1010
         },
         {
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 510,
+          "moyen": 509,
           "haut": 1010
         },
         {
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 120,
-          "moyen": 712,
+          "moyen": 711,
           "haut": 1510
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 300,
-          "moyen": 893,
+          "moyen": 890,
           "haut": 2010
         }
       ],
@@ -777,76 +807,86 @@
           "Marseille": 651
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 677,
+          "Paris": 717,
+          "Lyon": 659,
+          "Bordeaux": 623,
+          "Lille": 632,
+          "Marseille": 649
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
             "national": [
-              663,
-              690
+              662,
+              689
             ],
             "Paris": [
               698,
               727
             ],
             "Lyon": [
-              641,
-              674
+              643,
+              676
             ],
             "Bordeaux": [
-              603,
-              649
+              600,
+              646
             ],
             "Lille": [
-              614,
-              645
+              612,
+              643
             ],
             "Marseille": [
-              641,
-              670
+              638,
+              667
             ]
           },
-          "national": 676,
+          "national": 675,
           "Paris": 713,
-          "Lyon": 657,
-          "Bordeaux": 626,
-          "Lille": 630,
-          "Marseille": 655
+          "Lyon": 659,
+          "Bordeaux": 623,
+          "Lille": 628,
+          "Marseille": 652
         },
         {
           "date": "2028-07",
           "origine": "projection",
           "marge": {
             "national": [
-              634,
-              713
+              633,
+              712
             ],
             "Paris": [
-              667,
-              749
+              666,
+              748
             ],
             "Lyon": [
-              610,
-              705
+              611,
+              706
             ],
             "Bordeaux": [
-              564,
-              691
+              562,
+              689
             ],
             "Lille": [
-              583,
-              670
+              581,
+              668
             ],
             "Marseille": [
-              617,
-              702
+              614,
+              699
             ]
           },
-          "national": 673,
-          "Paris": 708,
-          "Lyon": 657,
-          "Bordeaux": 626,
-          "Lille": 626,
-          "Marseille": 659
+          "national": 672,
+          "Paris": 707,
+          "Lyon": 658,
+          "Bordeaux": 624,
+          "Lille": 624,
+          "Marseille": 656
         }
       ],
       "experience": [
@@ -854,27 +894,27 @@
           "cle": "0-2",
           "label": "0 à 2 ans",
           "bas": 120,
-          "moyen": 395,
+          "moyen": 394,
           "haut": 810
         },
         {
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 519,
+          "moyen": 518,
           "haut": 810
         },
         {
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 350,
-          "moyen": 678,
+          "moyen": 677,
           "haut": 1210
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
-          "bas": 400,
+          "bas": 450,
           "moyen": 778,
           "haut": 1210
         }
@@ -947,76 +987,86 @@
           "Marseille": 557
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 579,
+          "Paris": 579,
+          "Lyon": 504,
+          "Bordeaux": 498,
+          "Lille": 514,
+          "Marseille": 556
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
             "national": [
-              567,
-              594
+              563,
+              590
             ],
             "Paris": [
-              559,
-              577
+              565,
+              583
             ],
             "Lyon": [
-              480,
-              501
+              479,
+              500
             ],
             "Bordeaux": [
-              461,
-              483
+              469,
+              491
             ],
             "Lille": [
-              500,
-              548
+              483,
+              529
             ],
             "Marseille": [
-              615,
-              653
+              571,
+              607
             ]
           },
-          "national": 580,
-          "Paris": 568,
-          "Lyon": 490,
-          "Bordeaux": 472,
-          "Lille": 524,
-          "Marseille": 634
+          "national": 576,
+          "Paris": 574,
+          "Lyon": 489,
+          "Bordeaux": 480,
+          "Lille": 506,
+          "Marseille": 589
         },
         {
           "date": "2028-07",
           "origine": "projection",
           "marge": {
             "national": [
-              543,
-              618
+              536,
+              611
             ],
             "Paris": [
-              531,
-              581
+              542,
+              594
             ],
             "Lyon": [
-              445,
-              500
+              444,
+              499
             ],
             "Bordeaux": [
-              412,
-              472
+              428,
+              490
             ],
             "Lille": [
-              462,
-              601
+              433,
+              564
             ],
             "Marseille": [
-              661,
-              778
+              578,
+              680
             ]
           },
-          "national": 580,
-          "Paris": 556,
-          "Lyon": 472,
-          "Bordeaux": 442,
-          "Lille": 530,
-          "Marseille": 718
+          "national": 573,
+          "Paris": 568,
+          "Lyon": 471,
+          "Bordeaux": 459,
+          "Lille": 497,
+          "Marseille": 628
         }
       ],
       "experience": [
@@ -1032,20 +1082,20 @@
           "label": "3 à 7 ans",
           "bas": 120,
           "moyen": 393,
-          "haut": 810
+          "haut": 710
         },
         {
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 120,
-          "moyen": 580,
+          "moyen": 579,
           "haut": 1010
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 120,
-          "moyen": 786,
+          "moyen": 783,
           "haut": 2010
         }
       ],
@@ -1117,6 +1167,16 @@
           "Marseille": 409
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 430,
+          "Paris": 448,
+          "Lyon": 415,
+          "Bordeaux": 425,
+          "Lille": 406,
+          "Marseille": 410
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
@@ -1129,16 +1189,16 @@
               455
             ],
             "Lyon": [
-              410,
-              423
+              406,
+              419
             ],
             "Bordeaux": [
-              418,
-              431
+              422,
+              435
             ],
             "Lille": [
-              393,
-              421
+              389,
+              417
             ],
             "Marseille": [
               408,
@@ -1147,9 +1207,9 @@
           },
           "national": 430,
           "Paris": 448,
-          "Lyon": 416,
-          "Bordeaux": 424,
-          "Lille": 407,
+          "Lyon": 412,
+          "Bordeaux": 428,
+          "Lille": 403,
           "Marseille": 415
         },
         {
@@ -1165,16 +1225,16 @@
               467
             ],
             "Lyon": [
-              398,
-              434
+              391,
+              427
             ],
             "Bordeaux": [
-              406,
-              443
+              413,
+              450
             ],
             "Lille": [
-              368,
-              449
+              362,
+              441
             ],
             "Marseille": [
               404,
@@ -1183,9 +1243,9 @@
           },
           "national": 430,
           "Paris": 448,
-          "Lyon": 416,
-          "Bordeaux": 424,
-          "Lille": 407,
+          "Lyon": 409,
+          "Bordeaux": 431,
+          "Lille": 400,
           "Marseille": 421
         }
       ],
@@ -1215,7 +1275,7 @@
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 120,
-          "moyen": 483,
+          "moyen": 485,
           "haut": 810
         }
       ],
@@ -1297,6 +1357,16 @@
           "Marseille": 393
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 439,
+          "Paris": 445,
+          "Lyon": 412,
+          "Bordeaux": 398,
+          "Lille": 393,
+          "Marseille": 393
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
@@ -1305,20 +1375,20 @@
               446
             ],
             "Paris": [
-              433,
-              454
+              434,
+              455
             ],
             "Lyon": [
               401,
               427
             ],
             "Bordeaux": [
-              388,
-              416
+              386,
+              414
             ],
             "Lille": [
-              354,
-              417
+              356,
+              419
             ],
             "Marseille": [
               384,
@@ -1326,10 +1396,10 @@
             ]
           },
           "national": 439,
-          "Paris": 444,
+          "Paris": 445,
           "Lyon": 414,
-          "Bordeaux": 402,
-          "Lille": 386,
+          "Bordeaux": 400,
+          "Lille": 388,
           "Marseille": 395
         },
         {
@@ -1341,20 +1411,20 @@
               459
             ],
             "Paris": [
-              415,
-              472
+              416,
+              473
             ],
             "Lyon": [
               380,
               454
             ],
             "Bordeaux": [
-              366,
-              446
+              363,
+              443
             ],
             "Lille": [
-              298,
-              472
+              300,
+              476
             ],
             "Marseille": [
               370,
@@ -1362,10 +1432,10 @@
             ]
           },
           "national": 440,
-          "Paris": 443,
+          "Paris": 444,
           "Lyon": 416,
-          "Bordeaux": 405,
-          "Lille": 380,
+          "Bordeaux": 402,
+          "Lille": 383,
           "Marseille": 398
         }
       ],
@@ -1381,7 +1451,7 @@
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 317,
+          "moyen": 318,
           "haut": 610
         },
         {
@@ -1395,7 +1465,7 @@
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 120,
-          "moyen": 535,
+          "moyen": 534,
           "haut": 1210
         }
       ],
@@ -1487,76 +1557,86 @@
           "Marseille": 437
         },
         {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 466,
+          "Paris": 456,
+          "Lyon": 436,
+          "Bordeaux": 432,
+          "Lille": 423,
+          "Marseille": 436
+        },
+        {
           "date": "2027-07",
           "origine": "projection",
           "marge": {
             "national": [
-              459,
-              473
+              460,
+              474
             ],
             "Paris": [
-              449,
-              463
+              450,
+              464
             ],
             "Lyon": [
               430,
               445
             ],
             "Bordeaux": [
-              408,
-              444
+              413,
+              449
             ],
             "Lille": [
-              390,
-              456
+              392,
+              458
             ],
             "Marseille": [
-              434,
-              447
+              433,
+              446
             ]
           },
-          "national": 466,
-          "Paris": 456,
+          "national": 467,
+          "Paris": 457,
           "Lyon": 437,
-          "Bordeaux": 426,
-          "Lille": 423,
-          "Marseille": 440
+          "Bordeaux": 431,
+          "Lille": 425,
+          "Marseille": 439
         },
         {
           "date": "2028-07",
           "origine": "projection",
           "marge": {
             "national": [
-              449,
-              488
+              450,
+              489
             ],
             "Paris": [
-              438,
-              477
+              439,
+              478
             ],
             "Lyon": [
-              417,
-              460
+              416,
+              459
             ],
             "Bordeaux": [
-              375,
-              477
+              379,
+              483
             ],
             "Lille": [
-              337,
-              524
+              339,
+              526
             ],
             "Marseille": [
-              424,
-              461
+              423,
+              460
             ]
           },
-          "national": 468,
-          "Paris": 457,
-          "Lyon": 438,
-          "Bordeaux": 425,
-          "Lille": 426,
-          "Marseille": 443
+          "national": 469,
+          "Paris": 458,
+          "Lyon": 437,
+          "Bordeaux": 430,
+          "Lille": 428,
+          "Marseille": 442
         }
       ],
       "experience": [
@@ -1571,21 +1651,21 @@
           "cle": "3-7",
           "label": "3 à 7 ans",
           "bas": 120,
-          "moyen": 363,
+          "moyen": 364,
           "haut": 610
         },
         {
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 120,
-          "moyen": 465,
+          "moyen": 466,
           "haut": 810
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 120,
-          "moyen": 533,
+          "moyen": 535,
           "haut": 1010
         }
       ],
@@ -1615,6 +1695,16 @@
           "Bordeaux": 557,
           "Lille": 484,
           "Marseille": 391
+        },
+        {
+          "date": "2026-09",
+          "origine": "live",
+          "national": 430,
+          "Paris": 507,
+          "Lyon": 424,
+          "Bordeaux": 557,
+          "Lille": 484,
+          "Marseille": 391
         }
       ],
       "experience": [
@@ -1636,14 +1726,14 @@
           "cle": "8-15",
           "label": "8 à 15 ans",
           "bas": 120,
-          "moyen": 431,
+          "moyen": 430,
           "haut": 710
         },
         {
           "cle": "15p",
           "label": "15 ans et +",
           "bas": 120,
-          "moyen": 468,
+          "moyen": 472,
           "haut": 810
         }
       ],
