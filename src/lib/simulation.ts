@@ -1,3 +1,4 @@
+import { eur } from './format';
 import * as P from './parametres2026';
 
 // ---------------------------------------------------------------------------
@@ -694,10 +695,106 @@ export function plateauOptimum(
   };
 }
 
+/** Salary level at which a tax rule kicks in and the curve changes slope. */
+export type Seuil = {
+  brut: number;
+  /** Short label drawn above the marker. */
+  libelle: string;
+  /** One-sentence explanation of what changes past this point. */
+  explication: string;
+};
+
+/**
+ * Salary levels where the take-home curve bends, for the given assumptions.
+ *
+ * Each rule is read off `simuler` rather than inverted by hand: the salary
+ * that crosses a tax bracket depends on contributions, the 10% allowance, the
+ * household shares and the other income, and the engine already knows all of
+ * that. A change of state between two grid points is pinned down by bisection.
+ */
+export function seuilsCourbe(
+  h: Omit<Hypotheses, 'brutAnnuel'>,
+  grille: { brut: number; resultat: Resultat }[],
+): Seuil[] {
+  const plafond = plafondTranche1(h.moisRemuneration);
+  const regles: {
+    etat: (r: Resultat) => number | boolean;
+    seuil: (apres: Resultat) => Omit<Seuil, 'brut'> | null;
+  }[] = [
+    {
+      etat: (r) => r.irSurSalaire > 0.5,
+      seuil: (apres) =>
+        apres.irSurSalaire > 0.5
+          ? {
+              libelle: 'IR',
+              explication:
+                "Le salaire commence à payer de l'impôt sur le revenu : la décote ne suffit plus à l'annuler.",
+            }
+          : null,
+    },
+    {
+      etat: (r) => r.tmi,
+      // Entering a bracket while the rebate still cancels the tax changes nothing.
+      seuil: (apres) =>
+        apres.irSurSalaire > 0.5
+          ? {
+              libelle: `TMI ${Math.round(apres.tmi * 100)} %`,
+              explication: `Le revenu imposable du foyer entre dans la tranche à ${Math.round(apres.tmi * 100)} % : chaque euro de salaire supplémentaire y est imposé à ce taux.`,
+            }
+          : null,
+    },
+    {
+      etat: (r) => h.eligibleISReduit && r.resultatFiscal <= P.IS_SEUIL_TAUX_REDUIT,
+      seuil: (apres) =>
+        apres.resultatFiscal <= P.IS_SEUIL_TAUX_REDUIT
+          ? {
+              libelle: 'IS 15 %',
+              explication: `Le bénéfice restant passe sous ${eur(P.IS_SEUIL_TAUX_REDUIT)} : il n'est plus imposé qu'à 15 %, donc chaque euro de salaire fait moins économiser d'IS.`,
+            }
+          : null,
+    },
+    {
+      etat: (r) => r.brutAnnuel > plafond,
+      seuil: (apres) =>
+        apres.brutAnnuel > plafond
+          ? {
+              libelle: 'PASS',
+              explication: `Au-delà du plafond de la Sécurité sociale (${eur(plafond)}), la CET et la tranche 2 de retraite complémentaire s'ajoutent.`,
+            }
+          : null,
+    },
+  ];
+
+  const seuils: Seuil[] = [];
+  for (const regle of regles) {
+    for (let i = 1; i < grille.length; i++) {
+      const avant = grille[i - 1];
+      const apres = grille[i];
+      if (regle.etat(avant.resultat) === regle.etat(apres.resultat)) continue;
+      const etatAvant = regle.etat(avant.resultat);
+      let bas = avant.brut;
+      let haut = apres.brut;
+      let resultatHaut = apres.resultat;
+      for (let k = 0; k < 30; k++) {
+        const milieu = (bas + haut) / 2;
+        const r = simuler({ ...h, brutAnnuel: milieu });
+        if (regle.etat(r) === etatAvant) bas = milieu;
+        else {
+          haut = milieu;
+          resultatHaut = r;
+        }
+      }
+      const seuil = regle.seuil(resultatHaut);
+      if (seuil) seuils.push({ brut: haut, ...seuil });
+    }
+  }
+  return seuils.sort((a, b) => a.brut - b.brut);
+}
+
 /**
  * Sweeps every payable salary level and returns the take-home curve together
- * with the optimum. The salary level is the swept variable, so it is not part
- * of the expected assumptions.
+ * with the optimum and the levels where the curve bends. The salary level is
+ * the swept variable, so it is not part of the expected assumptions.
  */
 export function balayer(
   h: Omit<Hypotheses, 'brutAnnuel'>,
@@ -706,6 +803,7 @@ export function balayer(
   points: { brut: number; net: number; resultat: Resultat }[];
   optimum: Resultat;
   plateau: Plateau;
+  seuils: Seuil[];
 } {
   const brutMax = brutMaxPourBudget(
     h.resultatAvantRemuneration,
@@ -733,5 +831,10 @@ export function balayer(
     if (r.netEnPoche > optimum.netEnPoche) optimum = r;
   }
 
-  return { points, optimum, plateau: plateauOptimum(h, optimum, brutMax) };
+  return {
+    points,
+    optimum,
+    plateau: plateauOptimum(h, optimum, brutMax),
+    seuils: seuilsCourbe(h, points),
+  };
 }

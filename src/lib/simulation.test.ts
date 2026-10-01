@@ -12,6 +12,7 @@ import {
   decomposerSalaire,
   plafondTranche1,
   plateauOptimum,
+  seuilsCourbe,
   simuler,
   tauxPrelevementSource,
   type Hypotheses,
@@ -576,6 +577,40 @@ describe('recherche de l’optimum', () => {
     expect(balayer({ ...BASE, autresRevenus: 120_000 }).optimum.brutAnnuel).toBeLessThan(
       balayer(BASE).optimum.brutAnnuel,
     );
+  });
+});
+
+describe('seuils où la courbe change de pente', () => {
+  const DEFAUT = { ...BASE, resultatAvantRemuneration: P.RESULTAT_PAR_DEFAUT };
+  const parLibelle = (h: typeof BASE) =>
+    Object.fromEntries(balayer(h).seuils.map((s) => [s.libelle, s.brut]));
+
+  it('place la tranche à 30 % là où le revenu imposable atteint son plafond', () => {
+    const brut = parLibelle(DEFAUT)['TMI 30 %'];
+    expect(brut).toBeGreaterThan(39_000);
+    expect(brut).toBeLessThan(41_000);
+    expect(sim(brut - 10, DEFAUT).revenuImposable).toBeLessThan(P.BAREME_IR[1].plafond);
+    expect(sim(brut + 10, DEFAUT).revenuImposable).toBeGreaterThan(P.BAREME_IR[1].plafond);
+  });
+
+  it("repère le passage de l'IS à 15 % et le PASS", () => {
+    const seuils = parLibelle(DEFAUT);
+    expect(sim(seuils['IS 15 %'] + 10, DEFAUT).resultatFiscal).toBeLessThan(P.IS_SEUIL_TAUX_REDUIT);
+    expect(seuils.PASS).toBeCloseTo(P.PASS, 0);
+  });
+
+  it("ne marque pas l'entrée dans une tranche que la décote neutralise", () => {
+    expect(parLibelle(DEFAUT)['TMI 11 %']).toBeUndefined();
+  });
+
+  it('ignore le taux réduit d’IS quand la société n’y a pas droit', () => {
+    expect(parLibelle({ ...DEFAUT, eligibleISReduit: false })['IS 15 %']).toBeUndefined();
+  });
+
+  it('décale la tranche à 30 % avec le quotient familial', () => {
+    const { points } = balayer({ ...DEFAUT, parts: 2, couple: true });
+    const libelles = seuilsCourbe({ ...DEFAUT, parts: 2, couple: true }, points).map((s) => s.libelle);
+    expect(libelles).not.toContain('TMI 30 %');
   });
 });
 

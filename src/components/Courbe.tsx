@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { eur } from '../lib/format';
+import type { Seuil } from '../lib/simulation';
 
 export type Point = { brut: number; net: number };
 
@@ -15,6 +16,8 @@ type Props = {
    * it sits.
    */
   brutExterne?: number;
+  /** Salary levels where a tax rule kicks in, drawn as faint vertical markers. */
+  seuils?: Seuil[];
   onScrub?: (brut: number) => void;
   /**
    * Read-only rendering: no clickable green cursor, no hover, no invitation to
@@ -25,7 +28,11 @@ type Props = {
 
 const L = 56; // left margin
 const R = 16;
-const T = 16;
+const T_BASE = 16;
+/** Height of one row of threshold labels above the plot. */
+const RANG_SEUIL = 13;
+/** Minimum horizontal gap between two labels sharing a row. */
+const ECART_ETIQUETTES = 58;
 const B = 34;
 const W = 720;
 const H = 260;
@@ -58,14 +65,34 @@ export function Courbe({
   brutOptimal,
   plateau,
   brutExterne,
+  seuils = [],
   onScrub,
   statique = false,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [survol, setSurvol] = useState<Point | null>(null);
 
+  const brutMaxPoints = Math.max(...points.map((p) => p.brut), 1);
+  const xSeuil = (b: number) => L + (b / brutMaxPoints) * (W - L - R);
+
+  // Labels too close to fit side by side go up a row.
+  const seuilsVisibles = useMemo(() => {
+    const finDeRang: number[] = [];
+    return seuils
+      .filter((s) => s.brut > brutMaxPoints * 0.03 && s.brut < brutMaxPoints)
+      .map((s) => {
+        const cx = L + (s.brut / brutMaxPoints) * (W - L - R);
+        let rang = finDeRang.findIndex((fin) => cx - fin >= ECART_ETIQUETTES);
+        if (rang === -1) rang = finDeRang.length;
+        finDeRang[rang] = cx;
+        return { ...s, rang };
+      });
+  }, [seuils, brutMaxPoints]);
+  const T =
+    T_BASE + (seuilsVisibles.length ? Math.max(...seuilsVisibles.map((s) => s.rang)) + 1 : 0) * RANG_SEUIL;
+
   const { chemin, aire, x, y, netMin, netMax, brutMax, pasY } = useMemo(() => {
-    const brutMax = Math.max(...points.map((p) => p.brut), 1);
+    const brutMax = brutMaxPoints;
     const netMaxBrut = Math.max(...points.map((p) => p.net));
     const netMinBrut = Math.min(...points.map((p) => p.net));
     // Do not always start from zero: what must read clearly is the gap
@@ -85,7 +112,7 @@ export function Courbe({
     const aire = `${chemin} L${x(brutMax).toFixed(1)},${H - B} L${L},${H - B} Z`;
 
     return { chemin, aire, x, y, netMin, netMax, brutMax, pasY };
-  }, [points]);
+  }, [points, brutMaxPoints, T]);
 
   const graduationsY = useMemo(() => {
     const valeurs: number[] = [];
@@ -203,6 +230,30 @@ export function Courbe({
           />
         )}
 
+        {/* Tax thresholds */}
+        {seuilsVisibles.map((s) => (
+          <g key={s.libelle + s.brut}>
+            <title>{`${s.libelle} — ${eur(s.brut)} de brut. ${s.explication}`}</title>
+            <line
+              x1={xSeuil(s.brut)}
+              x2={xSeuil(s.brut)}
+              y1={T}
+              y2={H - B}
+              stroke="var(--color-ink-300)"
+              strokeDasharray="1 3"
+            />
+            <text
+              x={xSeuil(s.brut)}
+              y={T - 5 - s.rang * RANG_SEUIL}
+              textAnchor="middle"
+              fontSize="10"
+              fill="var(--color-ink-400)"
+            >
+              {s.libelle}
+            </text>
+          </g>
+        ))}
+
         <path d={aire} fill="url(#degradeAire)" />
         <path
           d={chemin}
@@ -273,10 +324,29 @@ export function Courbe({
             {eur(plateau.max)}
           </span>
         )}
+        {seuilsVisibles.length > 0 && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-0 border-l border-dotted border-ink-400" />
+            Seuils où la pente change
+          </span>
+        )}
         {!statique && (
           <span className="text-ink-400">Cliquez sur la courbe pour vous y placer.</span>
         )}
       </figcaption>
+
+      {!statique && seuilsVisibles.length > 0 && (
+        <ul className="mt-3 space-y-1 text-xs leading-relaxed text-ink-500">
+          {seuilsVisibles.map((s) => (
+            <li key={s.libelle + s.brut}>
+              <strong className="font-medium text-ink-700">
+                {s.libelle} · {eur(s.brut)}
+              </strong>{' '}
+              — {s.explication}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {brutExterne !== undefined && brutExterne > 0 && (
         <p className="mt-1.5 text-xs text-ink-400">

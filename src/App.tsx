@@ -54,7 +54,7 @@ export default function App() {
   }, [brutMaxArrondi]);
 
   const r = useMemo(() => simuler({ ...base, brutAnnuel: brut }), [base, brut]);
-  const { points, optimum, plateau } = useMemo(() => balayer(base), [base]);
+  const { points, optimum, plateau, seuils } = useMemo(() => balayer(base), [base]);
 
   const ecart = optimum.netEnPoche - r.netEnPoche;
   // The curve is flat at its top: a whole range of salaries comes out the
@@ -514,6 +514,7 @@ export default function App() {
                 brutCourant={brut}
                 brutOptimal={optimum.brutAnnuel}
                 plateau={plateau}
+                seuils={seuils}
                 brutExterne={base.salaireExterneBrut}
                 onScrub={(b) =>
                   setBrut(Math.min(brutMaxArrondi, Math.round(b / 500) * 500))
