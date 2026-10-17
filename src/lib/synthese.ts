@@ -61,6 +61,8 @@ const CLES_ARBITRAGE = [
   'bareme',
   'epargneSalariale',
   'avantages',
+  'versementPER',
+  'plafondPER',
 ];
 const CLES_ACOMPTES = [
   'precedent',

@@ -57,6 +57,13 @@ export type Hypotheses = {
    * full.
    */
   avantagesExoneres: number;
+  /** Voluntary payments into an individual PER this year, opted as deductible. */
+  versementPER: number;
+  /**
+   * Deduction ceiling available this year, as printed on the tax notice: this
+   * year's ceiling plus the unused ones carried forward.
+   */
+  plafondPER: number;
   /** Company's work-accident insurance rate, as a percentage. */
   tauxATMP: number;
   /** Is the company eligible for the reduced 15% corporate tax rate? */
@@ -168,6 +175,14 @@ export type Resultat = {
   csgCrdsEpargneSalariale: number;
   /** What the benefits leave in the pocket. */
   avantagesNets: number;
+
+  // Individual retirement savings (PER)
+  /** Payment actually deducted: capped by the ceiling and by taxable income. */
+  deductionPER: number;
+  /** Household income tax saved by the deduction. */
+  economieImpotPER: number;
+  /** Ceiling this year's earned income opens for next year's payments. */
+  plafondPERAnneeSuivante: number;
 
   // Summary
   /** President's salary after income tax, including its effect on an outside job. */
@@ -605,22 +620,34 @@ export function simuler(h: Hypotheses): Resultat {
   let revenuImposable: number;
   let irFoyer: number;
   let irSurSalaire: number;
+  let deductionPER: number;
 
   // Two bases: the household as it stands, and the household without the
   // president's salary. The difference isolates the tax that salary actually
   // causes — tax owed on an outside job or on a partner's income must not be
   // charged to the company.
+  //
+  // A PER payment comes off the household's income taxed at the progressive
+  // scale, in every one of these bases alike: the deduction exists with or
+  // without the company, and only the tax the salary still causes on top of it
+  // is charged to the salary. It cannot take a base below zero, and income
+  // under the flat tax is outside its reach.
+  const versementPER = Math.max(0, h.versementPER);
+  const deductionPlafonnee = Math.min(versementPER, Math.max(0, h.plafondPER));
+  const deduire = (base: number) => Math.max(0, base - deductionPlafonnee);
   const baseHorsDividendes = salairesImposables + h.autresRevenus;
   const baseSansRemuneration =
     abattementSalaire(externeSeul.netImposableAvantAbattement) + h.autresRevenus;
-  const irHorsDividendes = calculerIR(baseHorsDividendes, h.parts, h.couple);
-  const irSansRemuneration = calculerIR(baseSansRemuneration, h.parts, h.couple);
+  const irHorsDividendes = calculerIR(deduire(baseHorsDividendes), h.parts, h.couple);
+  const irSansRemuneration = calculerIR(deduire(baseSansRemuneration), h.parts, h.couple);
 
   if (h.dividendesAuBareme) {
     const dividendesImposables =
       dividendesBruts * (1 - P.ABATTEMENT_DIVIDENDES) -
       dividendesBruts * P.CSG_DEDUCTIBLE_DIVIDENDES;
-    revenuImposable = baseHorsDividendes + Math.max(0, dividendesImposables);
+    const avantDeduction = baseHorsDividendes + Math.max(0, dividendesImposables);
+    revenuImposable = deduire(avantDeduction);
+    deductionPER = avantDeduction - revenuImposable;
     irFoyer = calculerIR(revenuImposable, h.parts, h.couple);
 
     // Salary and dividends now share one progressive scale, so the tax they
@@ -633,7 +660,7 @@ export function simuler(h: Hypotheses): Resultat {
     // the Shapley value for two contributors, and it adds up exactly to the
     // tax they cause together.
     const irDividendesDAbord = calculerIR(
-      baseSansRemuneration + Math.max(0, dividendesImposables),
+      deduire(baseSansRemuneration + Math.max(0, dividendesImposables)),
       h.parts,
       h.couple,
     );
@@ -642,7 +669,8 @@ export function simuler(h: Hypotheses): Resultat {
     irDividendes =
       (irDividendesDAbord - irSansRemuneration + (irFoyer - irHorsDividendes)) / 2;
   } else {
-    revenuImposable = baseHorsDividendes;
+    revenuImposable = deduire(baseHorsDividendes);
+    deductionPER = baseHorsDividendes - revenuImposable;
     // Under the flat tax, dividends stay out of the progressive scale: there
     // is nothing to share, and the salary bears exactly its own tax.
     irDividendes = dividendesBruts * P.PFU_IR;
@@ -650,6 +678,16 @@ export function simuler(h: Hypotheses): Resultat {
     irSurSalaire = irHorsDividendes - irSansRemuneration;
   }
   const irTotal = irSurSalaire + irDividendes;
+
+  // What the PER saves the household, against the same year without it.
+  const economieImpotPER =
+    deductionPER > 0 ? simuler({ ...h, versementPER: 0 }).irFoyer - irFoyer : 0;
+  // This year's salaries open next year's ceiling: 10% of earned income net of
+  // the professional-expense deduction, bounded by 10% of one and eight PASS.
+  const plafondPERAnneeSuivante = Math.min(
+    8 * P.PASS * P.PER_TAUX_PLAFOND,
+    Math.max(P.PASS * P.PER_TAUX_PLAFOND, salairesImposables * P.PER_TAUX_PLAFOND),
+  );
 
   const dividendesNets = dividendesBruts - prelevementsSociauxDividendes - irDividendes;
 
@@ -758,6 +796,9 @@ export function simuler(h: Hypotheses): Resultat {
     chargesAvantages,
     csgCrdsEpargneSalariale,
     avantagesNets,
+    deductionPER,
+    economieImpotPER,
+    plafondPERAnneeSuivante,
     salaireNetApresImpot,
     netEnPoche,
     totalPrelevements,

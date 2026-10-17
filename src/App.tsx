@@ -37,7 +37,9 @@ export default function App() {
       initial.base.tauxATMP !== DEFAUTS.tauxATMP ||
       initial.base.eligibleISReduit !== DEFAUTS.eligibleISReduit ||
       initial.base.epargneSalariale !== DEFAUTS.epargneSalariale ||
-      initial.base.avantagesExoneres !== DEFAUTS.avantagesExoneres,
+      initial.base.avantagesExoneres !== DEFAUTS.avantagesExoneres ||
+      initial.base.versementPER !== DEFAUTS.versementPER ||
+      initial.base.plafondPER !== DEFAUTS.plafondPER,
   );
 
   const brutMax = useMemo(
@@ -348,6 +350,24 @@ export default function App() {
                         hint="15 % jusqu'à 42 500 € de bénéfice si le chiffre d'affaires est inférieur à 10 M€, le capital entièrement libéré et détenu à 75 % au moins par des personnes physiques."
                       />
                     </div>
+                    <Montant
+                      label="Versements sur un PER individuel"
+                      valeur={base.versementPER}
+                      onChange={(v) => maj('versementPER', v)}
+                      hint={
+                        r.deductionPER > 0
+                          ? `${eur(r.deductionPER)} déduits de votre revenu imposable : ${eur(r.economieImpotPER)} d'impôt en moins pour le foyer. L'argent reste bloqué jusqu'à la retraite, sauf cas de déblocage anticipé.`
+                          : base.versementPER > 0
+                            ? "Rien n'est déduit : sans revenu imposé au barème, le versement ne réduit aucun impôt."
+                            : "Versements de l'année, déductibles du revenu imposé au barème. Les dividendes à la flat tax n'en profitent pas."
+                      }
+                    />
+                    <Montant
+                      label="Plafond de déduction disponible"
+                      valeur={base.plafondPER}
+                      onChange={(v) => maj('plafondPER', v)}
+                      hint={`Le montant indiqué sur votre avis d'impôt, plafonds non utilisés compris. ${eur(P.PER_PLAFOND_MINIMUM)} au minimum en 2026. Votre rémunération de cette année vous ouvrira ${eur(r.plafondPERAnneeSuivante)} pour l'an prochain.`}
+                    />
                     <Montant
                       label="Épargne salariale et chèques-vacances"
                       valeur={base.epargneSalariale}

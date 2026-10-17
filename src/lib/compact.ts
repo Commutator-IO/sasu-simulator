@@ -31,6 +31,8 @@ const VERS_COURT: Record<string, string> = {
   bareme: 'bm',
   epargneSalariale: 'es',
   avantages: 'av',
+  versementPER: 'vp',
+  plafondPER: 'pp',
   // Shared
   isReduit: 'ir',
   // Instalments

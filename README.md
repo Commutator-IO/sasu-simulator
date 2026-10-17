@@ -193,7 +193,9 @@ et un paramètre ajouté sans date fait lui aussi échouer la suite.
 - Hors CFE, mutuelle, prévoyance et frais de tenue de comptabilité.
 - La CSG déductible sur dividendes est imputée sur l'année simulée, alors
   qu'elle l'est en pratique l'année suivante.
-- Pas de crédits ni de réductions d'impôt, pas de PER.
+- Pas de crédits ni de réductions d'impôt. Les versements sur un PER individuel
+  sont déduits dans la limite du plafond saisi, mais la mutualisation des
+  plafonds entre conjoints n'est pas proposée.
 - L'épargne salariale et les autres avantages hors salaire se saisissent en
   montants globaux : leurs plafonds et leurs conditions d'éligibilité ne sont
   pas contrôlés. L'épargne salariale est supposée placée sur un plan

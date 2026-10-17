@@ -13,6 +13,8 @@ const DEFAUTS: EtatPartage = {
     salaireExterneBrut: 0,
     epargneSalariale: 0,
     avantagesExoneres: 0,
+    versementPER: 0,
+    plafondPER: P.PER_PLAFOND_MINIMUM,
     reservesDistribuables: 0,
     moisRemuneration: 12,
     tauxATMP: P.AT_MP_DEFAUT,
@@ -41,6 +43,13 @@ describe('encodage', () => {
     const etat = avec({ epargneSalariale: 3_000, avantagesExoneres: 1_200 });
     const url = encoderEtat(etat, DEFAUTS);
     expect(url).toBe('?epargneSalariale=3000&avantages=1200');
+    expect(decoderEtat(url, DEFAUTS)).toEqual(etat);
+  });
+
+  it('fait voyager les versements PER et le plafond disponible', () => {
+    const etat = avec({ versementPER: 6_000, plafondPER: 12_500 });
+    const url = encoderEtat(etat, DEFAUTS);
+    expect(url).toBe('?versementPER=6000&plafondPER=12500');
     expect(decoderEtat(url, DEFAUTS)).toEqual(etat);
   });
 

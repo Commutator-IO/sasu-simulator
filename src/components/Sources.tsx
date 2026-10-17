@@ -71,6 +71,12 @@ const SOURCES = [
     hote: 'boss.gouv.fr',
   },
   {
+    titre: 'Plafond de déduction du PER individuel',
+    detail: `10 % des revenus d'activité de l'année précédente nets de frais professionnels, entre ${eur(P.PER_PLAFOND_MINIMUM)} et ${eur(P.PER_PLAFOND_MAXIMUM)} en 2026, majoré des plafonds non utilisés des années précédentes : le total figure sur l'avis d'impôt.`,
+    url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F34982',
+    hote: 'service-public.gouv.fr',
+  },
+  {
     titre: 'Épargne salariale et président de SASU',
     detail:
       "Intéressement, participation et abondement sont déductibles du bénéfice, exonérés de cotisations et de forfait social sous 50 salariés, mais soumis à la CSG-CRDS. Le président n'y a accès que si la société emploie au moins un salarié en plus de lui.",
@@ -97,6 +103,7 @@ const HYPOTHESES = [
   "Sa rémunération est traitée comme celle d'un cadre : Apec et CET sont retenues.",
   "La rémunération d'un mandataire social sans contrat de travail est exclue de l'assiette de la taxe d'apprentissage et de la contribution à la formation professionnelle.",
   "L'abattement de 1,75 % sur l'assiette CSG-CRDS est plafonné à 4 Pass, la fraction supérieure étant soumise sur 100 % du brut.",
+  "Les versements sur un PER individuel sont déduits du seul revenu imposé au barème : les dividendes soumis à la flat tax n'en profitent pas. Le plafond est celui du président ; la mutualisation avec celui du conjoint n'est pas modélisée.",
   "L'épargne salariale saisie est supposée placée sur un plan d'épargne, donc exonérée d'impôt sur le revenu, et versée par une société de moins de 50 salariés, donc sans forfait social. Les autres avantages sont supposés rester dans leurs limites d'exonération.",
   "L'impôt sur le revenu est calculé sur la seule année simulée : la CSG déductible sur dividendes est imputée sur la même année, alors qu'elle l'est en pratique l'année suivante.",
   "Le taux de prélèvement à la source affiché est celui qui correspondrait à la situation simulée. Le taux réellement appliqué par l'Urssaf est calculé sur vos dernières déclarations et actualisé en septembre : il est donc en décalage d'un à deux ans. Tant que l'administration n'a transmis aucun taux — le cas d'une société qui vient d'être créée — c'est la grille de taux par défaut qui s'applique.",

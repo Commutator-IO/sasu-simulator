@@ -613,8 +613,6 @@ c'est la suite logique de la question des dividendes.
 - **Contribution différentielle sur les hauts revenus** : vérifier si elle est
   reconduite en 2026 et, le cas échéant, la modéliser. Elle concerne les
   revenus fiscaux de référence supérieurs à 250 000 €.
-- **Arbitrage PER** : les versements déductibles changent l'optimum, parfois
-  nettement.
 - **Intérêts de compte courant d'associé**, déductibles du résultat dans la
   limite du taux fiscal.
 - **Comparaison SASU / EURL** à revenu net constant, la question qui précède

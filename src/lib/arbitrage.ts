@@ -17,6 +17,8 @@ export const DEFAUTS_ARBITRAGE: Omit<Hypotheses, 'brutAnnuel'> = {
   salaireExterneBrut: 0,
   epargneSalariale: 0,
   avantagesExoneres: 0,
+  versementPER: 0,
+  plafondPER: P.PER_PLAFOND_MINIMUM,
   reservesDistribuables: 0,
   moisRemuneration: 12,
   tauxATMP: P.AT_MP_DEFAUT,

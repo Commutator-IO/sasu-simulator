@@ -36,6 +36,8 @@ const CLES = {
   bareme: 'bareme',
   epargneSalariale: 'epargneSalariale',
   avantages: 'avantages',
+  versementPER: 'versementPER',
+  plafondPER: 'plafondPER',
 } as const;
 
 /** Query-string keys this tool owns, for state persistence. */
@@ -111,6 +113,8 @@ export function encoderEtat(
   ajouter(CLES.bareme, base.dividendesAuBareme, d.dividendesAuBareme);
   ajouter(CLES.epargneSalariale, arrondi(base.epargneSalariale), d.epargneSalariale);
   ajouter(CLES.avantages, arrondi(base.avantagesExoneres), d.avantagesExoneres);
+  ajouter(CLES.versementPER, arrondi(base.versementPER), d.versementPER);
+  ajouter(CLES.plafondPER, arrondi(base.plafondPER), d.plafondPER);
 
   const chaine = params.toString();
   return chaine === '' ? '' : `?${chaine}`;
@@ -166,6 +170,8 @@ export function decoderEtat(recherche: string, defauts: EtatPartage): EtatPartag
         MAX_MONTANT,
       ),
       avantagesExoneres: nombre(p.get(CLES.avantages), d.avantagesExoneres, 0, MAX_MONTANT),
+      versementPER: nombre(p.get(CLES.versementPER), d.versementPER, 0, MAX_MONTANT),
+      plafondPER: nombre(p.get(CLES.plafondPER), d.plafondPER, 0, MAX_MONTANT),
     },
     brut: nombre(p.get(CLES.brut), defauts.brut, 0, MAX_MONTANT),
   };

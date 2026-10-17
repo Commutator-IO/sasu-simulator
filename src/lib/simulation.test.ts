@@ -30,6 +30,8 @@ const BASE: Omit<Hypotheses, 'brutAnnuel'> = {
   salaireExterneBrut: 0,
   epargneSalariale: 0,
   avantagesExoneres: 0,
+  versementPER: 0,
+  plafondPER: P.PER_PLAFOND_MINIMUM,
   reservesDistribuables: 0,
   moisRemuneration: 12,
   tauxATMP: P.AT_MP_DEFAUT,
@@ -709,6 +711,42 @@ describe('avantages versés hors salaire', () => {
     expect(points.at(-1)!.brut).toBeCloseTo(brutMaxPourBudget(130_000, BASE.tauxATMP), 6);
     expect(points.at(-1)!.brut).toBeLessThan(balayer(BASE).points.at(-1)!.brut);
     expect(optimum.avantagesNets).toBe(20_000);
+  });
+});
+
+describe('versements sur un PER individuel', () => {
+  it('déduit le versement dans la limite du plafond disponible', () => {
+    const r = sim(60_000, { versementPER: 10_000, plafondPER: 4_710 });
+    expect(r.deductionPER).toBe(4_710);
+    expect(r.economieImpotPER).toBeCloseTo(sim(60_000).irFoyer - r.irFoyer, 6);
+    // Still in the 30% bracket after the deduction: it all saves 30%.
+    expect(r.tmi).toBe(0.3);
+    expect(r.economieImpotPER).toBeCloseTo(4_710 * 0.3, 6);
+  });
+
+  it('ne déduit rien de revenus soumis à la seule flat tax', () => {
+    // No salary, dividends at the flat tax: nothing is taxed at the scale.
+    const r = sim(0, { versementPER: 5_000, plafondPER: 5_000 });
+    expect(r.deductionPER).toBe(0);
+    expect(r.economieImpotPER).toBe(0);
+  });
+
+  it('déplace l’optimum vers plus de salaire', () => {
+    // The deduction frees the bottom of the scale, so salary stays cheaper
+    // than dividends over a wider range: the recommendation changes by more
+    // than €10,000 of gross pay.
+    const DEFAUT = { ...BASE, resultatAvantRemuneration: P.RESULTAT_PAR_DEFAUT };
+    const sans = balayer(DEFAUT).optimum.brutAnnuel;
+    const avec = balayer({ ...DEFAUT, versementPER: 10_000, plafondPER: 10_000 }).optimum
+      .brutAnnuel;
+    expect(avec - sans).toBeGreaterThan(10_000);
+  });
+
+  it("ouvre le plafond de l'année suivante sur les salaires de l'année", () => {
+    expect(sim(0).plafondPERAnneeSuivante).toBeCloseTo(0.1 * P.PASS, 6);
+    expect(sim(20 * P.PASS).plafondPERAnneeSuivante).toBeCloseTo(0.8 * P.PASS, 6);
+    const r = sim(120_000);
+    expect(r.plafondPERAnneeSuivante).toBeCloseTo(0.1 * r.salaireNetImposable, 6);
   });
 });
 

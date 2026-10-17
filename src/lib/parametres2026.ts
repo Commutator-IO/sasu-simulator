@@ -223,6 +223,20 @@ export const CSG_CRDS_EPARGNE_SALARIALE =
  */
 export const PLAFOND_AIDE_SERVICES_PERSONNE = 2_591;
 
+// --- Individual retirement savings (PER) -------------------------------------
+
+/**
+ * Deduction ceiling for voluntary payments into an individual PER in 2026:
+ * 10% of 2025 earned income net of professional expenses, at least €4,710
+ * (10% of the 2025 PASS) and at most €37,680 (10% of 8 times it). Unused
+ * ceilings of earlier years add to it, which is why the figure to enter is the
+ * one printed on the tax notice (service-public.gouv.fr F34982).
+ */
+export const PER_PLAFOND_MINIMUM = 4_710;
+export const PER_PLAFOND_MAXIMUM = 37_680;
+/** Share of earned income that opens next year's ceiling. */
+export const PER_TAUX_PLAFOND = 0.1;
+
 // ---------------------------------------------------------------------------
 // Corporate income tax
 // ---------------------------------------------------------------------------
@@ -474,6 +488,13 @@ export const VALIDITE_PARAMETRES: Validite[] = [
     aVerifier: "Plafond annuel de l'aide aux services à la personne (CESU préfinancé), revalorisé par arrêté en fin d'année.",
     source:
       'https://www.servicesalapersonne.gouv.fr/tout-savoir-sur-les-services-la-personne/les-avantages-du-cesu-prefinance',
+  },
+  {
+    constantes: ['PER_PLAFOND_MINIMUM', 'PER_PLAFOND_MAXIMUM', 'PER_TAUX_PLAFOND'],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      "Plafond de déduction de l'épargne retraite (10 % des revenus d'activité, bornes de 10 % et 80 % du Pass de l'année précédente) et règles de report des plafonds non utilisés.",
+    source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F34982',
   },
   {
     constantes: ['IS_SEUIL_TAUX_REDUIT', 'IS_TAUX_REDUIT', 'IS_TAUX_NORMAL'],
