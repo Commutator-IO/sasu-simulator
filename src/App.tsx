@@ -8,7 +8,7 @@ import { Entete, Pied } from './components/Cadre';
 import { BoutonPartage } from './components/BoutonPartage';
 import { BoutonReset } from './components/BoutonReset';
 import { eur, pct } from './lib/format';
-import { balayer, brutMaxPourBudget, simuler } from './lib/simulation';
+import { balayer, brutMaxPourBudget, budgetRemuneration, simuler } from './lib/simulation';
 import { decoderEtat, encoderEtat, lienPartage } from './lib/url';
 import {
   DEFAUTS_ARBITRAGE as DEFAUTS,
@@ -34,17 +34,29 @@ export default function App() {
       initial.base.tauxDistribution !== DEFAUTS.tauxDistribution ||
       initial.base.reservesDistribuables !== DEFAUTS.reservesDistribuables ||
       initial.base.tauxATMP !== DEFAUTS.tauxATMP ||
-      initial.base.eligibleISReduit !== DEFAUTS.eligibleISReduit,
+      initial.base.eligibleISReduit !== DEFAUTS.eligibleISReduit ||
+      initial.base.epargneSalariale !== DEFAUTS.epargneSalariale ||
+      initial.base.avantagesExoneres !== DEFAUTS.avantagesExoneres,
   );
 
   const brutMax = useMemo(
     () =>
       brutMaxPourBudget(
-        base.resultatAvantRemuneration,
+        budgetRemuneration({
+          resultatAvantRemuneration: base.resultatAvantRemuneration,
+          epargneSalariale: base.epargneSalariale,
+          avantagesExoneres: base.avantagesExoneres,
+        }),
         base.tauxATMP,
         base.moisRemuneration,
       ),
-    [base.resultatAvantRemuneration, base.tauxATMP, base.moisRemuneration],
+    [
+      base.resultatAvantRemuneration,
+      base.epargneSalariale,
+      base.avantagesExoneres,
+      base.tauxATMP,
+      base.moisRemuneration,
+    ],
   );
   const brutMaxArrondi = Math.max(1000, Math.floor(brutMax / 500) * 500);
 
@@ -336,6 +348,27 @@ export default function App() {
                         hint="15 % jusqu'à 42 500 € de bénéfice si le chiffre d'affaires est inférieur à 10 M€, le capital entièrement libéré et détenu à 75 % au moins par des personnes physiques."
                       />
                     </div>
+                    <Montant
+                      label="Épargne salariale et chèques-vacances"
+                      valeur={base.epargneSalariale}
+                      onChange={(v) => maj('epargneSalariale', v)}
+                      hint={`Intéressement, participation, abondement PEE ou Perco, chèques-vacances, versés par an. Déduits du bénéfice ; vous les recevez nets de ${pct(P.CSG_CRDS_EPARGNE_SALARIALE, 1)} de CSG-CRDS, sans impôt sur le revenu s'ils sont placés sur un plan d'épargne.`}
+                    />
+                    <Montant
+                      label="Autres avantages exonérés"
+                      valeur={base.avantagesExoneres}
+                      onChange={(v) => maj('avantagesExoneres', v)}
+                      hint="Part patronale des titres-restaurant, bons d'achat et chèques cadeaux, dans leurs limites d'exonération. Déduits du bénéfice, reçus sans prélèvement."
+                    />
+                    {(base.epargneSalariale > 0 || base.avantagesExoneres > 0) && (
+                      <p className="rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-ink-600 sm:col-span-2">
+                        Vérifiez que votre société y a droit. L'intéressement, la
+                        participation et le PEE ne sont ouverts au président que si la
+                        société emploie au moins un salarié en plus de lui. Chaque
+                        dispositif a ses propres conditions et plafonds : faites-les
+                        valider par votre expert-comptable.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -377,6 +410,11 @@ export default function App() {
                         </p>
                       </div>
                     </div>
+                    {r.avantagesNets > 0 && (
+                      <p className="mt-2 text-xs text-brand-100">
+                        + {eur(r.avantagesNets)} d'avantages versés hors salaire
+                      </p>
+                    )}
                   </div>
 
                   <div className="px-6 py-6 sm:px-8">

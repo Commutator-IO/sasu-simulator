@@ -182,6 +182,28 @@ export const CSG_DEDUCTIBLE = 6.8;
 export const CSG_NON_DEDUCTIBLE = 2.4;
 export const CRDS = 0.5;
 
+// --- Benefits paid outside salary and dividends ----------------------------
+
+/**
+ * CSG-CRDS withheld from employee savings (profit-sharing, statutory
+ * participation, employer top-up on a PEE or PERCO/PERECO) and from
+ * holiday vouchers in companies under 50 employees: 9.2% + 0.5% = 9.7%, on
+ * the **whole** amount — these sums are outside the 1.75% professional
+ * expense allowance (BOSS, Assiette générale, § 270).
+ *
+ * Under 50 employees the company owes no forfait social on them and no social
+ * contributions (service-public.gouv.fr F2140, F2141, F2142). Placed on a
+ * savings plan within 15 days, they are also exempt from income tax up to
+ * €36,045 in 2026.
+ *
+ * Eligibility is the catch for a sole president: the company must employ at
+ * least one employee besides its officer for them to join the PEE or
+ * profit-sharing, and a company whose only employee is its president cannot
+ * sign a profit-sharing agreement (F2140, F2142).
+ */
+export const CSG_CRDS_EPARGNE_SALARIALE =
+  (CSG_DEDUCTIBLE + CSG_NON_DEDUCTIBLE + CRDS) / 100;
+
 // ---------------------------------------------------------------------------
 // Corporate income tax
 // ---------------------------------------------------------------------------

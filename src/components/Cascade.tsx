@@ -22,7 +22,9 @@ export function Cascade({ r }: { r: Resultat }) {
       label: 'Net en poche',
       montant: Math.max(0, r.netEnPoche),
       couleur: 'var(--color-brand-500)',
-      detail: `${eur(r.salaireNet - r.irSurSalaire)} de salaire + ${eur(r.dividendesNets)} de dividendes`,
+      detail:
+        `${eur(r.salaireNet - r.irSurSalaire)} de salaire + ${eur(r.dividendesNets)} de dividendes` +
+        (r.avantagesNets > 0 ? ` + ${eur(r.avantagesNets)} d'avantages hors salaire` : ''),
     },
     {
       cle: 'reserves',
@@ -40,7 +42,7 @@ export function Cascade({ r }: { r: Resultat }) {
     {
       cle: 'salariales',
       label: 'Cotisations salariales et CSG-CRDS',
-      montant: r.cotisationsSalariales,
+      montant: r.cotisationsSalariales + r.csgCrdsEpargneSalariale,
       couleur: 'var(--color-ink-500)',
     },
     {

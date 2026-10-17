@@ -59,6 +59,8 @@ const CLES_ARBITRAGE = [
   'distribution',
   'atmp',
   'bareme',
+  'epargneSalariale',
+  'avantages',
 ];
 const CLES_ACOMPTES = [
   'precedent',
@@ -170,7 +172,10 @@ export function calculerSynthese(recherche: string): Synthese {
     { label: 'Net en poche', montant: arbitrage.netEnPoche },
     {
       label: 'Cotisations sociales',
-      montant: arbitrage.cotisationsPatronales + arbitrage.cotisationsSalariales,
+      montant:
+        arbitrage.cotisationsPatronales +
+        arbitrage.cotisationsSalariales +
+        arbitrage.csgCrdsEpargneSalariale,
     },
     { label: 'Impôt sur les sociétés', montant: arbitrage.is },
     { label: 'Impôt sur le revenu', montant: arbitrage.irTotal },

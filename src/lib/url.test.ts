@@ -11,6 +11,8 @@ const DEFAUTS: EtatPartage = {
     couple: false,
     autresRevenus: 0,
     salaireExterneBrut: 0,
+    epargneSalariale: 0,
+    avantagesExoneres: 0,
     reservesDistribuables: 0,
     moisRemuneration: 12,
     tauxATMP: P.AT_MP_DEFAUT,
@@ -33,6 +35,13 @@ describe('encodage', () => {
   it('n’écrit que ce qui diffère des valeurs par défaut', () => {
     const url = encoderEtat(avec({ couple: true }), DEFAUTS);
     expect(url).toBe('?couple=1');
+  });
+
+  it('fait voyager les avantages versés hors salaire', () => {
+    const etat = avec({ epargneSalariale: 3_000, avantagesExoneres: 1_200 });
+    const url = encoderEtat(etat, DEFAUTS);
+    expect(url).toBe('?epargneSalariale=3000&avantages=1200');
+    expect(decoderEtat(url, DEFAUTS)).toEqual(etat);
   });
 
   it('exprime le taux de distribution en pourcentage entier', () => {

@@ -73,6 +73,18 @@ export function Detail({ r }: { r: Resultat }) {
         <Ligne label="Résultat avant rémunération du président" montant={r.resultatAvantRemuneration} />
         <Ligne label="Rémunération brute" montant={r.brutAnnuel} negatif />
         <Ligne label="Cotisations patronales" montant={r.cotisationsPatronales} negatif />
+        {r.chargesAvantages > 0 && (
+          <Ligne
+            label="Avantages versés hors salaire"
+            montant={r.chargesAvantages}
+            negatif
+            note={
+              r.csgCrdsEpargneSalariale > 0
+                ? `${eur(r.avantagesNets)} nets pour vous`
+                : undefined
+            }
+          />
+        )}
         <Ligne label="Résultat fiscal" montant={r.resultatFiscal} fort />
         <Ligne
           label="Impôt sur les sociétés"

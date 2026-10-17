@@ -44,6 +44,18 @@ export type Hypotheses = {
    * a part-time job held alongside the company.
    */
   salaireExterneBrut: number;
+  /**
+   * Yearly employee savings paid by the company: profit-sharing, statutory
+   * participation, employer top-up on a savings plan, plus holiday vouchers.
+   * A deductible company expense, received net of CSG-CRDS.
+   */
+  epargneSalariale: number;
+  /**
+   * Yearly benefits exempt from every levy within their limits: employer share
+   * of meal vouchers, gift and service vouchers. A deductible company expense,
+   * received in full.
+   */
+  avantagesExoneres: number;
   /** Company's work-accident insurance rate, as a percentage. */
   tauxATMP: number;
   /** Is the company eligible for the reduced 15% corporate tax rate? */
@@ -137,6 +149,14 @@ export type Resultat = {
   prelevementAnnuelPAS: number;
   /** Monthly amount withheld on the company payslip alone. */
   prelevementMensuelPAS: number;
+
+  // Benefits outside salary and dividends
+  /** Company cost of the employee savings and other exempt benefits. */
+  chargesAvantages: number;
+  /** CSG-CRDS withheld from the employee savings. */
+  csgCrdsEpargneSalariale: number;
+  /** What the benefits leave in the pocket. */
+  avantagesNets: number;
 
   // Summary
   netEnPoche: number;
@@ -293,6 +313,20 @@ export function brutMaxPourBudget(
     else bas = milieu;
   }
   return bas;
+}
+
+/**
+ * What is left of the profit to pay a salary once the benefits paid outside
+ * salary are funded.
+ */
+export function budgetRemuneration(
+  h: Pick<Hypotheses, 'resultatAvantRemuneration' | 'epargneSalariale' | 'avantagesExoneres'>,
+): number {
+  return (
+    h.resultatAvantRemuneration -
+    Math.max(0, h.epargneSalariale) -
+    Math.max(0, h.avantagesExoneres)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -453,7 +487,12 @@ export function simuler(h: Hypotheses): Resultat {
   const lignes = calculerCotisations(brut, h.tauxATMP, mois);
   const cotisationsPatronales = lignes.reduce((s, l) => s + l.patronal, 0);
   const cout = brut + cotisationsPatronales;
-  const resultatFiscal = h.resultatAvantRemuneration - cout;
+  // Benefits outside salary are a deductible expense like the salary itself:
+  // they come off the profit before corporate tax.
+  const epargneSalariale = Math.max(0, h.epargneSalariale);
+  const avantagesExoneres = Math.max(0, h.avantagesExoneres);
+  const chargesAvantages = epargneSalariale + avantagesExoneres;
+  const resultatFiscal = h.resultatAvantRemuneration - cout - chargesAvantages;
   const is = calculerIS(resultatFiscal, h.eligibleISReduit);
   const resultatNet = resultatFiscal - is;
 
@@ -571,10 +610,16 @@ export function simuler(h: Hypotheses): Resultat {
   const prelevementMensuelPAS = prelevementAnnuelPAS / mois;
 
   // --- Summary -------------------------------------------------------------
-  const netEnPoche = salaireNet + dividendesNets - irSurSalaire;
+  // Employee savings and holiday vouchers only bear CSG-CRDS; they are assumed
+  // placed on a savings plan, hence exempt from income tax.
+  const csgCrdsEpargneSalariale = epargneSalariale * P.CSG_CRDS_EPARGNE_SALARIALE;
+  const avantagesNets = chargesAvantages - csgCrdsEpargneSalariale;
+
+  const netEnPoche = salaireNet + dividendesNets - irSurSalaire + avantagesNets;
   const totalPrelevements =
     cotisationsPatronales +
     cotisationsSalariales +
+    csgCrdsEpargneSalariale +
     is +
     prelevementsSociauxDividendes +
     irTotal;
@@ -641,6 +686,9 @@ export function simuler(h: Hypotheses): Resultat {
     tauxPAS,
     prelevementAnnuelPAS,
     prelevementMensuelPAS,
+    chargesAvantages,
+    csgCrdsEpargneSalariale,
+    avantagesNets,
     netEnPoche,
     totalPrelevements,
     tauxPrelevementGlobal,
@@ -807,7 +855,7 @@ export function balayer(
   seuils: Seuil[];
 } {
   const brutMax = brutMaxPourBudget(
-    h.resultatAvantRemuneration,
+    budgetRemuneration(h),
     h.tauxATMP,
     h.moisRemuneration,
   );

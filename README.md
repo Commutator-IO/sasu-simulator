@@ -174,7 +174,11 @@ commentaire dans `parametres2026.ts`.
 - Hors CFE, mutuelle, prévoyance et frais de tenue de comptabilité.
 - La CSG déductible sur dividendes est imputée sur l'année simulée, alors
   qu'elle l'est en pratique l'année suivante.
-- Pas de crédits ni de réductions d'impôt, pas de PER, pas d'épargne salariale.
+- Pas de crédits ni de réductions d'impôt, pas de PER.
+- L'épargne salariale et les autres avantages hors salaire se saisissent en
+  montants globaux : leurs plafonds et leurs conditions d'éligibilité ne sont
+  pas contrôlés. L'épargne salariale est supposée placée sur un plan
+  d'épargne, donc exonérée d'impôt sur le revenu.
 - La contribution exceptionnelle sur les hauts revenus n'est pas calculée. Le
   simulateur signale le franchissement du seuil de revenu fiscal de référence
   et prévient qu'il surestime alors le net en poche.

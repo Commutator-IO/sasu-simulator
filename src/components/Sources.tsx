@@ -63,6 +63,20 @@ const SOURCES = [
     url: 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000051917000',
     hote: 'legifrance.gouv.fr',
   },
+  {
+    titre: 'Épargne salariale et président de SASU',
+    detail:
+      "Intéressement, participation et abondement sont déductibles du bénéfice, exonérés de cotisations et de forfait social sous 50 salariés, mais soumis à la CSG-CRDS. Le président n'y a accès que si la société emploie au moins un salarié en plus de lui.",
+    url: 'https://entreprendre.service-public.gouv.fr/vosdroits/F2140',
+    hote: 'service-public.gouv.fr',
+  },
+  {
+    titre: "CSG-CRDS sur l'épargne salariale",
+    detail:
+      "9,7 % sur la totalité du montant : intéressement, participation, abondements et chèques-vacances des entreprises de moins de 50 salariés sont exclus de l'abattement de 1,75 %.",
+    url: 'https://boss.gouv.fr/portail/accueil/regles-dassujettissement/assiette-generale.html',
+    hote: 'boss.gouv.fr',
+  },
 ];
 
 const HYPOTHESES = [
@@ -70,6 +84,7 @@ const HYPOTHESES = [
   "Sa rémunération est traitée comme celle d'un cadre : Apec et CET sont retenues.",
   "La rémunération d'un mandataire social sans contrat de travail est exclue de l'assiette de la taxe d'apprentissage et de la contribution à la formation professionnelle.",
   "L'abattement de 1,75 % sur l'assiette CSG-CRDS est plafonné à 4 Pass, la fraction supérieure étant soumise sur 100 % du brut.",
+  "L'épargne salariale saisie est supposée placée sur un plan d'épargne, donc exonérée d'impôt sur le revenu, et versée par une société de moins de 50 salariés, donc sans forfait social. Les autres avantages sont supposés rester dans leurs limites d'exonération.",
   "L'impôt sur le revenu est calculé sur la seule année simulée : la CSG déductible sur dividendes est imputée sur la même année, alors qu'elle l'est en pratique l'année suivante.",
   "Le taux de prélèvement à la source affiché est celui qui correspondrait à la situation simulée. Le taux réellement appliqué par l'Urssaf est calculé sur vos dernières déclarations et actualisé en septembre : il est donc en décalage d'un à deux ans. Tant que l'administration n'a transmis aucun taux — le cas d'une société qui vient d'être créée — c'est la grille de taux par défaut qui s'applique.",
   "Le taux de prélèvement à la source est celui du foyer : il porte sur la rémunération de président et sur un éventuel salaire extérieur, la retenue affichée n'étant que la part opérée par la SASU. Les revenus du conjoint saisis en « autres revenus » ne sont en revanche pas comptés dans son assiette.",

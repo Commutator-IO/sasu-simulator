@@ -3,6 +3,7 @@ import {
   abattementSalaire,
   assietteCSG,
   balayer,
+  budgetRemuneration,
   baremeIR,
   brutMaxPourBudget,
   calculerCotisations,
@@ -26,6 +27,8 @@ const BASE: Omit<Hypotheses, 'brutAnnuel'> = {
   couple: false,
   autresRevenus: 0,
   salaireExterneBrut: 0,
+  epargneSalariale: 0,
+  avantagesExoneres: 0,
   reservesDistribuables: 0,
   moisRemuneration: 12,
   tauxATMP: P.AT_MP_DEFAUT,
@@ -592,6 +595,52 @@ describe('recherche de l’optimum', () => {
     expect(balayer({ ...BASE, autresRevenus: 120_000 }).optimum.brutAnnuel).toBeLessThan(
       balayer(BASE).optimum.brutAnnuel,
     );
+  });
+});
+
+describe('avantages versés hors salaire', () => {
+  const BRUT = 30_000;
+
+  it('déduit les avantages exonérés du bénéfice et les verse en entier', () => {
+    const sans = sim(BRUT);
+    const avec = sim(BRUT, { avantagesExoneres: 2_000 });
+    expect(avec.resultatFiscal).toBeCloseTo(sans.resultatFiscal - 2_000, 6);
+    // The profit sits in the 25% band: €2,000 less of it saves €500 of tax.
+    expect(sans.is - avec.is).toBeCloseTo(2_000 * P.IS_TAUX_NORMAL, 6);
+    expect(avec.avantagesNets).toBe(2_000);
+    expect(avec.csgCrdsEpargneSalariale).toBe(0);
+  });
+
+  it("retient la CSG-CRDS sur la totalité de l'épargne salariale", () => {
+    const r = sim(BRUT, { epargneSalariale: 10_000 });
+    expect(P.CSG_CRDS_EPARGNE_SALARIALE).toBeCloseTo(0.097, 6);
+    expect(r.csgCrdsEpargneSalariale).toBeCloseTo(970, 6);
+    expect(r.avantagesNets).toBeCloseTo(9_030, 6);
+  });
+
+  it('rapporte plus que le même montant distribué en dividendes', () => {
+    // A euro of benefit escapes corporate tax and the flat tax: it is worth
+    // more in the pocket than the dividends it displaces.
+    const sans = sim(BRUT);
+    const avec = sim(BRUT, { epargneSalariale: 5_000 });
+    expect(avec.netEnPoche).toBeGreaterThan(sans.netEnPoche);
+    expect(avec.netEnPoche - sans.netEnPoche).toBeLessThan(avec.avantagesNets);
+    // The levy is counted, so the overall total stays balanced.
+    expect(avec.totalPrelevements - sans.totalPrelevements).toBeCloseTo(
+      avec.csgCrdsEpargneSalariale - (sans.is - avec.is) -
+        (sans.prelevementsSociauxDividendes - avec.prelevementsSociauxDividendes) -
+        (sans.irTotal - avec.irTotal),
+      6,
+    );
+  });
+
+  it('réduit le salaire que la société peut financer', () => {
+    const h = { ...BASE, avantagesExoneres: 20_000 };
+    expect(budgetRemuneration(h)).toBe(BASE.resultatAvantRemuneration - 20_000);
+    const { points, optimum } = balayer(h);
+    expect(points.at(-1)!.brut).toBeCloseTo(brutMaxPourBudget(130_000, BASE.tauxATMP), 6);
+    expect(points.at(-1)!.brut).toBeLessThan(balayer(BASE).points.at(-1)!.brut);
+    expect(optimum.avantagesNets).toBe(20_000);
   });
 });
 

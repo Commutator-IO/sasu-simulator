@@ -34,6 +34,8 @@ const CLES = {
   atmp: 'atmp',
   isReduit: 'isReduit',
   bareme: 'bareme',
+  epargneSalariale: 'epargneSalariale',
+  avantages: 'avantages',
 } as const;
 
 /** Query-string keys this tool owns, for state persistence. */
@@ -107,6 +109,8 @@ export function encoderEtat(
   ajouter(CLES.atmp, arrondi(base.tauxATMP, 2), d.tauxATMP);
   ajouter(CLES.isReduit, base.eligibleISReduit, d.eligibleISReduit);
   ajouter(CLES.bareme, base.dividendesAuBareme, d.dividendesAuBareme);
+  ajouter(CLES.epargneSalariale, arrondi(base.epargneSalariale), d.epargneSalariale);
+  ajouter(CLES.avantages, arrondi(base.avantagesExoneres), d.avantagesExoneres);
 
   const chaine = params.toString();
   return chaine === '' ? '' : `?${chaine}`;
@@ -155,6 +159,13 @@ export function decoderEtat(recherche: string, defauts: EtatPartage): EtatPartag
       tauxATMP: nombre(p.get(CLES.atmp), d.tauxATMP, 0, 20, 2),
       eligibleISReduit: booleen(p.get(CLES.isReduit), d.eligibleISReduit),
       dividendesAuBareme: booleen(p.get(CLES.bareme), d.dividendesAuBareme),
+      epargneSalariale: nombre(
+        p.get(CLES.epargneSalariale),
+        d.epargneSalariale,
+        0,
+        MAX_MONTANT,
+      ),
+      avantagesExoneres: nombre(p.get(CLES.avantages), d.avantagesExoneres, 0, MAX_MONTANT),
     },
     brut: nombre(p.get(CLES.brut), defauts.brut, 0, MAX_MONTANT),
   };
