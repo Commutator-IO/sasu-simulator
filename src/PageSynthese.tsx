@@ -290,7 +290,7 @@ function SlideArbitrage({
         <Chiffre label="Rémunération brute" valeur={eur(brutChoisi)} />
         <Chiffre
           label="Salaire net après impôt"
-          valeur={eur(arbitrage.salaireNet - arbitrage.irSurSalaire)}
+          valeur={eur(arbitrage.salaireNetApresImpot)}
         />
         <Chiffre label="Dividendes nets" valeur={eur(arbitrage.dividendesNets)} />
         <Chiffre label="Net en poche" valeur={eur(arbitrage.netEnPoche)} accent />

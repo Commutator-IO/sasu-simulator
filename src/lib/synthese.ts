@@ -175,7 +175,8 @@ export function calculerSynthese(recherche: string): Synthese {
       montant:
         arbitrage.cotisationsPatronales +
         arbitrage.cotisationsSalariales +
-        arbitrage.csgCrdsEpargneSalariale,
+        arbitrage.csgCrdsEpargneSalariale -
+        arbitrage.effetPlafondExterne,
     },
     { label: 'Impôt sur les sociétés', montant: arbitrage.is },
     { label: 'Impôt sur le revenu', montant: arbitrage.irTotal },

@@ -64,6 +64,13 @@ const SOURCES = [
     hote: 'legifrance.gouv.fr',
   },
   {
+    titre: 'Plafond partagé entre plusieurs employeurs',
+    detail:
+      "Quand une même personne est payée par plusieurs employeurs, chacun applique le plafond × (son salaire / total des salaires). La règle vaut pour le mandataire social qui garde un emploi ailleurs.",
+    url: 'https://boss.gouv.fr/portail/accueil/regles-dassujettissement/assiette-generale.html',
+    hote: 'boss.gouv.fr',
+  },
+  {
     titre: 'Épargne salariale et président de SASU',
     detail:
       "Intéressement, participation et abondement sont déductibles du bénéfice, exonérés de cotisations et de forfait social sous 50 salariés, mais soumis à la CSG-CRDS. Le président n'y a accès que si la société emploie au moins un salarié en plus de lui.",
@@ -88,7 +95,7 @@ const HYPOTHESES = [
   "L'impôt sur le revenu est calculé sur la seule année simulée : la CSG déductible sur dividendes est imputée sur la même année, alors qu'elle l'est en pratique l'année suivante.",
   "Le taux de prélèvement à la source affiché est celui qui correspondrait à la situation simulée. Le taux réellement appliqué par l'Urssaf est calculé sur vos dernières déclarations et actualisé en septembre : il est donc en décalage d'un à deux ans. Tant que l'administration n'a transmis aucun taux — le cas d'une société qui vient d'être créée — c'est la grille de taux par défaut qui s'applique.",
   "Le taux de prélèvement à la source est celui du foyer : il porte sur la rémunération de président et sur un éventuel salaire extérieur, la retenue affichée n'étant que la part opérée par la SASU. Les revenus du conjoint saisis en « autres revenus » ne sont en revanche pas comptés dans son assiette.",
-  "En cas de cumul avec un emploi extérieur, chaque employeur applique le plafond de la sécurité sociale de son côté et une régularisation annuelle recalcule les cotisations plafonnées sur le total. Cette régularisation n'est pas modélisée : les cotisations plafonnées sont légèrement surestimées.",
+  "En cas de cumul avec un emploi extérieur, le plafond de la sécurité sociale est réparti entre les employeurs au prorata des salaires versés : chacun ne plafonne qu'à sa part. Dès que le total dépasse le plafond, la tranche 2 et la CET s'appliquent des deux côtés. L'effet sur la fiche de paie extérieure est imputé à la rémunération versée par la SASU, qui en est la cause.",
   "L'impôt sur le revenu attribué à la rémunération de président est l'impôt supplémentaire qu'elle provoque, le reste du foyer étant tenu pour acquis. Un salaire extérieur ou les revenus du conjoint occupent le bas du barème et renchérissent donc la rémunération.",
   "En cas d'option pour le barème, rémunération et dividendes partagent le même barème progressif : l'impôt qu'ils provoquent ensemble est réparti entre eux à parts égales de contribution marginale, chacun étant crédité de la moyenne entre « entrer le premier dans l'assiette » et « entrer le dernier ». Taxer la rémunération en premier lui attribuerait les tranches basses et ferait paraître le salaire artificiellement peu imposé. Ce partage ne change ni le net en poche ni l'optimum, qui ne dépendent que du total.",
   "Les plafonds de cotisation sont proratisés à la durée du mandat : sur six mois d'activité, la tranche 1 s'arrête à six plafonds mensuels. C'est bien la période d'emploi qui proratise le plafond, non le rythme des versements — un président en poste toute l'année conserve un plafond annuel entier, même s'il se rémunère irrégulièrement, grâce à la régularisation progressive.",

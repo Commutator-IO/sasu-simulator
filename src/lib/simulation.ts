@@ -81,8 +81,13 @@ export type Resultat = {
   resultatAvantRemuneration: number;
   brutAnnuel: number;
   moisRemuneration: number;
-  /** Band 1 ceiling actually applicable, prorated. */
+  /** Band 1 ceiling for the months in office, prorated. */
   plafondTranche1: number;
+  /**
+   * The company's share of that ceiling once an outside salary takes its own
+   * part; equal to `plafondTranche1` without one.
+   */
+  plafondApplique: number;
   cotisationsPatronales: number;
   coutEmployeur: number;
   resultatFiscal: number;
@@ -119,6 +124,11 @@ export type Resultat = {
   salaireExterneBrut: number;
   salaireExterneNet: number;
   salaireExterneNetImposable: number;
+  /**
+   * Change in the outside job's net pay caused by the company salary taking
+   * its share of the ceiling. Zero without an outside job.
+   */
+  effetPlafondExterne: number;
 
   // Personal income tax
   revenuImposable: number;
@@ -159,6 +169,8 @@ export type Resultat = {
   avantagesNets: number;
 
   // Summary
+  /** President's salary after income tax, including its effect on an outside job. */
+  salaireNetApresImpot: number;
   netEnPoche: number;
   totalPrelevements: number;
   tauxPrelevementGlobal: number;
@@ -181,6 +193,27 @@ export type Resultat = {
  */
 export function plafondTranche1(moisRemuneration = 12): number {
   return P.PMSS * bornerMois(moisRemuneration);
+}
+
+/**
+ * Share of the ceiling one employer applies when the same person is paid by
+ * several employers at once: the ceiling times this employer's pay over the
+ * total pay (BOSS, Assiette générale, § 960-970, which extends the rule to
+ * company officers who also hold a job elsewhere).
+ *
+ * Without the split, each employer would apply a full ceiling and the capped
+ * contributions would be computed as though the person earned twice the
+ * ceiling's worth of capped pay.
+ */
+export function plafondReparti(
+  plafond: number,
+  brut: number,
+  brutAutresEmployeurs = 0,
+): number {
+  const autres = Math.max(0, brutAutresEmployeurs);
+  const total = Math.max(0, brut) + autres;
+  if (autres === 0 || total === 0) return plafond;
+  return (plafond * Math.max(0, brut)) / total;
 }
 
 function bornerMois(mois: number): number {
@@ -207,8 +240,13 @@ function assiette(type: P.Assiette, brut: number, plafond: number): number {
  * CSG-CRDS base: 98.25% of gross salary, the allowance being capped at four
  * times the applicable ceiling.
  */
-export function assietteCSG(brut: number, moisRemuneration = 12): number {
-  const plafond = 4 * plafondTranche1(moisRemuneration);
+export function assietteCSG(
+  brut: number,
+  moisRemuneration = 12,
+  brutAutresEmployeurs = 0,
+): number {
+  const plafond =
+    4 * plafondReparti(plafondTranche1(moisRemuneration), brut, brutAutresEmployeurs);
   const partAbattue = Math.min(brut, plafond);
   const partNonAbattue = Math.max(0, brut - plafond);
   return partAbattue * (1 - P.CSG_ABATTEMENT) + partNonAbattue;
@@ -218,8 +256,13 @@ export function calculerCotisations(
   brut: number,
   tauxATMP: number,
   moisRemuneration = 12,
+  brutAutresEmployeurs = 0,
 ): LigneCotisation[] {
-  const plafond = plafondTranche1(moisRemuneration);
+  const plafond = plafondReparti(
+    plafondTranche1(moisRemuneration),
+    brut,
+    brutAutresEmployeurs,
+  );
   const lignes: LigneCotisation[] = P.COTISATIONS.map((c) => {
     const base = assiette(c.assiette, brut, plafond);
     return {
@@ -247,7 +290,7 @@ export function calculerCotisations(
     note: "Taux notifié par la Carsat, variable selon l'activité.",
   });
 
-  const baseCSG = assietteCSG(brut, moisRemuneration);
+  const baseCSG = assietteCSG(brut, moisRemuneration, brutAutresEmployeurs);
   lignes.push(
     {
       libelle: 'CSG déductible',
@@ -289,8 +332,9 @@ export function coutEmployeur(
   brut: number,
   tauxATMP: number,
   moisRemuneration = 12,
+  brutAutresEmployeurs = 0,
 ): number {
-  const lignes = calculerCotisations(brut, tauxATMP, moisRemuneration);
+  const lignes = calculerCotisations(brut, tauxATMP, moisRemuneration, brutAutresEmployeurs);
   return brut + lignes.reduce((s, l) => s + l.patronal, 0);
 }
 
@@ -303,13 +347,15 @@ export function brutMaxPourBudget(
   budget: number,
   tauxATMP: number,
   moisRemuneration = 12,
+  brutAutresEmployeurs = 0,
 ): number {
   if (budget <= 0) return 0;
   let bas = 0;
   let haut = budget;
   for (let i = 0; i < 60; i++) {
     const milieu = (bas + haut) / 2;
-    if (coutEmployeur(milieu, tauxATMP, moisRemuneration) > budget) haut = milieu;
+    if (coutEmployeur(milieu, tauxATMP, moisRemuneration, brutAutresEmployeurs) > budget)
+      haut = milieu;
     else bas = milieu;
   }
   return bas;
@@ -437,6 +483,7 @@ export function tauxPrelevementSource(
 export function decomposerSalaire(
   brut: number,
   moisRemuneration = 12,
+  brutAutresEmployeurs = 0,
 ): {
   cotisationsHorsCSG: number;
   csgCrds: number;
@@ -444,7 +491,12 @@ export function decomposerSalaire(
   net: number;
   netImposableAvantAbattement: number;
 } {
-  const lignes = calculerCotisations(Math.max(0, brut), 0, moisRemuneration);
+  const lignes = calculerCotisations(
+    Math.max(0, brut),
+    0,
+    moisRemuneration,
+    brutAutresEmployeurs,
+  );
   const csgLignes = lignes.filter((l) => l.famille === 'CSG-CRDS');
   const csgCrds = csgLignes.reduce((s, l) => s + l.salarial, 0);
   const csgDeductible =
@@ -484,7 +536,10 @@ export function simuler(h: Hypotheses): Resultat {
   const mois = bornerMois(h.moisRemuneration);
 
   // --- Company -------------------------------------------------------------
-  const lignes = calculerCotisations(brut, h.tauxATMP, mois);
+  // A job held elsewhere takes its share of the ceiling: each employer only
+  // caps contributions at its pro rata part.
+  const externeBrut = Math.max(0, h.salaireExterneBrut);
+  const lignes = calculerCotisations(brut, h.tauxATMP, mois, externeBrut);
   const cotisationsPatronales = lignes.reduce((s, l) => s + l.patronal, 0);
   const cout = brut + cotisationsPatronales;
   // Benefits outside salary are a deductible expense like the salary itself:
@@ -524,8 +579,13 @@ export function simuler(h: Hypotheses): Resultat {
   );
 
   // --- Outside salary ------------------------------------------------------
-  const externeBrut = Math.max(0, h.salaireExterneBrut);
-  const externe = decomposerSalaire(externeBrut);
+  const externe = decomposerSalaire(externeBrut, 12, brut);
+  // The same job without the company: it keeps the whole ceiling. Paying a
+  // salary from the company shifts part of the outside pay into band 2 and
+  // brings in the CET, so the outside net moves too. That change is caused by
+  // the company salary and is charged to it.
+  const externeSeul = decomposerSalaire(externeBrut);
+  const effetPlafondExterne = externe.net - externeSeul.net;
 
   // The 10% deduction applies to all of a person's salaries at once, and its
   // cap only bites once: the salaries cannot be deducted separately.
@@ -550,7 +610,8 @@ export function simuler(h: Hypotheses): Resultat {
   // causes — tax owed on an outside job or on a partner's income must not be
   // charged to the company.
   const baseHorsDividendes = salairesImposables + h.autresRevenus;
-  const baseSansRemuneration = salaireExterneNetImposable + h.autresRevenus;
+  const baseSansRemuneration =
+    abattementSalaire(externeSeul.netImposableAvantAbattement) + h.autresRevenus;
   const irHorsDividendes = calculerIR(baseHorsDividendes, h.parts, h.couple);
   const irSansRemuneration = calculerIR(baseSansRemuneration, h.parts, h.couple);
 
@@ -615,11 +676,15 @@ export function simuler(h: Hypotheses): Resultat {
   const csgCrdsEpargneSalariale = epargneSalariale * P.CSG_CRDS_EPARGNE_SALARIALE;
   const avantagesNets = chargesAvantages - csgCrdsEpargneSalariale;
 
-  const netEnPoche = salaireNet + dividendesNets - irSurSalaire + avantagesNets;
+  const salaireNetApresImpot = salaireNet - irSurSalaire + effetPlafondExterne;
+  const netEnPoche = salaireNetApresImpot + dividendesNets + avantagesNets;
   const totalPrelevements =
     cotisationsPatronales +
     cotisationsSalariales +
-    csgCrdsEpargneSalariale +
+    csgCrdsEpargneSalariale -
+    // What the outside payslip gains or loses in contributions because of the
+    // company salary.
+    effetPlafondExterne +
     is +
     prelevementsSociauxDividendes +
     irTotal;
@@ -638,8 +703,9 @@ export function simuler(h: Hypotheses): Resultat {
     Math.floor(externeBrut / P.BRUT_PAR_TRIMESTRE),
   );
   const plafond = plafondTranche1(mois);
-  const t1 = Math.min(brut, plafond);
-  const t2 = Math.max(0, Math.min(brut, 8 * plafond) - plafond);
+  const plafondSASU = plafondReparti(plafond, brut, externeBrut);
+  const t1 = Math.min(brut, plafondSASU);
+  const t2 = Math.max(0, Math.min(brut, 8 * plafondSASU) - plafondSASU);
   const pointsAgircArrco =
     (t1 * P.TAUX_POINTS_T1 + t2 * P.TAUX_POINTS_T2) / P.SALAIRE_REFERENCE_AGIRC_ARRCO;
   // The point value is a yearly amount: points × value is already the annual pension.
@@ -650,6 +716,7 @@ export function simuler(h: Hypotheses): Resultat {
     brutAnnuel: brut,
     moisRemuneration: mois,
     plafondTranche1: plafond,
+    plafondApplique: plafondSASU,
     cotisationsPatronales,
     coutEmployeur: cout,
     resultatFiscal,
@@ -676,6 +743,7 @@ export function simuler(h: Hypotheses): Resultat {
     salaireExterneBrut: externeBrut,
     salaireExterneNet: externe.net,
     salaireExterneNetImposable,
+    effetPlafondExterne,
     revenuImposable,
     irTotal,
     irSurSalaire,
@@ -689,6 +757,7 @@ export function simuler(h: Hypotheses): Resultat {
     chargesAvantages,
     csgCrdsEpargneSalariale,
     avantagesNets,
+    salaireNetApresImpot,
     netEnPoche,
     totalPrelevements,
     tauxPrelevementGlobal,
@@ -803,12 +872,17 @@ export function seuilsCourbe(
           : null,
     },
     {
-      etat: (r) => r.brutAnnuel > plafond,
+      // With an outside job the ceiling is shared: it is the combined pay that
+      // crosses it.
+      etat: (r) => r.brutAnnuel + r.salaireExterneBrut > plafond,
       seuil: (apres) =>
-        apres.brutAnnuel > plafond
+        apres.brutAnnuel + apres.salaireExterneBrut > plafond
           ? {
               libelle: 'PASS',
-              explication: `Au-delà du plafond de la Sécurité sociale (${eur(plafond)}), la CET et la tranche 2 de retraite complémentaire s'ajoutent.`,
+              explication:
+                `Au-delà du plafond de la Sécurité sociale (${eur(plafond)}` +
+                (apres.salaireExterneBrut > 0 ? ', salaire extérieur compris' : '') +
+                "), la CET et la tranche 2 de retraite complémentaire s'ajoutent.",
             }
           : null,
     },
@@ -858,6 +932,7 @@ export function balayer(
     budgetRemuneration(h),
     h.tauxATMP,
     h.moisRemuneration,
+    h.salaireExterneBrut,
   );
   const points = Array.from({ length: pas }, (_, i) => {
     const brut = (brutMax * i) / (pas - 1);

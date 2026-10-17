@@ -49,6 +49,7 @@ export default function App() {
         }),
         base.tauxATMP,
         base.moisRemuneration,
+        base.salaireExterneBrut,
       ),
     [
       base.resultatAvantRemuneration,
@@ -56,6 +57,7 @@ export default function App() {
       base.avantagesExoneres,
       base.tauxATMP,
       base.moisRemuneration,
+      base.salaireExterneBrut,
     ],
   );
   const brutMaxArrondi = Math.max(1000, Math.floor(brutMax / 500) * 500);
@@ -400,7 +402,7 @@ export default function App() {
                       <div className="bg-brand-700 px-4 py-3">
                         <p className="text-xs text-brand-200">Salaire net après impôt</p>
                         <p className="tabular mt-0.5 font-semibold">
-                          {eur(r.salaireNet - r.irSurSalaire)}
+                          {eur(r.salaireNetApresImpot)}
                         </p>
                       </div>
                       <div className="bg-brand-700 px-4 py-3">

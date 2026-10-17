@@ -11,6 +11,7 @@ import {
   calculerIS,
   coutEmployeur,
   decomposerSalaire,
+  plafondReparti,
   plafondTranche1,
   plateauOptimum,
   seuilsCourbe,
@@ -337,7 +338,8 @@ describe('prélèvement à la source', () => {
     const r = sim(45_000, { salaireExterneBrut: 30_000 });
     // The household base covers both salaries...
     expect(r.assiettePASFoyer - r.assiettePAS).toBeCloseTo(
-      decomposerSalaire(30_000).netImposableAvantAbattement,
+      // The outside employer applies its share of the ceiling.
+      decomposerSalaire(30_000, 12, 45_000).netImposableAvantAbattement,
       6,
     );
     // ...but the withholding shown is the one the company operates.
@@ -428,6 +430,72 @@ describe('nombre de mois de rémunération', () => {
 });
 
 describe('salaire perçu chez un autre employeur', () => {
+  // Hand-checked case: €45,000 from the company and €40,000 from an outside
+  // employer, €85,000 in all, above the €48,060 ceiling. Each employer caps at
+  // its pro rata share: the company at 48,060 × 45/85 = €25,443.53, the
+  // outside job at 48,060 × 40/85 = €22,616.47.
+  const S = 45_000;
+  const E = 40_000;
+  const partSASU = (P.PASS * S) / (S + E);
+  const partExterne = (P.PASS * E) / (S + E);
+
+  it('répartit le plafond entre employeurs au prorata des salaires', () => {
+    expect(plafondReparti(P.PASS, S, E)).toBeCloseTo(25_443.53, 2);
+    expect(plafondReparti(P.PASS, E, S)).toBeCloseTo(22_616.47, 2);
+    expect(plafondReparti(P.PASS, S, E) + plafondReparti(P.PASS, E, S)).toBeCloseTo(P.PASS, 6);
+    expect(plafondReparti(P.PASS, S, 0)).toBe(P.PASS);
+    expect(plafondReparti(P.PASS, 0, E)).toBe(0);
+  });
+
+  it('cotise sur la part de plafond de la SASU, et non sur un plafond entier', () => {
+    const r = sim(S, { salaireExterneBrut: E });
+    const ligne = (k: string) => r.lignes.find((l) => l.libelle.includes(k))!;
+    expect(r.plafondApplique).toBeCloseTo(partSASU, 6);
+    expect(ligne('Vieillesse plafonnée').basePatronale).toBeCloseTo(partSASU, 6);
+    expect(ligne('Agirc-Arrco T2').basePatronale).toBeCloseTo(S - partSASU, 6);
+    // Combined pay is above the ceiling, so the CET is due on the whole salary
+    // even though €45,000 alone is below it.
+    expect(ligne('CET').basePatronale).toBe(S);
+  });
+
+  it("corrige le net en poche d'un cas vérifié à la main", () => {
+    const r = sim(S, { salaireExterneBrut: E });
+    const t1Salarie = 6.9 + 3.15 + 0.86; // capped old-age, Agirc-Arrco T1, CEG T1
+    const t2Salarie = 8.64 + 1.08; // Agirc-Arrco T2, CEG T2
+    const t1Patronal = 8.55 + 4.72 + 1.29 + 0.1; // same, plus Fnal
+    const t2Patronal = 12.95 + 1.62;
+
+    // Employee side: the slice moved from band 1 to band 2 bears 1.19 points
+    // less, minus the 0.14% CET now due.
+    const economieSalariale = ((t1Salarie - t2Salarie) * (S - partSASU) - 0.14 * S) / 100;
+    expect(sim(S).cotisationsSalariales - r.cotisationsSalariales).toBeCloseTo(
+      economieSalariale,
+      6,
+    );
+    expect(economieSalariale).toBeCloseTo(169.72, 2);
+
+    // Employer side: 0.09 point saved on the same slice, 0.21% of CET added.
+    const surcoutPatronal = (0.21 * S - (t1Patronal - t2Patronal) * (S - partSASU)) / 100;
+    expect(r.cotisationsPatronales - sim(S).cotisationsPatronales).toBeCloseTo(
+      surcoutPatronal,
+      6,
+    );
+    expect(surcoutPatronal).toBeCloseTo(76.9, 2);
+
+    // The outside payslip gains the same way, and that gain is caused by the
+    // company salary.
+    expect(r.effetPlafondExterne).toBeCloseTo(
+      ((t1Salarie - t2Salarie) * (E - partExterne) - 0.14 * E) / 100,
+      6,
+    );
+    expect(r.effetPlafondExterne).toBeCloseTo(150.86, 2);
+
+    // Before the split, each employer applied a full ceiling and the simulator
+    // showed €74,104 of take-home: €194 too little.
+    expect(r.netEnPoche).toBeCloseTo(74_298.82, 2);
+    expect(r.netEnPoche - 74_104.36).toBeCloseTo(194.46, 2);
+  });
+
   it('ne change rien quand il est nul', () => {
     const sans = sim(45_000);
     const zero = sim(45_000, { salaireExterneBrut: 0 });
@@ -740,8 +808,14 @@ describe('invariants, quelle que soit la situation', () => {
     for (const h of cas) {
       const r = simuler(h);
       expect
-        .soft(r.salaireNet - r.irSurSalaire + r.dividendesNets, nom(h))
+        .soft(r.salaireNetApresImpot + r.dividendesNets + r.avantagesNets, nom(h))
         .toBeCloseTo(r.netEnPoche, 6);
+      // Without an outside job the displayed salary is the payslip minus its tax.
+      if (h.salaireExterneBrut === 0) {
+        expect
+          .soft(r.salaireNetApresImpot, nom(h))
+          .toBeCloseTo(r.salaireNet - r.irSurSalaire, 6);
+      }
     }
   });
 

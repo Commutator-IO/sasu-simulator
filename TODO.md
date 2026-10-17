@@ -618,9 +618,3 @@ c'est la suite logique de la question des dividendes.
   limite du taux fiscal.
 - **Comparaison SASU / EURL** à revenu net constant, la question qui précède
   toutes les autres.
-- **Régularisation du plafond entre employeurs** : quand le président cumule sa
-  rémunération avec un emploi extérieur, chaque employeur applique le Pass de
-  son côté, et une régularisation annuelle recalcule les cotisations plafonnées
-  sur le total. Le simulateur ne la modélise pas et surestime donc légèrement
-  les cotisations vieillesse plafonnée et de retraite complémentaire dans ce
-  cas de figure.
