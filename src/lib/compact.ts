@@ -31,6 +31,11 @@ const VERS_COURT: Record<string, string> = {
   bareme: 'bm',
   epargneSalariale: 'es',
   avantages: 'av',
+  cesu: 'cu',
+  depensesSAP: 'dp',
+  majorationsCI: 'mj',
+  premiereAnneeSAP: 'p1',
+  invaliditeCI: 'iv',
   versementPER: 'vp',
   plafondPER: 'pp',
   // Shared

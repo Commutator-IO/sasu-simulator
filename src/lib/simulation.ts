@@ -57,6 +57,19 @@ export type Hypotheses = {
    * full.
    */
   avantagesExoneres: number;
+  /**
+   * Employer aid for home services (CESU préfinancé) the company pays its
+   * president, capped at the yearly ceiling and at the spending it funds.
+   */
+  cesuPrefinance: number;
+  /** The household's yearly home-service spending, before any aid. */
+  depensesServicesPersonne: number;
+  /** Dependants raising the tax-credit ceiling by €1,500 each. */
+  majorationsCreditImpot: number;
+  /** First year the household directly employs someone at home. */
+  premiereAnneeEmploiDomicile: boolean;
+  /** Disability raising the ceiling to €20,000. */
+  invaliditeCreditImpot: boolean;
   /** Voluntary payments into an individual PER this year, opted as deductible. */
   versementPER: number;
   /**
@@ -175,6 +188,17 @@ export type Resultat = {
   csgCrdsEpargneSalariale: number;
   /** What the benefits leave in the pocket. */
   avantagesNets: number;
+
+  // Home services (CESU préfinancé and the home-employment tax credit)
+  /** Aid actually paid, after its caps. */
+  cesuVerse: number;
+  /** Household tax credit, with and without the aid taken off its base. */
+  creditImpotServices: number;
+  creditImpotServicesSansAide: number;
+  /** Credit lost because of the aid: always zero or negative. */
+  effetCesuSurCredit: number;
+  /** Spending above which the aid stops eating into the credit. */
+  seuilRentabiliteCesu: number;
 
   // Individual retirement savings (PER)
   /** Payment actually deducted: capped by the ceiling and by taxable income. */
@@ -377,17 +401,44 @@ export function brutMaxPourBudget(
   return bas;
 }
 
+/** Spending ceiling of the home-employment tax credit for the household. */
+export function plafondCreditImpotServices(
+  h: Pick<
+    Hypotheses,
+    'majorationsCreditImpot' | 'premiereAnneeEmploiDomicile' | 'invaliditeCreditImpot'
+  >,
+): number {
+  if (h.invaliditeCreditImpot) return P.CI_SAP_PLAFOND_INVALIDITE;
+  const majorations = Math.max(0, h.majorationsCreditImpot) * P.CI_SAP_MAJORATION;
+  return h.premiereAnneeEmploiDomicile
+    ? Math.min(P.CI_SAP_PLAFOND_PREMIERE_ANNEE_MAX, P.CI_SAP_PLAFOND_PREMIERE_ANNEE + majorations)
+    : Math.min(P.CI_SAP_PLAFOND_MAJORE_MAX, P.CI_SAP_PLAFOND + majorations);
+}
+
 /**
  * What is left of the profit to pay a salary once the benefits paid outside
  * salary are funded.
  */
 export function budgetRemuneration(
-  h: Pick<Hypotheses, 'resultatAvantRemuneration' | 'epargneSalariale' | 'avantagesExoneres'>,
+  h: Pick<
+    Hypotheses,
+    | 'resultatAvantRemuneration'
+    | 'epargneSalariale'
+    | 'avantagesExoneres'
+    | 'cesuPrefinance'
+    | 'depensesServicesPersonne'
+  >,
 ): number {
+  const cesu = Math.min(
+    Math.max(0, h.cesuPrefinance),
+    P.PLAFOND_AIDE_SERVICES_PERSONNE,
+    Math.max(0, h.depensesServicesPersonne),
+  );
   return (
     h.resultatAvantRemuneration -
     Math.max(0, h.epargneSalariale) -
-    Math.max(0, h.avantagesExoneres)
+    Math.max(0, h.avantagesExoneres) -
+    cesu
   );
 }
 
@@ -562,7 +613,14 @@ export function simuler(h: Hypotheses): Resultat {
   // they come off the profit before corporate tax.
   const epargneSalariale = Math.max(0, h.epargneSalariale);
   const avantagesExoneres = Math.max(0, h.avantagesExoneres);
-  const chargesAvantages = epargneSalariale + avantagesExoneres;
+  // The aid cannot exceed its ceiling nor the cost it actually funds.
+  const depensesSAP = Math.max(0, h.depensesServicesPersonne);
+  const cesuVerse = Math.min(
+    Math.max(0, h.cesuPrefinance),
+    P.PLAFOND_AIDE_SERVICES_PERSONNE,
+    depensesSAP,
+  );
+  const chargesAvantages = epargneSalariale + avantagesExoneres + cesuVerse;
   const resultatFiscal = h.resultatAvantRemuneration - cout - chargesAvantages;
   const is = calculerIS(resultatFiscal, h.eligibleISReduit);
   const resultatNet = resultatFiscal - is;
@@ -713,7 +771,22 @@ export function simuler(h: Hypotheses): Resultat {
   // Employee savings and holiday vouchers only bear CSG-CRDS; they are assumed
   // placed on a savings plan, hence exempt from income tax.
   const csgCrdsEpargneSalariale = epargneSalariale * P.CSG_CRDS_EPARGNE_SALARIALE;
-  const avantagesNets = chargesAvantages - csgCrdsEpargneSalariale;
+  // The home-employment credit is the household's whether or not the company
+  // pays an aid; what the aid changes is the base, which it must come off. Only
+  // that change is charged to the company, so below the ceiling each euro of
+  // aid costs fifty cents of credit.
+  const plafondCredit = plafondCreditImpotServices(h);
+  const credit = (aide: number) =>
+    Math.min(
+      P.PLAFONNEMENT_GLOBAL_NICHES,
+      P.CI_SAP_TAUX * Math.min(Math.max(0, depensesSAP - aide), plafondCredit),
+    );
+  const creditImpotServices = credit(cesuVerse);
+  const creditImpotServicesSansAide = credit(0);
+  const effetCesuSurCredit = creditImpotServices - creditImpotServicesSansAide;
+  const seuilRentabiliteCesu = plafondCredit + cesuVerse;
+
+  const avantagesNets = chargesAvantages - csgCrdsEpargneSalariale + effetCesuSurCredit;
 
   const salaireNetApresImpot = salaireNet - irSurSalaire + effetPlafondExterne;
   const netEnPoche = salaireNetApresImpot + dividendesNets + avantagesNets;
@@ -796,6 +869,11 @@ export function simuler(h: Hypotheses): Resultat {
     chargesAvantages,
     csgCrdsEpargneSalariale,
     avantagesNets,
+    cesuVerse,
+    creditImpotServices,
+    creditImpotServicesSansAide,
+    effetCesuSurCredit,
+    seuilRentabiliteCesu,
     deductionPER,
     economieImpotPER,
     plafondPERAnneeSuivante,

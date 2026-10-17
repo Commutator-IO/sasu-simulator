@@ -38,6 +38,8 @@ export default function App() {
       initial.base.eligibleISReduit !== DEFAUTS.eligibleISReduit ||
       initial.base.epargneSalariale !== DEFAUTS.epargneSalariale ||
       initial.base.avantagesExoneres !== DEFAUTS.avantagesExoneres ||
+      initial.base.cesuPrefinance !== DEFAUTS.cesuPrefinance ||
+      initial.base.depensesServicesPersonne !== DEFAUTS.depensesServicesPersonne ||
       initial.base.versementPER !== DEFAUTS.versementPER ||
       initial.base.plafondPER !== DEFAUTS.plafondPER,
   );
@@ -49,6 +51,8 @@ export default function App() {
           resultatAvantRemuneration: base.resultatAvantRemuneration,
           epargneSalariale: base.epargneSalariale,
           avantagesExoneres: base.avantagesExoneres,
+          cesuPrefinance: base.cesuPrefinance,
+          depensesServicesPersonne: base.depensesServicesPersonne,
         }),
         base.tauxATMP,
         base.moisRemuneration,
@@ -58,6 +62,8 @@ export default function App() {
       base.resultatAvantRemuneration,
       base.epargneSalariale,
       base.avantagesExoneres,
+      base.cesuPrefinance,
+      base.depensesServicesPersonne,
       base.tauxATMP,
       base.moisRemuneration,
       base.salaireExterneBrut,
@@ -375,11 +381,79 @@ export default function App() {
                       hint={`Intéressement, participation, abondement PEE ou Perco, chèques-vacances, versés par an. Déduits du bénéfice ; vous les recevez nets de ${pct(P.CSG_CRDS_EPARGNE_SALARIALE, 1)} de CSG-CRDS, sans impôt sur le revenu s'ils sont placés sur un plan d'épargne.`}
                     />
                     <Montant
-                      label="CESU préfinancé et autres avantages exonérés"
+                      label="Autres avantages exonérés"
                       valeur={base.avantagesExoneres}
                       onChange={(v) => maj('avantagesExoneres', v)}
-                      hint={`Surtout l'aide aux services à la personne (CESU préfinancé), jusqu'à ${eur(P.PLAFOND_AIDE_SERVICES_PERSONNE)} par an et ouverte au président seul. Déduite du bénéfice, reçue sans cotisation, CSG ni impôt. Elle réduit d'autant la base de votre crédit d'impôt emploi à domicile, que le simulateur ne calcule pas.`}
+                      hint="Tout avantage versé par la société dans ses limites d'exonération, sans cotisation, CSG ni impôt. Déduit du bénéfice, reçu en entier."
                     />
+                    <Montant
+                      label="CESU préfinancé versé par la société"
+                      valeur={base.cesuPrefinance}
+                      onChange={(v) => maj('cesuPrefinance', v)}
+                      max={P.PLAFOND_AIDE_SERVICES_PERSONNE}
+                      hint={`Aide aux services à la personne, ouverte au président d'une société sans salarié, jusqu'à ${eur(P.PLAFOND_AIDE_SERVICES_PERSONNE)} par an. Déduite du bénéfice, reçue sans cotisation, CSG ni impôt.`}
+                    />
+                    <Montant
+                      label="Dépenses de services à la personne du foyer"
+                      valeur={base.depensesServicesPersonne}
+                      onChange={(v) => maj('depensesServicesPersonne', v)}
+                      hint="Ménage, garde d'enfant, soutien scolaire, jardinage… sur l'année, avant toute aide. Elles ouvrent un crédit d'impôt de 50 %."
+                    />
+                    <Segments
+                      label="Majorations du plafond du crédit"
+                      valeur={Math.min(3, base.majorationsCreditImpot)}
+                      options={[0, 1, 2, 3].map((n) => ({
+                        valeur: n,
+                        label: n === 3 ? '3 et +' : String(n),
+                      }))}
+                      onChange={(v) => maj('majorationsCreditImpot', v)}
+                      hint={`${eur(P.CI_SAP_MAJORATION)} par enfant à charge ou membre du foyer de plus de 65 ans.`}
+                    />
+                    <Segments
+                      label="Situation"
+                      valeur={
+                        base.invaliditeCreditImpot
+                          ? 'invalidite'
+                          : base.premiereAnneeEmploiDomicile
+                            ? 'premiere'
+                            : 'general'
+                      }
+                      options={[
+                        { valeur: 'general', label: 'Cas général' },
+                        { valeur: 'premiere', label: '1ʳᵉ année' },
+                        { valeur: 'invalidite', label: 'Invalidité' },
+                      ]}
+                      onChange={(v) =>
+                        setBase((b) => ({
+                          ...b,
+                          premiereAnneeEmploiDomicile: v === 'premiere',
+                          invaliditeCreditImpot: v === 'invalidite',
+                        }))
+                      }
+                      hint="La première année d'emploi direct d'un salarié à domicile relève le plafond."
+                    />
+                    {base.depensesServicesPersonne > 0 && (
+                      <p
+                        className={`rounded-xl px-4 py-3 text-xs leading-relaxed sm:col-span-2 ${
+                          r.effetCesuSurCredit < -0.5
+                            ? 'bg-gold-500/10 text-ink-700'
+                            : 'bg-brand-50 text-ink-600'
+                        }`}
+                      >
+                        Crédit d'impôt emploi à domicile :{' '}
+                        <strong className="font-semibold text-ink-900">
+                          {eur(r.creditImpotServices)}
+                        </strong>
+                        {r.cesuVerse > 0 && (
+                          <> ({eur(r.creditImpotServicesSansAide)} sans le CESU)</>
+                        )}
+                        .{' '}
+                        {r.cesuVerse > 0 &&
+                          (r.effetCesuSurCredit < -0.5
+                            ? `Le CESU vous coûte ${eur(-r.effetCesuSurCredit)} de crédit : l'aide se retire de la base, et sous ${eur(r.seuilRentabiliteCesu)} de dépenses chaque euro d'aide fait perdre 0,50 € de crédit. Versé en dividende, le même euro rapporterait davantage.`
+                            : `Au-delà de ${eur(r.seuilRentabiliteCesu)} de dépenses, l'aide ne réduit plus le crédit : elle s'ajoute entièrement.`)}
+                      </p>
+                    )}
                     {(base.epargneSalariale > 0 || base.avantagesExoneres > 0) && (
                       <p className="rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-ink-600 sm:col-span-2">
                         Vérifiez que votre société y a droit. L'intéressement, la

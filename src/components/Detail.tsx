@@ -79,7 +79,7 @@ export function Detail({ r }: { r: Resultat }) {
             montant={r.chargesAvantages}
             negatif
             note={
-              r.csgCrdsEpargneSalariale > 0
+              Math.abs(r.avantagesNets - r.chargesAvantages) >= 1
                 ? `${eur(r.avantagesNets)} nets pour vous`
                 : undefined
             }

@@ -61,6 +61,11 @@ const CLES_ARBITRAGE = [
   'bareme',
   'epargneSalariale',
   'avantages',
+  'cesu',
+  'depensesSAP',
+  'majorationsCI',
+  'premiereAnneeSAP',
+  'invaliditeCI',
   'versementPER',
   'plafondPER',
 ];

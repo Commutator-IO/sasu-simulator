@@ -36,6 +36,11 @@ const CLES = {
   bareme: 'bareme',
   epargneSalariale: 'epargneSalariale',
   avantages: 'avantages',
+  cesu: 'cesu',
+  depensesSAP: 'depensesSAP',
+  majorationsCI: 'majorationsCI',
+  premiereAnneeSAP: 'premiereAnneeSAP',
+  invaliditeCI: 'invaliditeCI',
   versementPER: 'versementPER',
   plafondPER: 'plafondPER',
 } as const;
@@ -113,6 +118,19 @@ export function encoderEtat(
   ajouter(CLES.bareme, base.dividendesAuBareme, d.dividendesAuBareme);
   ajouter(CLES.epargneSalariale, arrondi(base.epargneSalariale), d.epargneSalariale);
   ajouter(CLES.avantages, arrondi(base.avantagesExoneres), d.avantagesExoneres);
+  ajouter(CLES.cesu, arrondi(base.cesuPrefinance), d.cesuPrefinance);
+  ajouter(
+    CLES.depensesSAP,
+    arrondi(base.depensesServicesPersonne),
+    d.depensesServicesPersonne,
+  );
+  ajouter(CLES.majorationsCI, arrondi(base.majorationsCreditImpot), d.majorationsCreditImpot);
+  ajouter(
+    CLES.premiereAnneeSAP,
+    base.premiereAnneeEmploiDomicile,
+    d.premiereAnneeEmploiDomicile,
+  );
+  ajouter(CLES.invaliditeCI, base.invaliditeCreditImpot, d.invaliditeCreditImpot);
   ajouter(CLES.versementPER, arrondi(base.versementPER), d.versementPER);
   ajouter(CLES.plafondPER, arrondi(base.plafondPER), d.plafondPER);
 
@@ -170,6 +188,19 @@ export function decoderEtat(recherche: string, defauts: EtatPartage): EtatPartag
         MAX_MONTANT,
       ),
       avantagesExoneres: nombre(p.get(CLES.avantages), d.avantagesExoneres, 0, MAX_MONTANT),
+      cesuPrefinance: nombre(p.get(CLES.cesu), d.cesuPrefinance, 0, MAX_MONTANT),
+      depensesServicesPersonne: nombre(
+        p.get(CLES.depensesSAP),
+        d.depensesServicesPersonne,
+        0,
+        MAX_MONTANT,
+      ),
+      majorationsCreditImpot: nombre(p.get(CLES.majorationsCI), d.majorationsCreditImpot, 0, 10),
+      premiereAnneeEmploiDomicile: booleen(
+        p.get(CLES.premiereAnneeSAP),
+        d.premiereAnneeEmploiDomicile,
+      ),
+      invaliditeCreditImpot: booleen(p.get(CLES.invaliditeCI), d.invaliditeCreditImpot),
       versementPER: nombre(p.get(CLES.versementPER), d.versementPER, 0, MAX_MONTANT),
       plafondPER: nombre(p.get(CLES.plafondPER), d.plafondPER, 0, MAX_MONTANT),
     },

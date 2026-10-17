@@ -223,6 +223,23 @@ export const CSG_CRDS_EPARGNE_SALARIALE =
  */
 export const PLAFOND_AIDE_SERVICES_PERSONNE = 2_591;
 
+/**
+ * Home-employment tax credit (CGI art. 199 sexdecies, service-public F12): half
+ * of the year's home-service spending, net of any aid received for it, within
+ * a ceiling of €12,000, raised by €1,500 per dependent child or member over
+ * 65 up to €15,000. The first year of direct employment starts at €15,000
+ * (up to €18,000); disability raises it to €20,000.
+ */
+export const CI_SAP_TAUX = 0.5;
+export const CI_SAP_PLAFOND = 12_000;
+export const CI_SAP_MAJORATION = 1_500;
+export const CI_SAP_PLAFOND_MAJORE_MAX = 15_000;
+export const CI_SAP_PLAFOND_PREMIERE_ANNEE = 15_000;
+export const CI_SAP_PLAFOND_PREMIERE_ANNEE_MAX = 18_000;
+export const CI_SAP_PLAFOND_INVALIDITE = 20_000;
+/** Overall cap on tax breaks the credit counts towards (CGI art. 200-0 A). */
+export const PLAFONNEMENT_GLOBAL_NICHES = 10_000;
+
 // --- Individual retirement savings (PER) -------------------------------------
 
 /**
@@ -510,6 +527,22 @@ export const VALIDITE_PARAMETRES: Validite[] = [
     valableJusquau: '2026-12-31',
     aVerifier: "Taux et assiette de la CSG-CRDS sur les revenus d'activité, dans la LFSS.",
     source: 'https://boss.gouv.fr/portail/accueil/regles-dassujettissement/assiette-generale.html',
+  },
+  {
+    constantes: [
+      'CI_SAP_TAUX',
+      'CI_SAP_PLAFOND',
+      'CI_SAP_MAJORATION',
+      'CI_SAP_PLAFOND_MAJORE_MAX',
+      'CI_SAP_PLAFOND_PREMIERE_ANNEE',
+      'CI_SAP_PLAFOND_PREMIERE_ANNEE_MAX',
+      'CI_SAP_PLAFOND_INVALIDITE',
+      'PLAFONNEMENT_GLOBAL_NICHES',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      "Taux et plafonds du crédit d'impôt emploi à domicile, et plafonnement global des niches fiscales, dans la loi de finances.",
+    source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F12',
   },
   {
     constantes: ['PLAFOND_AIDE_SERVICES_PERSONNE'],

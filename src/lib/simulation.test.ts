@@ -4,6 +4,7 @@ import {
   assietteCSG,
   balayer,
   budgetRemuneration,
+  plafondCreditImpotServices,
   baremeIR,
   brutMaxPourBudget,
   calculerCotisations,
@@ -30,6 +31,11 @@ const BASE: Omit<Hypotheses, 'brutAnnuel'> = {
   salaireExterneBrut: 0,
   epargneSalariale: 0,
   avantagesExoneres: 0,
+  cesuPrefinance: 0,
+  depensesServicesPersonne: 0,
+  majorationsCreditImpot: 0,
+  premiereAnneeEmploiDomicile: false,
+  invaliditeCreditImpot: false,
   versementPER: 0,
   plafondPER: P.PER_PLAFOND_MINIMUM,
   reservesDistribuables: 0,
@@ -711,6 +717,65 @@ describe('avantages versés hors salaire', () => {
     expect(points.at(-1)!.brut).toBeCloseTo(brutMaxPourBudget(130_000, BASE.tauxATMP), 6);
     expect(points.at(-1)!.brut).toBeLessThan(balayer(BASE).points.at(-1)!.brut);
     expect(optimum.avantagesNets).toBe(20_000);
+  });
+});
+
+describe('CESU préfinancé et crédit d’impôt emploi à domicile', () => {
+  // Profit stays in the 15% corporate-tax band and dividends go to the flat
+  // tax, as in the worked example of issue #13.
+  const CAS = { resultatAvantRemuneration: 60_000 } as const;
+  const gain = (depenses: number) => {
+    const sans = sim(15_000, { ...CAS, depensesServicesPersonne: depenses });
+    const avec = sim(15_000, {
+      ...CAS,
+      depensesServicesPersonne: depenses,
+      cesuPrefinance: P.PLAFOND_AIDE_SERVICES_PERSONNE,
+    });
+    expect(avec.resultatFiscal).toBeLessThan(P.IS_SEUIL_TAUX_REDUIT);
+    return avec.netEnPoche - sans.netEnPoche;
+  };
+
+  it('rapporte environ 1 080 € quand les dépenses dépassent plafond + aide', () => {
+    // €2,591 of aid against €2,591 × 0.85 × 0.686 of dividends, credit intact.
+    expect(gain(14_591)).toBeCloseTo(2_591 - 2_591 * 0.85 * (1 - P.PFU_TOTAL), 1);
+    expect(gain(14_591)).toBeCloseTo(1_080, -1);
+  });
+
+  it('fait perdre environ 215 € quand les dépenses restent sous le plafond', () => {
+    // Half the aid comes off the credit: €1,295.50 lost.
+    expect(gain(12_000)).toBeCloseTo(
+      2_591 - 2_591 * P.CI_SAP_TAUX - 2_591 * 0.85 * (1 - P.PFU_TOTAL),
+      1,
+    );
+    expect(gain(12_000)).toBeCloseTo(-215, -1);
+  });
+
+  it('signale le seuil à partir duquel l’aide ne réduit plus le crédit', () => {
+    const r = sim(15_000, { depensesServicesPersonne: 12_000, cesuPrefinance: 2_591 });
+    expect(r.seuilRentabiliteCesu).toBe(14_591);
+    expect(r.effetCesuSurCredit).toBeCloseTo(-1_295.5, 6);
+    expect(r.creditImpotServicesSansAide).toBe(6_000);
+  });
+
+  it("borne l'aide à son plafond et à la dépense qu'elle finance", () => {
+    expect(sim(15_000, { depensesServicesPersonne: 20_000, cesuPrefinance: 9_000 }).cesuVerse).toBe(
+      P.PLAFOND_AIDE_SERVICES_PERSONNE,
+    );
+    expect(sim(15_000, { depensesServicesPersonne: 1_000, cesuPrefinance: 2_000 }).cesuVerse).toBe(
+      1_000,
+    );
+  });
+
+  it('applique les plafonds du crédit selon la situation', () => {
+    const base = { majorationsCreditImpot: 0, premiereAnneeEmploiDomicile: false, invaliditeCreditImpot: false };
+    expect(plafondCreditImpotServices(base)).toBe(12_000);
+    expect(plafondCreditImpotServices({ ...base, majorationsCreditImpot: 1 })).toBe(13_500);
+    expect(plafondCreditImpotServices({ ...base, majorationsCreditImpot: 5 })).toBe(15_000);
+    expect(plafondCreditImpotServices({ ...base, premiereAnneeEmploiDomicile: true })).toBe(15_000);
+    expect(
+      plafondCreditImpotServices({ ...base, premiereAnneeEmploiDomicile: true, majorationsCreditImpot: 3 }),
+    ).toBe(18_000);
+    expect(plafondCreditImpotServices({ ...base, invaliditeCreditImpot: true })).toBe(20_000);
   });
 });
 
