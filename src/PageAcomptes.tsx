@@ -24,6 +24,9 @@ import {
 import { litStockage, sauvegarderRecherche, CLE_ACOMPTES } from './lib/persistance';
 import { minifier, rechercheCourante } from './lib/compact';
 import { LienSignaler } from './components/LienSignaler';
+import { SectionCfe } from './components/SectionCfe';
+import { DEFAUTS_CFE, type HypothesesCfe } from './lib/cfe';
+import { decoderCfe, fusionnerCfe } from './lib/urlCfe';
 import * as P from './lib/parametres2026';
 
 export default function PageAcomptes() {
@@ -35,11 +38,15 @@ export default function PageAcomptes() {
     return decoderAcomptes(rechercheCourante(), saved);
   });
   const r = useMemo(() => calculerAcomptes(h), [h]);
+  // The CFE estimate shares the page, its storage slot and its query string.
+  const [cfe, setCfe] = useState<HypothesesCfe>(() =>
+    decoderCfe(rechercheCourante(), decoderCfe(litStockage(CLE_ACOMPTES))),
+  );
 
   // The browser is updated at once (a debounced save is lost if the page is
   // left within the delay); only the address-bar rewrite is debounced.
   useEffect(() => {
-    const requete = encoderAcomptes(h, DEFAUTS_ACOMPTES);
+    const requete = fusionnerCfe(encoderAcomptes(h, DEFAUTS_ACOMPTES), cfe);
     sauvegarderRecherche(CLE_ACOMPTES, requete);
     const minuteur = setTimeout(() => {
       window.history.replaceState(
@@ -49,7 +56,7 @@ export default function PageAcomptes() {
       );
     }, 250);
     return () => clearTimeout(minuteur);
-  }, [h]);
+  }, [h, cfe]);
 
   // What the slider shows: the manual amount, or what the active strategy
   // works out to for the next unpaid instalment.
@@ -382,8 +389,15 @@ export default function PageAcomptes() {
                   </div>
                 </div>
 
-                <BoutonPartage lien={lienPartageAcomptes(h, DEFAUTS_ACOMPTES)} />
-                <BoutonReset onReset={() => setH(DEFAUTS_ACOMPTES)} />
+                <BoutonPartage
+                  lien={lienPartageAcomptes(h, DEFAUTS_ACOMPTES, (q) => fusionnerCfe(q, cfe))}
+                />
+                <BoutonReset
+                  onReset={() => {
+                    setH(DEFAUTS_ACOMPTES);
+                    setCfe(DEFAUTS_CFE);
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -494,6 +508,8 @@ export default function PageAcomptes() {
             </div>
           </div>
         </section>
+
+        <SectionCfe h={cfe} onChange={setCfe} />
 
         <Regles />
       </main>
@@ -628,6 +644,12 @@ function Stat({ label, valeur }: { label: string; valeur: string }) {
 }
 
 const SOURCES = [
+  {
+    titre: 'Cotisation foncière des entreprises',
+    detail: `Exonérée l'année de création, base réduite de moitié l'année suivante. Sans local, base minimum votée par la commune entre ${eur(P.CFE_BASE_MINIMUM_PLANCHER)} et ${eur(P.CFE_TRANCHES_BASE_MINIMUM[P.CFE_TRANCHES_BASE_MINIMUM.length - 1].baseMax)} selon le chiffre d'affaires N-2 ; exonération jusqu'à ${eur(P.CFE_SEUIL_EXONERATION_CA)}. S'y ajoutent la taxe additionnelle CCI et 1 % de frais de gestion.`,
+    url: 'https://entreprendre.service-public.gouv.fr/vosdroits/F23547',
+    hote: 'service-public.gouv.fr',
+  },
   {
     titre: 'Versement des acomptes',
     detail:

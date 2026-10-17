@@ -190,7 +190,9 @@ et un paramètre ajouté sans date fait lui aussi échouer la suite.
 
 ## Limites connues
 
-- Hors CFE, mutuelle, prévoyance et frais de tenue de comptabilité.
+- Hors CFE, mutuelle, prévoyance et frais de tenue de comptabilité dans
+  l'arbitrage salaire / dividendes. La CFE est estimée à part, sur la page des
+  acomptes, à partir du taux de la commune.
 - La CSG déductible sur dividendes est imputée sur l'année simulée, alors
   qu'elle l'est en pratique l'année suivante.
 - Pas de crédits ni de réductions d'impôt. Les versements sur un PER individuel

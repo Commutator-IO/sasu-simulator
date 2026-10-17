@@ -35,6 +35,12 @@ const VERS_COURT: Record<string, string> = {
   plafondPER: 'pp',
   // Shared
   isReduit: 'ir',
+  // CFE, on the instalments page
+  cfeCa: 'fa',
+  cfeCreation: 'fc',
+  cfeBase: 'fb',
+  cfeTaux: 'ft',
+  cfeCci: 'fi',
   // Instalments
   precedent: 'pc',
   moisPrecedent: 'mp',

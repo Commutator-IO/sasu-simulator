@@ -246,6 +246,35 @@ export const IS_TAUX_REDUIT = 0.15;
 export const IS_TAUX_NORMAL = 0.25;
 
 // ---------------------------------------------------------------------------
+// Cotisation foncière des entreprises (CFE)
+// ---------------------------------------------------------------------------
+
+/**
+ * Minimum tax base for the CFE due in 2026, by turnover excluding VAT of year
+ * N-2 (CGI art. 1647 D). Each commune votes its own base within the range; the
+ * floor is the same in every bracket. A company working from home or from a
+ * domiciliation address has next to no rental value, so this minimum base is
+ * what it is taxed on (service-public.gouv.fr F23547).
+ */
+export const CFE_BASE_MINIMUM_PLANCHER = 250;
+export const CFE_TRANCHES_BASE_MINIMUM: { plafondCA: number; baseMax: number }[] = [
+  { plafondCA: 10_000, baseMax: 597 },
+  { plafondCA: 32_600, baseMax: 1_194 },
+  { plafondCA: 100_000, baseMax: 2_509 },
+  { plafondCA: 250_000, baseMax: 4_183 },
+  { plafondCA: 500_000, baseMax: 5_974 },
+  { plafondCA: Infinity, baseMax: 7_769 },
+];
+/** No CFE when the reference turnover does not exceed this. */
+export const CFE_SEUIL_EXONERATION_CA = 5_000;
+/** The base is halved the year after creation; the creation year is exempt. */
+export const CFE_REDUCTION_ANNEE_SUIVANT_CREATION = 0.5;
+/** Additional tax for the chambers of commerce, on the base. */
+export const CFE_TAXE_ADDITIONNELLE_CCI = 0.0112;
+/** Local tax management fee, on the CFE plus the additional tax. */
+export const CFE_FRAIS_GESTION = 0.01;
+
+// ---------------------------------------------------------------------------
 // Personal income tax — 2026 brackets (2025 income)
 // ---------------------------------------------------------------------------
 
@@ -495,6 +524,20 @@ export const VALIDITE_PARAMETRES: Validite[] = [
     aVerifier:
       "Plafond de déduction de l'épargne retraite (10 % des revenus d'activité, bornes de 10 % et 80 % du Pass de l'année précédente) et règles de report des plafonds non utilisés.",
     source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F34982',
+  },
+  {
+    constantes: [
+      'CFE_BASE_MINIMUM_PLANCHER',
+      'CFE_TRANCHES_BASE_MINIMUM',
+      'CFE_SEUIL_EXONERATION_CA',
+      'CFE_REDUCTION_ANNEE_SUIVANT_CREATION',
+      'CFE_TAXE_ADDITIONNELLE_CCI',
+      'CFE_FRAIS_GESTION',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      'Tranches de base minimum de CFE (revalorisées chaque année), seuil d’exonération, taxe additionnelle CCI et frais de gestion.',
+    source: 'https://entreprendre.service-public.gouv.fr/vosdroits/F23547',
   },
   {
     constantes: ['IS_SEUIL_TAUX_REDUIT', 'IS_TAUX_REDUIT', 'IS_TAUX_NORMAL'],

@@ -134,12 +134,16 @@ export function decoderAcomptes(
   };
 }
 
-/** Absolute URL to share, keeping the current path. */
+/**
+ * Absolute URL to share, keeping the current path. The page's other tool, the
+ * CFE estimate, adds its own keys through `completer`.
+ */
 export function lienPartageAcomptes(
   h: HypothesesAcomptes,
   defauts: HypothesesAcomptes,
+  completer: (requete: string) => string = (requete) => requete,
 ): string {
   if (typeof window === 'undefined') return '';
   const { origin, pathname } = window.location;
-  return `${origin}${pathname}${minifier(encoderAcomptes(h, defauts))}`;
+  return `${origin}${pathname}${minifier(completer(encoderAcomptes(h, defauts)))}`;
 }

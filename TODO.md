@@ -588,9 +588,10 @@ dividendes. Aucun outil ne traite les deux ensemble.
 y ajouter le chômage et l'AGS, dont le président est exempté, et la réduction
 générale dégressive dont un salarié bénéficie.
 
-**CFE.** Oubliée par presque tous les créateurs, exonérée la première année
-puis due sur une base minimale qui dépend du chiffre d'affaires et de la
-commune. Peu de calcul, beaucoup de valeur.
+**CFE.** En ligne sur la page des acomptes : base minimum selon le chiffre
+d'affaires, exonération de l'année de création, base réduite de moitié la
+suivante, taux de la commune saisi. Reste à la déduire du résultat dans
+l'arbitrage salaire / dividendes, où elle est encore ignorée.
 
 **TVA : régime et seuils.** Franchise en base, réel simplifié, réel normal, et
 les échéances qui vont avec. Sujet fréquent au démarrage.
