@@ -355,18 +355,21 @@ export default function App() {
                       hint={`Intéressement, participation, abondement PEE ou Perco, chèques-vacances, versés par an. Déduits du bénéfice ; vous les recevez nets de ${pct(P.CSG_CRDS_EPARGNE_SALARIALE, 1)} de CSG-CRDS, sans impôt sur le revenu s'ils sont placés sur un plan d'épargne.`}
                     />
                     <Montant
-                      label="Autres avantages exonérés"
+                      label="CESU préfinancé et autres avantages exonérés"
                       valeur={base.avantagesExoneres}
                       onChange={(v) => maj('avantagesExoneres', v)}
-                      hint="Part patronale des titres-restaurant, bons d'achat et chèques cadeaux, dans leurs limites d'exonération. Déduits du bénéfice, reçus sans prélèvement."
+                      hint={`Surtout l'aide aux services à la personne (CESU préfinancé), jusqu'à ${eur(P.PLAFOND_AIDE_SERVICES_PERSONNE)} par an et ouverte au président seul. Déduite du bénéfice, reçue sans cotisation, CSG ni impôt. Elle réduit d'autant la base de votre crédit d'impôt emploi à domicile, que le simulateur ne calcule pas.`}
                     />
                     {(base.epargneSalariale > 0 || base.avantagesExoneres > 0) && (
                       <p className="rounded-xl bg-gold-500/10 px-4 py-3 text-xs leading-relaxed text-ink-600 sm:col-span-2">
                         Vérifiez que votre société y a droit. L'intéressement, la
                         participation et le PEE ne sont ouverts au président que si la
-                        société emploie au moins un salarié en plus de lui. Chaque
-                        dispositif a ses propres conditions et plafonds : faites-les
-                        valider par votre expert-comptable.
+                        société emploie au moins un salarié en plus de lui ; les
+                        titres-restaurant et la prime de partage de la valeur exigent un
+                        contrat de travail. Le CESU préfinancé et les chèques-vacances
+                        restent ouverts à un président seul. Chaque dispositif a ses
+                        conditions et ses plafonds : faites-les valider par votre
+                        expert-comptable.
                       </p>
                     )}
                   </div>

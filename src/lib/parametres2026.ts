@@ -23,10 +23,19 @@ export const PASS = 48_060;
 /** Monthly ceiling. */
 export const PMSS = 4_005;
 
-/** Gross hourly minimum wage as of 1 January 2026. */
-export const SMIC_HORAIRE = 11.88;
-/** Gross monthly minimum wage (35 h/week) as of 1 January 2026. */
-export const SMIC_MENSUEL = 1_823.03;
+/**
+ * Gross hourly minimum wage as of 1 January 2026 (decree 2025-1228 of
+ * 17/12/2025). Pension quarters are earned on the rate in force on
+ * 1 January, so this one stays the reference for the whole year even though
+ * the rate rose on 1 June.
+ */
+export const SMIC_HORAIRE = 12.02;
+/**
+ * Gross monthly minimum wage (35 h/week) in force today: €1,867.02 since
+ * 1 June 2026 (order of 22/05/2026), up from €1,823.03. Only used to suggest a
+ * salary level.
+ */
+export const SMIC_MENSUEL = 1_867.02;
 
 // ---------------------------------------------------------------------------
 // Social contributions — SASU president (employee-equivalent status)
@@ -203,6 +212,16 @@ export const CRDS = 0.5;
  */
 export const CSG_CRDS_EPARGNE_SALARIALE =
   (CSG_DEDUCTIBLE + CSG_NON_DEDUCTIBLE + CRDS) / 100;
+
+/**
+ * Yearly ceiling of the employer aid for home services (CESU préfinancé) per
+ * beneficiary, from 1 January 2026 (order of 23/12/2025). In a company with no
+ * employee, the president may grant it to themselves "sans autre condition"
+ * (BOI-BIC-CHG-40-50-10 § 20). It is free of contributions, CSG and income
+ * tax, but it must be taken off the expenses that open the home-employment tax
+ * credit (CGI art. 199 sexdecies).
+ */
+export const PLAFOND_AIDE_SERVICES_PERSONNE = 2_591;
 
 // ---------------------------------------------------------------------------
 // Corporate income tax
@@ -426,8 +445,8 @@ export const VALIDITE_PARAMETRES: Validite[] = [
     constantes: ['SMIC_HORAIRE', 'SMIC_MENSUEL', 'BRUT_PAR_TRIMESTRE'],
     valableJusquau: '2026-12-31',
     aVerifier:
-      'Revalorisation du Smic au 1ᵉʳ janvier, ou en cours d’année si l’inflation la déclenche.',
-    source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F2300',
+      'Revalorisation du Smic au 1ᵉʳ janvier, ou en cours d’année si l’inflation la déclenche. Le Smic horaire au 1ᵉʳ janvier sert aux trimestres, le Smic mensuel en vigueur aux suggestions de salaire.',
+    source: 'https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html',
   },
   {
     constantes: ['RGDU_APPLICABLE_AU_PRESIDENT', 'COTISATIONS', 'AT_MP_DEFAUT'],
@@ -448,6 +467,13 @@ export const VALIDITE_PARAMETRES: Validite[] = [
     valableJusquau: '2026-12-31',
     aVerifier: "Taux et assiette de la CSG-CRDS sur les revenus d'activité, dans la LFSS.",
     source: 'https://boss.gouv.fr/portail/accueil/regles-dassujettissement/assiette-generale.html',
+  },
+  {
+    constantes: ['PLAFOND_AIDE_SERVICES_PERSONNE'],
+    valableJusquau: '2026-12-31',
+    aVerifier: "Plafond annuel de l'aide aux services à la personne (CESU préfinancé), revalorisé par arrêté en fin d'année.",
+    source:
+      'https://www.servicesalapersonne.gouv.fr/tout-savoir-sur-les-services-la-personne/les-avantages-du-cesu-prefinance',
   },
   {
     constantes: ['IS_SEUIL_TAUX_REDUIT', 'IS_TAUX_REDUIT', 'IS_TAUX_NORMAL'],

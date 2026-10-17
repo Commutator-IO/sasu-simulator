@@ -51,9 +51,10 @@ export type Hypotheses = {
    */
   epargneSalariale: number;
   /**
-   * Yearly benefits exempt from every levy within their limits: employer share
-   * of meal vouchers, gift and service vouchers. A deductible company expense,
-   * received in full.
+   * Yearly benefits exempt from every levy within their limits, chiefly the
+   * employer aid for home services (CESU préfinancé), which a president with no
+   * employee may grant themselves. A deductible company expense, received in
+   * full.
    */
   avantagesExoneres: number;
   /** Company's work-accident insurance rate, as a percentage. */

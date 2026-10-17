@@ -78,6 +78,12 @@ const SOURCES = [
     hote: 'service-public.gouv.fr',
   },
   {
+    titre: 'CESU préfinancé pour un président sans salarié',
+    detail: `Aide aux services à la personne exonérée de cotisations, de CSG et d'impôt jusqu'à ${eur(P.PLAFOND_AIDE_SERVICES_PERSONNE)} par an en 2026. Dans une société sans salarié, le président peut se l'allouer « sans autre condition » ; elle se déduit de la base du crédit d'impôt emploi à domicile.`,
+    url: 'https://bofip.impots.gouv.fr/bofip/1022-PGP.html/identifiant%3DBOI-BIC-CHG-40-50-10-20170705',
+    hote: 'bofip.impots.gouv.fr',
+  },
+  {
     titre: "CSG-CRDS sur l'épargne salariale",
     detail:
       "9,7 % sur la totalité du montant : intéressement, participation, abondements et chèques-vacances des entreprises de moins de 50 salariés sont exclus de l'abattement de 1,75 %.",
