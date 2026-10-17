@@ -350,7 +350,7 @@ export function tjmEquivalent(resultatAvantRemuneration: number): number {
 export const BRUT_PAR_TRIMESTRE = 150 * SMIC_HORAIRE;
 /** Agirc-Arrco 2026 reference salary (purchase price of one point). */
 export const SALAIRE_REFERENCE_AGIRC_ARRCO = 20.1877;
-/** Agirc-Arrco point value in 2026. */
+/** Agirc-Arrco point value in 2026: the yearly pension paid per point. */
 export const VALEUR_POINT_AGIRC_ARRCO = 1.4386;
 /** Point-accrual rates (excluding the 127% call rate). */
 export const TAUX_POINTS_T1 = 0.062;

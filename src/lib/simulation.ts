@@ -597,7 +597,8 @@ export function simuler(h: Hypotheses): Resultat {
   const t2 = Math.max(0, Math.min(brut, 8 * plafond) - plafond);
   const pointsAgircArrco =
     (t1 * P.TAUX_POINTS_T1 + t2 * P.TAUX_POINTS_T2) / P.SALAIRE_REFERENCE_AGIRC_ARRCO;
-  const retraiteComplementaireAnnuelle = pointsAgircArrco * P.VALEUR_POINT_AGIRC_ARRCO * 12;
+  // The point value is a yearly amount: points × value is already the annual pension.
+  const retraiteComplementaireAnnuelle = pointsAgircArrco * P.VALEUR_POINT_AGIRC_ARRCO;
 
   return {
     resultatAvantRemuneration: h.resultatAvantRemuneration,

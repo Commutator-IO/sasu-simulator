@@ -173,6 +173,21 @@ describe('arbitrage rémunération / dividendes', () => {
     expect(sim(4 * P.BRUT_PAR_TRIMESTRE - 1).trimestresValides).toBe(3);
   });
 
+  it('convertit les points Agirc-Arrco en rente annuelle sans les multiplier par douze', () => {
+    // At 1 PASS, a year earns about 148 points, worth about €212 of yearly pension.
+    const r = sim(P.PASS);
+    expect(r.pointsAgircArrco).toBeCloseTo(
+      (P.PASS * P.TAUX_POINTS_T1) / P.SALAIRE_REFERENCE_AGIRC_ARRCO,
+      6,
+    );
+    expect(r.retraiteComplementaireAnnuelle).toBeCloseTo(
+      r.pointsAgircArrco * P.VALEUR_POINT_AGIRC_ARRCO,
+      6,
+    );
+    expect(r.retraiteComplementaireAnnuelle).toBeGreaterThan(200);
+    expect(r.retraiteComplementaireAnnuelle).toBeLessThan(225);
+  });
+
   it('applique la flat tax à 31,4 %, dont 18,6 % de prélèvements sociaux', () => {
     // 12.8% income tax + 18.6% social levies since the 2026 Social Security
     // Financing Act: the flat tax is no longer 30%.
