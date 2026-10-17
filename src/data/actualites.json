@@ -5,6 +5,19 @@
   ],
   "entrees": [
     {
+      "date": "2026-11-01",
+      "quand": "1ᵉʳ novembre 2026",
+      "categorie": "fiscal",
+      "titre": "Revalorisation annuelle du point Agirc-Arrco",
+      "detail": "La valeur de service du point, qui convertit les points acquis en rente, est revue chaque 1ᵉʳ novembre ; elle vaut 1,4386 € depuis novembre 2025. Le simulateur la tient pour valable jusqu'au 31 octobre : au-delà, ses tests échouent tant que la nouvelle valeur n'est pas reportée.",
+      "url": "https://reglementation.agirc-arrco.fr/home/baremes/listes-area/baremes-1/valeur-de-service-du-point-agirc-arrco.html",
+      "hote": "agirc-arrco.fr",
+      "themes": [
+        "salaire"
+      ],
+      "aVenir": true
+    },
+    {
       "date": "2026-07-27",
       "quand": "27 juillet 2026",
       "categorie": "reglementaire",
@@ -18,6 +31,18 @@
       "effet": "baisse"
     },
     {
+      "date": "2026-06-01",
+      "quand": "1ᵉʳ juin 2026",
+      "categorie": "fiscal",
+      "titre": "Le Smic passe à 12,31 € de l'heure",
+      "detail": "Arrêté du 22 mai 2026 : 1 867,02 € brut par mois, contre 1 823,03 € depuis janvier. Les trimestres de retraite restent calculés sur le Smic du 1ᵉʳ janvier, 12,02 € : il faut 7 212 € de brut dans l'année pour en valider quatre.",
+      "url": "https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html",
+      "hote": "urssaf.fr",
+      "themes": [
+        "salaire"
+      ]
+    },
+    {
       "date": "2026-02-19",
       "quand": "19 février 2026",
       "categorie": "fiscal",
@@ -28,6 +53,19 @@
       "themes": [
         "impots",
         "salaire"
+      ]
+    },
+    {
+      "date": "2026-01-01",
+      "quand": "1ᵉʳ janvier 2026",
+      "categorie": "fiscal",
+      "titre": "CESU préfinancé : plafond relevé à 2 591 €",
+      "detail": "Arrêté du 23 décembre 2025. L'aide aux services à la personne reste exonérée de cotisations, de CSG et d'impôt dans cette limite, et le président d'une société sans salarié peut se l'allouer. Elle se déduit toutefois de la base du crédit d'impôt emploi à domicile : sous le plafond de ce crédit, chaque euro d'aide en fait perdre cinquante centimes.",
+      "url": "https://www.servicesalapersonne.gouv.fr/tout-savoir-sur-les-services-la-personne/les-avantages-du-cesu-prefinance",
+      "hote": "servicesalapersonne.gouv.fr",
+      "themes": [
+        "salaire",
+        "impots"
       ]
     },
     {
@@ -68,7 +106,7 @@
       ]
     }
   ],
-  "misAJourLe": "2026-08-01",
+  "misAJourLe": "2026-10-17",
   "calendrier": [
     {
       "quand": "Chaque mois, le 15",
