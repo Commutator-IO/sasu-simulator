@@ -95,7 +95,8 @@ vit sous `/<dépôt>/` et le build a besoin de `BASE_PATH=/<dépôt>/`.
 Chaque déploiement garde le SBOM (CycloneDX) du commit publié, 90 jours, avec
 le commit qu'il décrit. Le workflow `sbom` le scanne chaque lundi avec Grype
 contre les vulnérabilités publiées depuis, et scanne aussi l'inventaire de
-`main` à chaque changement de dépendances. Il échoue dès une faille haute ou
+`main` à chaque changement de dépendances (il n'y a pas de préproduction :
+`main` part directement en production). Il échoue dès une faille haute ou
 critique. Une faille inatteignable dans les fichiers statiques servis se
 documente dans `.github/vex.openvex.json`, avec sa justification, plutôt que
 d'être masquée par un réglage du scan.

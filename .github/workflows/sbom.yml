@@ -6,11 +6,13 @@ name: sbom
 # The ones that concern a live site come out later, so the inventory is kept
 # and checked again against current vulnerability data every Monday.
 #
-# Two inventories are scanned:
-#   staging     generated from the commit being checked (main, or a pull request)
+# There is no staging environment: deploy.yml publishes main straight to
+# production. Two inventories are still scanned:
+#   main        generated from the commit being checked (main, or a pull request)
 #   production  the SBOM that deploy.yml kept when it last published. It is
 #               scanned as it was stored, because production runs whatever commit
-#               was last deployed, which is not necessarily the tip of main.
+#               last deployed successfully, which is not necessarily the tip of
+#               main (a failed or skipped deployment leaves the previous one live).
 #
 # The site is served as static files, so most of these packages only run during
 # the build. When a finding cannot be reached in what is served, record it in
@@ -41,7 +43,7 @@ permissions:
   actions: read
 
 jobs:
-  staging:
+  main:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -57,7 +59,7 @@ jobs:
       - name: Keep the SBOM
         uses: actions/upload-artifact@v4
         with:
-          name: sbom-staging-${{ github.sha }}
+          name: sbom-main-${{ github.sha }}
           path: sbom.cdx.json
           retention-days: 90
 
