@@ -29,6 +29,8 @@ const VERS_COURT: Record<string, string> = {
   distribution: 'ds',
   atmp: 'at',
   bareme: 'bm',
+  epargneSalariale: 'es',
+  avantages: 'av',
   // Shared
   isReduit: 'ir',
   // Instalments
