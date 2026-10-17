@@ -16,6 +16,8 @@ type Props = {
    * it sits.
    */
   brutExterne?: number;
+  /** What the vertical axis measures, after the amount: "net" by default. */
+  unite?: string;
   /** Salary levels where a tax rule kicks in, drawn as faint vertical markers. */
   seuils?: Seuil[];
   onScrub?: (brut: number) => void;
@@ -66,6 +68,7 @@ export function Courbe({
   plateau,
   brutExterne,
   seuils = [],
+  unite = 'net',
   onScrub,
   statique = false,
 }: Props) {
@@ -310,7 +313,7 @@ export function Courbe({
         {!statique && (
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-brand-600" />
-            Votre choix — {eur(affiche.brut)} de brut → {eur(affiche.net)} net
+            Votre choix — {eur(affiche.brut)} de brut → {eur(affiche.net)} {unite}
           </span>
         )}
         <span className="flex items-center gap-1.5">

@@ -70,6 +70,19 @@ export type Hypotheses = {
   premiereAnneeEmploiDomicile: boolean;
   /** Disability raising the ceiling to €20,000. */
   invaliditeCreditImpot: boolean;
+  /**
+   * Will this year rank among the 25 best of the career? Only then does it
+   * raise the base pension.
+   */
+  anneeParmiMeilleures: boolean;
+  /** Count the pension this year earns, at its present value, in the optimum. */
+  valoriserRetraite: boolean;
+  /** Years until the pension starts. */
+  anneesAvantRetraite: number;
+  /** Years the pension is expected to be paid. */
+  dureeRetraite: number;
+  /** Real discount rate, as a percentage. */
+  tauxActualisation: number;
   /** Voluntary payments into an individual PER this year, opted as deductible. */
   versementPER: number;
   /**
@@ -221,6 +234,24 @@ export type Resultat = {
   trimestresExterne: number;
   pointsAgircArrco: number;
   retraiteComplementaireAnnuelle: number;
+  /** Yearly base pension this year's company salary adds, at the full rate. */
+  retraiteBaseAnnuelle: number;
+  /** Base plus complementary, gross and net of the levies on pensions. */
+  retraiteAcquiseBrute: number;
+  retraiteAcquiseNette: number;
+  /** Old-age and complementary-pension contributions, both sides. */
+  cotisationsRetraite: number;
+  /** Today's value of the net pension earned this year. */
+  valeurRetraite: number;
+  /** The assumptions behind that value, echoed for display. */
+  anneesAvantRetraite: number;
+  dureeRetraite: number;
+  tauxActualisation: number;
+  /**
+   * What the optimum maximises: take-home pay, plus the pension's value when
+   * the reader chose to count it.
+   */
+  critere: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -399,6 +430,23 @@ export function brutMaxPourBudget(
     else bas = milieu;
   }
   return bas;
+}
+
+/**
+ * Today's value of a yearly pension that starts in `differe` years and is paid
+ * for `duree` years, at a real discount rate: a euro of pension in thirty
+ * years is not a euro today.
+ */
+export function valeurActuelleRente(
+  rente: number,
+  differe: number,
+  duree: number,
+  taux: number,
+): number {
+  const n = Math.max(0, duree);
+  const r = Math.max(-0.99, taux);
+  const annuite = Math.abs(r) < 1e-9 ? n : (1 - (1 + r) ** -n) / r;
+  return rente * annuite * (1 + r) ** -Math.max(0, differe);
 }
 
 /** Spending ceiling of the home-employment tax credit for the household. */
@@ -823,6 +871,31 @@ export function simuler(h: Hypotheses): Resultat {
   // The point value is a yearly amount: points × value is already the annual pension.
   const retraiteComplementaireAnnuelle = pointsAgircArrco * P.VALEUR_POINT_AGIRC_ARRCO;
 
+  // A year among the 25 best adds its capped salary / 25 to the average the
+  // base pension is 50% of. With an outside job the cap is shared, so only the
+  // part the company salary adds on top of it is credited to the company.
+  const retraiteBaseAnnuelle = h.anneeParmiMeilleures
+    ? (P.RETRAITE_BASE_TAUX_PLEIN *
+        (Math.min(brut + externeBrut, plafond) - Math.min(externeBrut, plafond))) /
+      P.RETRAITE_BASE_MEILLEURES_ANNEES
+    : 0;
+  const retraiteAcquiseBrute = retraiteBaseAnnuelle + retraiteComplementaireAnnuelle;
+  const retraiteAcquiseNette = retraiteAcquiseBrute * (1 - P.PRELEVEMENTS_SOCIAUX_PENSION);
+  const cotisationsRetraite = lignes
+    .filter(
+      (l) =>
+        l.libelle.startsWith('Vieillesse') ||
+        (l.famille === 'Retraite complémentaire' && !l.libelle.startsWith('Apec')),
+    )
+    .reduce((s, l) => s + l.patronal + l.salarial, 0);
+  const valeurRetraite = valeurActuelleRente(
+    retraiteAcquiseNette,
+    h.anneesAvantRetraite,
+    h.dureeRetraite,
+    h.tauxActualisation / 100,
+  );
+  const critere = netEnPoche + (h.valoriserRetraite ? valeurRetraite : 0);
+
   return {
     resultatAvantRemuneration: h.resultatAvantRemuneration,
     brutAnnuel: brut,
@@ -885,6 +958,15 @@ export function simuler(h: Hypotheses): Resultat {
     trimestresExterne,
     pointsAgircArrco,
     retraiteComplementaireAnnuelle,
+    retraiteBaseAnnuelle,
+    retraiteAcquiseBrute,
+    retraiteAcquiseNette,
+    cotisationsRetraite,
+    valeurRetraite,
+    anneesAvantRetraite: h.anneesAvantRetraite,
+    dureeRetraite: h.dureeRetraite,
+    tauxActualisation: h.tauxActualisation,
+    critere,
   };
 }
 
@@ -910,8 +992,8 @@ export function plateauOptimum(
   brutMax: number,
   tolerance = P.TOLERANCE_OPTIMUM,
 ): Plateau {
-  const seuil = optimum.netEnPoche - tolerance;
-  const net = (brut: number) => simuler({ ...h, brutAnnuel: brut }).netEnPoche;
+  const seuil = optimum.critere - tolerance;
+  const net = (brut: number) => simuler({ ...h, brutAnnuel: brut }).critere;
 
   const borne = (depart: number, arrivee: number) => {
     // `depart` is inside the range, `arrivee` outside.
@@ -1057,7 +1139,7 @@ export function balayer(
   const points = Array.from({ length: pas }, (_, i) => {
     const brut = (brutMax * i) / (pas - 1);
     const resultat = simuler({ ...h, brutAnnuel: brut });
-    return { brut, net: resultat.netEnPoche, resultat };
+    return { brut, net: resultat.critere, resultat };
   });
 
   // Refine around the best point of the grid.
@@ -1072,7 +1154,7 @@ export function balayer(
       Math.min(brutMax, meilleur.brut - largeur + (2 * largeur * i) / 40),
     );
     const r = simuler({ ...h, brutAnnuel: brut });
-    if (r.netEnPoche > optimum.netEnPoche) optimum = r;
+    if (r.critere > optimum.critere) optimum = r;
   }
 
   return {

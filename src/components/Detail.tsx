@@ -244,6 +244,37 @@ export function Detail({ r }: { r: Resultat }) {
             </p>
           </div>
         </div>
+        <div className="mt-4">
+          <Ligne
+            label="Retraite de base acquise"
+            montant={r.retraiteBaseAnnuelle}
+            note={
+              r.retraiteBaseAnnuelle > 0
+                ? 'par an, si l’année compte parmi vos 25 meilleures'
+                : 'année hors de vos 25 meilleures'
+            }
+          />
+          <Ligne label="Retraite complémentaire acquise" montant={r.retraiteComplementaireAnnuelle} note="par an" />
+          <Ligne
+            label="Rente acquise cette année, nette"
+            montant={r.retraiteAcquiseNette}
+            note={`par an, après ${tauxPct(P.PRELEVEMENTS_SOCIAUX_PENSION * 100)} de prélèvements`}
+            fort
+          />
+          <Ligne label="Cotisations retraite de l'année" montant={r.cotisationsRetraite} note="patronales et salariales" />
+          <Ligne
+            label="Valeur actuelle de cette rente"
+            montant={r.valeurRetraite}
+            note={`versée ${r.dureeRetraite} ans dans ${r.anneesAvantRetraite} ans, actualisée à ${tauxPct(r.tauxActualisation)}`}
+          />
+        </div>
+        <p className="mt-3 rounded-lg bg-ink-50 px-3 py-2 text-xs leading-relaxed text-ink-500">
+          Estimation au taux plein, pour une carrière complète. Une année ne compte pour la
+          retraite de base que si elle finit parmi vos 25 meilleures : après une longue
+          carrière salariée bien payée, un petit salaire de président peut ne rien y
+          ajouter. La cotisation d'assurance maladie sur la complémentaire n'est pas
+          déduite. Votre relevé sur info-retraite.fr reste la référence.
+        </p>
         <p className="mt-4 text-xs leading-relaxed text-ink-500">
           Les dividendes n'ouvrent aucun droit : ni retraite, ni indemnités journalières,
           ni prévoyance. Le président de SASU ne cotise pas à l'assurance chômage, quelle

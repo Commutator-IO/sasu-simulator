@@ -453,6 +453,20 @@ export const BRUT_PAR_TRIMESTRE = 150 * SMIC_HORAIRE;
 export const SALAIRE_REFERENCE_AGIRC_ARRCO = 20.1877;
 /** Agirc-Arrco point value in 2026: the yearly pension paid per point. */
 export const VALEUR_POINT_AGIRC_ARRCO = 1.4386;
+/**
+ * Base pension of the general scheme at the full rate: 50% of the average of
+ * the 25 best years of salary, each year counting only up to the social
+ * security ceiling it was capped at (service-public F21552).
+ */
+export const RETRAITE_BASE_TAUX_PLEIN = 0.5;
+export const RETRAITE_BASE_MEILLEURES_ANNEES = 25;
+/**
+ * Social levies on a pension at the normal rate: CSG 8.3%, CRDS 0.5% and
+ * Casa 0.3% (service-public F2971). Reduced rates apply to modest incomes.
+ * Complementary pensions also bear a health-insurance contribution, not
+ * counted here.
+ */
+export const PRELEVEMENTS_SOCIAUX_PENSION = 0.091;
 /** Point-accrual rates (excluding the 127% call rate). */
 export const TAUX_POINTS_T1 = 0.062;
 export const TAUX_POINTS_T2 = 0.17;
@@ -639,6 +653,17 @@ export const VALIDITE_PARAMETRES: Validite[] = [
     aVerifier: "Valeur d'achat du point (salaire de référence) Agirc-Arrco de l'année suivante.",
     source:
       'https://reglementation.agirc-arrco.fr/home/baremes/listes-area/baremes-1/valeur-d-achat-du-point-agirc-arrco.html',
+  },
+  {
+    constantes: [
+      'RETRAITE_BASE_TAUX_PLEIN',
+      'RETRAITE_BASE_MEILLEURES_ANNEES',
+      'PRELEVEMENTS_SOCIAUX_PENSION',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      'Calcul de la pension de base (taux plein, 25 meilleures années) et taux normal des prélèvements sociaux sur les pensions.',
+    source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F21552',
   },
   {
     constantes: ['VALEUR_POINT_AGIRC_ARRCO'],

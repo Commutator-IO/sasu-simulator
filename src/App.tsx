@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BadgeBaremes } from './components/BadgeBaremes';
 import { Curseur, Montant, Segments } from './components/Champs';
 import { Courbe } from './components/Courbe';
+import { CourbeRetraite } from './components/CourbeRetraite';
 import { Cascade } from './components/Cascade';
 import { Detail } from './components/Detail';
 import { Sources } from './components/Sources';
@@ -40,6 +41,8 @@ export default function App() {
       initial.base.avantagesExoneres !== DEFAUTS.avantagesExoneres ||
       initial.base.cesuPrefinance !== DEFAUTS.cesuPrefinance ||
       initial.base.depensesServicesPersonne !== DEFAUTS.depensesServicesPersonne ||
+      initial.base.valoriserRetraite !== DEFAUTS.valoriserRetraite ||
+      initial.base.anneeParmiMeilleures !== DEFAUTS.anneeParmiMeilleures ||
       initial.base.versementPER !== DEFAUTS.versementPER ||
       initial.base.plafondPER !== DEFAUTS.plafondPER,
   );
@@ -79,7 +82,9 @@ export default function App() {
   const r = useMemo(() => simuler({ ...base, brutAnnuel: brut }), [base, brut]);
   const { points, optimum, plateau, seuils } = useMemo(() => balayer(base), [base]);
 
-  const ecart = optimum.netEnPoche - r.netEnPoche;
+  // The optimum maximises the criterion: take-home pay, plus the pension's
+  // present value when the reader chose to count it.
+  const ecart = optimum.critere - r.critere;
   // The curve is flat at its top: a whole range of salaries comes out the
   // same within a few euros. Saying so beats pointing at a single value.
   const estOptimal = ecart <= plateau.tolerance;
@@ -356,6 +361,56 @@ export default function App() {
                         hint="15 % jusqu'à 42 500 € de bénéfice si le chiffre d'affaires est inférieur à 10 M€, le capital entièrement libéré et détenu à 75 % au moins par des personnes physiques."
                       />
                     </div>
+                    <div className="sm:col-span-2">
+                      <Segments
+                        label="Compter la retraite acquise dans l'optimum"
+                        valeur={base.valoriserRetraite}
+                        options={[
+                          { valeur: false, label: 'Non' },
+                          { valeur: true, label: 'Oui, en valeur actuelle' },
+                        ]}
+                        onChange={(v) => maj('valoriserRetraite', v)}
+                        hint={`Le salaire achète aussi de la retraite : ${eur(r.retraiteAcquiseNette)} de rente annuelle nette pour celui-ci, soit ${eur(r.valeurRetraite)} aujourd'hui. Désactivé par défaut : c'est un droit différé, exposé aux réformes, pas de l'argent en poche.`}
+                      />
+                    </div>
+                    <Segments
+                      label="Cette année comptera parmi vos 25 meilleures"
+                      valeur={base.anneeParmiMeilleures}
+                      options={[
+                        { valeur: true, label: 'Oui' },
+                        { valeur: false, label: 'Non' },
+                      ]}
+                      onChange={(v) => maj('anneeParmiMeilleures', v)}
+                      hint="Sinon, elle n'ajoute rien à la retraite de base : seuls les trimestres et les points complémentaires comptent."
+                    />
+                    {base.valoriserRetraite && (
+                      <>
+                        <Montant
+                          label="Années avant la retraite"
+                          valeur={base.anneesAvantRetraite}
+                          onChange={(v) => maj('anneesAvantRetraite', v)}
+                          suffixe="ans"
+                          max={60}
+                        />
+                        <Montant
+                          label="Durée de la retraite"
+                          valeur={base.dureeRetraite}
+                          onChange={(v) => maj('dureeRetraite', v)}
+                          suffixe="ans"
+                          max={60}
+                          hint="Le nombre d'années pendant lesquelles la rente sera versée."
+                        />
+                        <Montant
+                          label="Taux d'actualisation réel"
+                          valeur={base.tauxActualisation}
+                          onChange={(v) => maj('tauxActualisation', v)}
+                          suffixe="%"
+                          max={15}
+                          decimales={1}
+                          hint="Le rendement, hors inflation, que vous tireriez de cet argent placé ailleurs."
+                        />
+                      </>
+                    )}
                     <Montant
                       label="Versements sur un PER individuel"
                       valeur={base.versementPER}
@@ -561,7 +616,10 @@ export default function App() {
                             +{eur(ecart)} à récupérer.
                           </span>{' '}
                           Une rémunération brute de {eur(optimum.brutAnnuel)} vous
-                          laisserait {eur(optimum.netEnPoche)}.
+                          laisserait {eur(optimum.netEnPoche)}
+                          {base.valoriserRetraite &&
+                            `, plus ${eur(optimum.valeurRetraite)} de retraite en valeur actuelle`}
+                          .
                         </p>
                         <span className="mt-2 inline-block text-sm font-semibold text-gold-600">
                           Appliquer cette rémunération →
@@ -642,6 +700,8 @@ export default function App() {
               Chaque euro de salaire supplémentaire coûte des cotisations, mais réduit
               d'autant le bénéfice imposé à l'IS puis à la flat tax. L'optimum se situe là
               où ces deux forces s'équilibrent.
+              {base.valoriserRetraite &&
+                ' Ici, la retraite acquise est comptée en valeur actuelle : la courbe mesure le net en poche plus cette valeur.'}
             </p>
             <div className="card mt-8 p-5 sm:p-8">
               <Courbe
@@ -650,12 +710,23 @@ export default function App() {
                 brutOptimal={optimum.brutAnnuel}
                 plateau={plateau}
                 seuils={seuils}
+                unite={base.valoriserRetraite ? 'net, retraite valorisée comprise' : 'net'}
                 brutExterne={base.salaireExterneBrut}
                 onScrub={(b) =>
                   setBrut(Math.min(brutMaxArrondi, Math.round(b / 500) * 500))
                 }
               />
             </div>
+            <h3 className="mt-12 text-lg font-semibold tracking-tight text-ink-900">
+              Ce que le salaire achète en retraite
+            </h3>
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-ink-500">
+              La rente annuelle que chaque niveau de salaire ajoute, base et complémentaire,
+              au taux plein. Les dividendes n'en achètent aucune.
+            </p>
+            <div className="card mt-5 p-5 sm:p-8">
+              <CourbeRetraite points={points} brutCourant={brut} />
+</div>
           </div>
         </section>
 

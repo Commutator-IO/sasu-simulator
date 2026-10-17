@@ -36,6 +36,11 @@ const VERS_COURT: Record<string, string> = {
   majorationsCI: 'mj',
   premiereAnneeSAP: 'p1',
   invaliditeCI: 'iv',
+  meilleures: 'm2',
+  valoriserRetraite: 'vr',
+  avantRetraite: 'an',
+  dureeRetraite: 'du',
+  actualisation: 'ac',
   versementPER: 'vp',
   plafondPER: 'pp',
   // Shared

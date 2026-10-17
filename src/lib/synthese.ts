@@ -66,6 +66,11 @@ const CLES_ARBITRAGE = [
   'majorationsCI',
   'premiereAnneeSAP',
   'invaliditeCI',
+  'meilleures',
+  'valoriserRetraite',
+  'avantRetraite',
+  'dureeRetraite',
+  'actualisation',
   'versementPER',
   'plafondPER',
 ];

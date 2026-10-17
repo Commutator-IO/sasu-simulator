@@ -41,6 +41,11 @@ const CLES = {
   majorationsCI: 'majorationsCI',
   premiereAnneeSAP: 'premiereAnneeSAP',
   invaliditeCI: 'invaliditeCI',
+  meilleures: 'meilleures',
+  valoriserRetraite: 'valoriserRetraite',
+  avantRetraite: 'avantRetraite',
+  dureeRetraite: 'dureeRetraite',
+  actualisation: 'actualisation',
   versementPER: 'versementPER',
   plafondPER: 'plafondPER',
 } as const;
@@ -131,6 +136,11 @@ export function encoderEtat(
     d.premiereAnneeEmploiDomicile,
   );
   ajouter(CLES.invaliditeCI, base.invaliditeCreditImpot, d.invaliditeCreditImpot);
+  ajouter(CLES.meilleures, base.anneeParmiMeilleures, d.anneeParmiMeilleures);
+  ajouter(CLES.valoriserRetraite, base.valoriserRetraite, d.valoriserRetraite);
+  ajouter(CLES.avantRetraite, arrondi(base.anneesAvantRetraite), d.anneesAvantRetraite);
+  ajouter(CLES.dureeRetraite, arrondi(base.dureeRetraite), d.dureeRetraite);
+  ajouter(CLES.actualisation, arrondi(base.tauxActualisation, 2), d.tauxActualisation);
   ajouter(CLES.versementPER, arrondi(base.versementPER), d.versementPER);
   ajouter(CLES.plafondPER, arrondi(base.plafondPER), d.plafondPER);
 
@@ -201,6 +211,11 @@ export function decoderEtat(recherche: string, defauts: EtatPartage): EtatPartag
         d.premiereAnneeEmploiDomicile,
       ),
       invaliditeCreditImpot: booleen(p.get(CLES.invaliditeCI), d.invaliditeCreditImpot),
+      anneeParmiMeilleures: booleen(p.get(CLES.meilleures), d.anneeParmiMeilleures),
+      valoriserRetraite: booleen(p.get(CLES.valoriserRetraite), d.valoriserRetraite),
+      anneesAvantRetraite: nombre(p.get(CLES.avantRetraite), d.anneesAvantRetraite, 0, 60),
+      dureeRetraite: nombre(p.get(CLES.dureeRetraite), d.dureeRetraite, 0, 60),
+      tauxActualisation: nombre(p.get(CLES.actualisation), d.tauxActualisation, -5, 15, 2),
       versementPER: nombre(p.get(CLES.versementPER), d.versementPER, 0, MAX_MONTANT),
       plafondPER: nombre(p.get(CLES.plafondPER), d.plafondPER, 0, MAX_MONTANT),
     },

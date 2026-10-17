@@ -15,6 +15,7 @@ import {
   plafondReparti,
   plafondTranche1,
   plateauOptimum,
+  valeurActuelleRente,
   seuilsCourbe,
   simuler,
   tauxPrelevementSource,
@@ -36,6 +37,11 @@ const BASE: Omit<Hypotheses, 'brutAnnuel'> = {
   majorationsCreditImpot: 0,
   premiereAnneeEmploiDomicile: false,
   invaliditeCreditImpot: false,
+  anneeParmiMeilleures: true,
+  valoriserRetraite: false,
+  anneesAvantRetraite: 25,
+  dureeRetraite: 25,
+  tauxActualisation: 2,
   versementPER: 0,
   plafondPER: P.PER_PLAFOND_MINIMUM,
   reservesDistribuables: 0,
@@ -717,6 +723,59 @@ describe('avantages versés hors salaire', () => {
     expect(points.at(-1)!.brut).toBeCloseTo(brutMaxPourBudget(130_000, BASE.tauxATMP), 6);
     expect(points.at(-1)!.brut).toBeLessThan(balayer(BASE).points.at(-1)!.brut);
     expect(optimum.avantagesNets).toBe(20_000);
+  });
+});
+
+describe('retraite acquise dans l’année', () => {
+  it('ajoute 2 % du salaire plafonné à la retraite de base', () => {
+    expect(sim(40_000).retraiteBaseAnnuelle).toBeCloseTo((0.5 * 40_000) / 25, 6);
+    // Above the ceiling the base pension stops growing.
+    expect(sim(90_000).retraiteBaseAnnuelle).toBeCloseTo((0.5 * P.PASS) / 25, 6);
+    expect(sim(40_000, { anneeParmiMeilleures: false }).retraiteBaseAnnuelle).toBe(0);
+  });
+
+  it("ne crédite à la SASU que ce qu'elle ajoute au-dessus d'un emploi extérieur", () => {
+    const r = sim(30_000, { salaireExterneBrut: 30_000 });
+    expect(r.retraiteBaseAnnuelle).toBeCloseTo((0.5 * (P.PASS - 30_000)) / 25, 6);
+  });
+
+  it('déduit les prélèvements sociaux des pensions', () => {
+    const r = sim(40_000);
+    expect(r.retraiteAcquiseBrute).toBeCloseTo(
+      r.retraiteBaseAnnuelle + r.retraiteComplementaireAnnuelle,
+      6,
+    );
+    expect(r.retraiteAcquiseNette).toBeCloseTo(r.retraiteAcquiseBrute * (1 - 0.091), 6);
+  });
+
+  it('divise par deux la rente achetée par euro de coût au-delà du PASS', () => {
+    const marginal = (brut: number) => {
+      const a = sim(brut);
+      const b = sim(brut + 1_000);
+      return (
+        (b.retraiteAcquiseBrute - a.retraiteAcquiseBrute) / (b.coutEmployeur - a.coutEmployeur)
+      );
+    };
+    expect(marginal(60_000)).toBeLessThan(marginal(30_000) * 0.6);
+  });
+
+  it('actualise la rente', () => {
+    expect(valeurActuelleRente(1_000, 0, 20, 0)).toBe(20_000);
+    expect(valeurActuelleRente(1_000, 10, 20, 0.02)).toBeCloseTo(
+      1_000 * ((1 - 1.02 ** -20) / 0.02) * 1.02 ** -10,
+      6,
+    );
+  });
+
+  it('pousse l’optimum vers le PASS quand on valorise la retraite', () => {
+    const DEFAUT = { ...BASE, resultatAvantRemuneration: P.RESULTAT_PAR_DEFAUT };
+    const sans = balayer(DEFAUT).optimum;
+    const avec = balayer({ ...DEFAUT, valoriserRetraite: true }).optimum;
+    expect(sans.critere).toBe(sans.netEnPoche);
+    expect(avec.brutAnnuel - sans.brutAnnuel).toBeGreaterThan(15_000);
+    expect(Math.abs(avec.brutAnnuel - P.PASS)).toBeLessThan(2_000);
+    // Off by default: the recommendation does not change unless asked.
+    expect(balayer(DEFAUT).optimum.brutAnnuel).toBe(sans.brutAnnuel);
   });
 });
 

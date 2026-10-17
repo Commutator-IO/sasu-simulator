@@ -1,5 +1,5 @@
 import * as P from '../lib/parametres2026';
-import { eur } from '../lib/format';
+import { eur, tauxPct } from '../lib/format';
 import { DEPOT, LIEN_ISSUES, lienNouvelleIssue } from '../lib/depot';
 
 const SOURCES = [
@@ -71,6 +71,19 @@ const SOURCES = [
     hote: 'boss.gouv.fr',
   },
   {
+    titre: 'Retraite de base du régime général',
+    detail:
+      "50 % du revenu annuel moyen des 25 meilleures années au taux plein, chaque salaire étant retenu dans la limite du plafond de la sécurité sociale. Une année parmi les 25 meilleures ajoute donc 2 % de son salaire plafonné à la pension annuelle.",
+    url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F21552',
+    hote: 'service-public.gouv.fr',
+  },
+  {
+    titre: 'Prélèvements sociaux sur les pensions',
+    detail: `Au taux normal, ${tauxPct(P.PRELEVEMENTS_SOCIAUX_PENSION * 100)} : CSG 8,3 %, CRDS 0,5 % et Casa 0,3 %. Des taux réduits s'appliquent aux revenus modestes.`,
+    url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F2971',
+    hote: 'service-public.gouv.fr',
+  },
+  {
     titre: "Crédit d'impôt emploi à domicile",
     detail: `50 % des dépenses de services à la personne, aides reçues déduites, dans la limite de ${eur(P.CI_SAP_PLAFOND)} (jusqu'à ${eur(P.CI_SAP_PLAFOND_MAJORE_MAX)} avec majorations, ${eur(P.CI_SAP_PLAFOND_PREMIERE_ANNEE_MAX)} la première année, ${eur(P.CI_SAP_PLAFOND_INVALIDITE)} en cas d'invalidité). Le CESU préfinancé réduit donc le crédit tant que les dépenses restent sous le plafond.`,
     url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F12',
@@ -109,6 +122,7 @@ const HYPOTHESES = [
   "Sa rémunération est traitée comme celle d'un cadre : Apec et CET sont retenues.",
   "La rémunération d'un mandataire social sans contrat de travail est exclue de l'assiette de la taxe d'apprentissage et de la contribution à la formation professionnelle.",
   "L'abattement de 1,75 % sur l'assiette CSG-CRDS est plafonné à 4 Pass, la fraction supérieure étant soumise sur 100 % du brut.",
+  "La retraite acquise est estimée au taux plein, pour une carrière complète : la base suppose que l'année compte parmi les 25 meilleures, et la cotisation d'assurance maladie sur la complémentaire n'est pas déduite. Sa valeur actuelle n'entre dans l'optimum que si on le demande.",
   "Le crédit d'impôt emploi à domicile appartient au foyer, avec ou sans la société : seule la part de crédit que fait perdre le CESU préfinancé est imputée à la SASU. Les sous-plafonds par activité (jardinage, informatique, bricolage) ne sont pas contrôlés.",
   "Les versements sur un PER individuel sont déduits du seul revenu imposé au barème : les dividendes soumis à la flat tax n'en profitent pas. Le plafond est celui du président ; la mutualisation avec celui du conjoint n'est pas modélisée.",
   "L'épargne salariale saisie est supposée placée sur un plan d'épargne, donc exonérée d'impôt sur le revenu, et versée par une société de moins de 50 salariés, donc sans forfait social. Les autres avantages sont supposés rester dans leurs limites d'exonération.",
