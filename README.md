@@ -169,6 +169,25 @@ droit commun quelle que soit la rémunération.
 Les sources sont listées en bas de page dans l'application, et référencées en
 commentaire dans `parametres2026.ts`.
 
+## Veille des paramètres
+
+Chaque paramètre de [src/lib/parametres2026.ts](src/lib/parametres2026.ts)
+appartient à une entrée de `VALIDITE_PARAMETRES`, avec une date de validité, le
+texte à relire et sa source. Les tests échouent dès qu'une date est dépassée,
+et un paramètre ajouté sans date fait lui aussi échouer la suite.
+
+- **Chaque matin**, le workflow `Veille des paramètres fiscaux` lance ces tests
+  et ouvre une issue « Paramètres fiscaux périmés » qui nomme le paramètre et
+  le texte à relire. Le déploiement échoue aussi tant que rien n'est corrigé.
+- **Sur le site**, le badge « Barèmes à jour » devient « en cours de mise à
+  jour » dès qu'un paramètre est périmé.
+- **La passe annuelle** : en novembre, la valeur du point Agirc-Arrco ; en
+  décembre et janvier, le Pass, le Smic, les taux Urssaf et la LFSS ; à la
+  publication de la loi de finances, le barème de l'impôt sur le revenu et
+  l'IS. Pour chaque entrée, relire la source, corriger ou confirmer la valeur,
+  puis repousser `valableJusquau`. Repousser une date sans relire la source
+  annule tout l'intérêt du mécanisme.
+
 ## Limites connues
 
 - Hors CFE, mutuelle, prévoyance et frais de tenue de comptabilité.

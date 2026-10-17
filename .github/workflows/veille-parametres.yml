@@ -1,0 +1,61 @@
+name: Veille des paramètres fiscaux
+
+# A parameter expires on a calendar date, not on a push: without a schedule, a
+# quiet month would let a stale rate sit on the site with CI still green. Every
+# morning this runs the validity tests of src/lib/parametres2026.ts and, if one
+# fails, opens (or updates) an issue naming the parameter and the text to
+# re-read. The deploy workflow runs the same tests, so the next push also fails
+# until the parameter is checked.
+#
+# Requires: Settings > Actions > General > Workflow permissions allowing issues
+# to be written (granted below through `permissions`).
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  veille:
+    name: Vérifier les dates de validité
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tester la validité des paramètres
+        id: tests
+        continue-on-error: true
+        run: npx vitest run src/lib/parametres2026.test.ts 2>&1 | tee resultat.txt; exit "${PIPESTATUS[0]}"
+
+      - name: Ouvrir ou mettre à jour l'issue
+        if: steps.tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITRE="Paramètres fiscaux périmés"
+          {
+            echo "La vérification quotidienne a trouvé des paramètres au-delà de leur date de validité."
+            echo
+            echo '```'
+            grep -E "Paramètre périmé" resultat.txt | sed 's/^ *//' | sort -u
+            echo '```'
+            echo
+            echo "Relire chaque source, corriger ou confirmer la valeur dans \`src/lib/parametres2026.ts\`, puis repousser \`valableJusquau\`."
+          } > corps.md
+          NUMERO=$(gh issue list --state open --search "$TITRE in:title" --json number --jq '.[0].number')
+          if [ -n "$NUMERO" ]; then
+            gh issue comment "$NUMERO" --body-file corps.md
+          else
+            gh issue create --title "$TITRE" --body-file corps.md
+          fi
+          exit 1

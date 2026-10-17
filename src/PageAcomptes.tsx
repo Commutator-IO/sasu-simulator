@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { BadgeBaremes } from './components/BadgeBaremes';
 import { Curseur, Montant, Segments } from './components/Champs';
 import { Entete, Pied } from './components/Cadre';
 import { HistogrammeAcomptes } from './components/HistogrammeAcomptes';
@@ -92,10 +93,7 @@ export default function PageAcomptes() {
       <main>
         <section className="border-b border-ink-200/70 bg-white">
           <div className="mx-auto max-w-6xl px-5 pt-14 pb-12 sm:pt-20 sm:pb-16">
-            <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
-              Barèmes {P.ANNEE} à jour
-            </p>
+            <BadgeBaremes />
             <h1 className="max-w-3xl text-3xl font-semibold leading-[1.1] tracking-tight text-ink-900 sm:text-5xl">
               Vos acomptes d'impôt sur les sociétés sont-ils trop élevés&nbsp;?
             </h1>

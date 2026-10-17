@@ -377,3 +377,175 @@ export const VALEUR_POINT_AGIRC_ARRCO = 1.4386;
 /** Point-accrual rates (excluding the 127% call rate). */
 export const TAUX_POINTS_T1 = 0.062;
 export const TAUX_POINTS_T2 = 0.17;
+
+// ---------------------------------------------------------------------------
+// Validity
+// ---------------------------------------------------------------------------
+
+/**
+ * How long each parameter above can be trusted, and what to re-read once it
+ * cannot.
+ *
+ * A stale rate looks exactly like a right one: the flat tax was once computed
+ * at 30% for several iterations after the 2026 Social Security Financing Act
+ * had moved it to 31.4%. Every exported parameter belongs to exactly one entry
+ * here (a test enforces it), and the test suite fails once an entry is past
+ * its date, so CI turns red before the site turns wrong.
+ *
+ * Extending a date without re-reading the source defeats the purpose: update
+ * the value or confirm it, then move the date.
+ */
+export type Validite = {
+  /** Names of the exported constants this entry covers. */
+  constantes: string[];
+  /**
+   * Last day the values hold, as YYYY-MM-DD; null for the simulator's own
+   * conventions, which no text can make stale.
+   */
+  valableJusquau: string | null;
+  /** What changes them, and where to check. */
+  aVerifier: string;
+  source: string;
+};
+
+export const VALIDITE_PARAMETRES: Validite[] = [
+  {
+    constantes: ['ANNEE'],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      "Passage à l'année suivante : revoir chaque paramètre de ce fichier, puis le renommer.",
+    source: 'https://github.com/Commutator-IO/sasu-simulator/blob/main/TODO.md',
+  },
+  {
+    constantes: ['PASS', 'PMSS', 'CSG_ABATTEMENT_PLAFOND'],
+    valableJusquau: '2026-12-31',
+    aVerifier: "Plafond de la sécurité sociale de l'année suivante, fixé par arrêté en décembre.",
+    source: 'https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/plafonds.html',
+  },
+  {
+    constantes: ['SMIC_HORAIRE', 'SMIC_MENSUEL', 'BRUT_PAR_TRIMESTRE'],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      'Revalorisation du Smic au 1ᵉʳ janvier, ou en cours d’année si l’inflation la déclenche.',
+    source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F2300',
+  },
+  {
+    constantes: ['RGDU_APPLICABLE_AU_PRESIDENT', 'COTISATIONS', 'AT_MP_DEFAUT'],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      'Taux de cotisations Urssaf et Agirc-Arrco au 1ᵉʳ janvier, après la loi de financement de la sécurité sociale.',
+    source:
+      'https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/taux-cotisations-secteur-prive.html',
+  },
+  {
+    constantes: [
+      'CSG_ABATTEMENT',
+      'CSG_DEDUCTIBLE',
+      'CSG_NON_DEDUCTIBLE',
+      'CRDS',
+      'CSG_CRDS_EPARGNE_SALARIALE',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier: "Taux et assiette de la CSG-CRDS sur les revenus d'activité, dans la LFSS.",
+    source: 'https://boss.gouv.fr/portail/accueil/regles-dassujettissement/assiette-generale.html',
+  },
+  {
+    constantes: ['IS_SEUIL_TAUX_REDUIT', 'IS_TAUX_REDUIT', 'IS_TAUX_NORMAL'],
+    valableJusquau: '2026-12-31',
+    aVerifier: "Taux et seuil de l'impôt sur les sociétés dans la loi de finances.",
+    source: 'https://entreprendre.service-public.gouv.fr/vosdroits/F23575',
+  },
+  {
+    constantes: [
+      'BAREME_IR',
+      'ABATTEMENT_SALAIRE',
+      'ABATTEMENT_SALAIRE_MIN',
+      'ABATTEMENT_SALAIRE_MAX',
+      'DECOTE_CELIBATAIRE',
+      'DECOTE_COUPLE',
+      'DECOTE_TAUX',
+      'PLAFOND_DEMI_PART',
+      'PAS_ARRONDI',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      "Barème de l'impôt sur le revenu, décote, plafond du quotient familial et déduction de 10 % votés dans la loi de finances suivante.",
+    source: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F1419',
+  },
+  {
+    constantes: [
+      'DISPENSE_PFNL_CELIBATAIRE',
+      'DISPENSE_PFNL_COUPLE',
+      'CEHR_SEUIL_CELIBATAIRE',
+      'CEHR_SEUIL_COUPLE',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      'Seuils de dispense de l’acompte de 12,8 % (CGI, art. 242 quater) et de la contribution exceptionnelle sur les hauts revenus (CGI, art. 223 sexies).',
+    source: 'https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006069577',
+  },
+  {
+    constantes: [
+      'PFU_IR',
+      'PRELEVEMENTS_SOCIAUX',
+      'PFU_TOTAL',
+      'ABATTEMENT_DIVIDENDES',
+      'CSG_DEDUCTIBLE_DIVIDENDES',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier:
+      'Flat tax, prélèvements sociaux sur les revenus du capital et abattement de 40 % : loi de finances et LFSS.',
+    source: 'https://entreprendre.service-public.gouv.fr/actualites/A18796',
+  },
+  {
+    constantes: [
+      'TJM_MOYEN_REFERENCE',
+      'JOURS_FACTURES_REFERENCE',
+      'TAUX_FRAIS_REFERENCE',
+      'RESULTAT_PAR_DEFAUT',
+      'CA_MENSUEL_PAR_DEFAUT',
+      'FRAIS_MENSUELS_PAR_DEFAUT',
+    ],
+    valableJusquau: '2026-12-31',
+    aVerifier: 'Tarif journalier moyen du baromètre public de l’année suivante.',
+    source: 'https://www.malt.fr/t/barometre-tarifs/tech/',
+  },
+  {
+    constantes: ['SALAIRE_REFERENCE_AGIRC_ARRCO', 'TAUX_POINTS_T1', 'TAUX_POINTS_T2'],
+    valableJusquau: '2026-12-31',
+    aVerifier: "Valeur d'achat du point (salaire de référence) Agirc-Arrco de l'année suivante.",
+    source:
+      'https://reglementation.agirc-arrco.fr/home/baremes/listes-area/baremes-1/valeur-d-achat-du-point-agirc-arrco.html',
+  },
+  {
+    constantes: ['VALEUR_POINT_AGIRC_ARRCO'],
+    // The point is revalued every 1 November.
+    valableJusquau: '2026-10-31',
+    aVerifier: 'Valeur de service du point Agirc-Arrco, revalorisée chaque 1ᵉʳ novembre.',
+    source:
+      'https://reglementation.agirc-arrco.fr/home/baremes/listes-area/baremes-1/valeur-de-service-du-point-agirc-arrco.html',
+  },
+  {
+    constantes: ['TOLERANCE_OPTIMUM'],
+    valableJusquau: null,
+    aVerifier: 'Convention du simulateur : aucun texte ne la fait évoluer.',
+    source: 'https://github.com/Commutator-IO/sasu-simulator',
+  },
+];
+
+/** Entries past their date on a given day (YYYY-MM-DD). */
+export function parametresPerimes(jour: string): Validite[] {
+  return VALIDITE_PARAMETRES.filter(
+    (v) => v.valableJusquau !== null && jour > v.valableJusquau,
+  );
+}
+
+/** Today as YYYY-MM-DD, in Paris time: the rules change at midnight there. */
+export function aujourdhuiAParis(maintenant = new Date()): string {
+  return new Intl.DateTimeFormat('fr-CA', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(maintenant);
+}

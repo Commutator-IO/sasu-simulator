@@ -47,18 +47,19 @@ après la publication.
 - Le taux était écrit en dur à quatre endroits de l'interface, en plus de la
   constante. Les libellés dérivent désormais des constantes ; il faut tenir
   cette règle et ne jamais réintroduire un taux littéral dans du JSX.
-- Rien n'indique **quand** un paramètre a été vérifié pour la dernière fois. Un
-  chiffre juste et un chiffre périmé se ressemblent.
-- Rien ne signale à l'utilisateur l'ancienneté des données.
+- Rien n'indiquait **jusqu'à quand** un paramètre restait valable : un chiffre
+  juste et un chiffre périmé se ressemblaient. C'est désormais daté (voir
+  « En place » ci-dessous).
+- Rien ne signalait à l'utilisateur l'ancienneté des données : le badge le fait
+  maintenant.
+
+**En place.** Chaque paramètre porte une date de validité, sa source et le
+texte à relire (`VALIDITE_PARAMETRES`). Les tests échouent au-delà de cette
+date, un workflow quotidien ouvre une issue, et le badge du site cesse alors
+d'affirmer que les barèmes sont à jour. Voir la section « Veille des
+paramètres » du README.
 
 **Pistes.**
-
-- Attacher à chaque paramètre une date de dernière vérification et l'URL de sa
-  source, plutôt que de laisser l'information en commentaire libre. Un simple
-  objet `{ valeur, source, verifieLe }` suffirait, et permettrait d'afficher
-  « barèmes vérifiés le … » en pied de page.
-- Un job planifié qui échoue au-delà d'un certain âge de vérification, pour
-  transformer l'oubli en alerte.
 - Surveiller les textes plutôt que les blogs : le PLF et le PLFSS à l'automne,
   la publication au JO fin décembre puis en février, les taux Urssaf au
   1ᵉʳ janvier, la revalorisation Agirc-Arrco en novembre, le Pass en décembre.
