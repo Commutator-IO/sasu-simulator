@@ -165,6 +165,7 @@
       "cle": "expert-data",
       "libelle": "Expert data",
       "couleur": "var(--color-brand-600)",
+      "capture": "expert-data",
       "villes": [
         {
           "date": "2019-10",
@@ -365,6 +366,7 @@
       "cle": "developpeur",
       "libelle": "Développeur",
       "couleur": "var(--color-gold-600)",
+      "capture": "tech",
       "villes": [
         {
           "date": "2020-12",
@@ -545,6 +547,7 @@
       "cle": "consultant",
       "libelle": "Consultant stratégie & business",
       "couleur": "#0ea5e9",
+      "capture": "business-conseil",
       "villes": [
         {
           "date": "2019-10",
@@ -735,6 +738,7 @@
       "cle": "chef-de-projet",
       "libelle": "Chef de projet & Coach agile",
       "couleur": "#7c3aed",
+      "capture": "gestion-de-projets-coaching",
       "villes": [
         {
           "date": "2020-11",
@@ -925,6 +929,7 @@
       "cle": "marketing",
       "libelle": "Consultant marketing & analytics",
       "couleur": "#db2777",
+      "capture": "marketing",
       "villes": [
         {
           "date": "2019-11",
@@ -1105,6 +1110,7 @@
       "cle": "graphiste",
       "libelle": "Graphiste & Photographe",
       "couleur": "#ea580c",
+      "capture": "web-graphic-design",
       "villes": [
         {
           "date": "2020-11",
@@ -1285,6 +1291,7 @@
       "cle": "redacteur",
       "libelle": "Rédacteur & Community manager",
       "couleur": "#64748b",
+      "capture": "communication",
       "villes": [
         {
           "date": "2019-10",
@@ -1475,6 +1482,7 @@
       "cle": "motion",
       "libelle": "Motion designer & Réalisateur",
       "couleur": "#0d9488",
+      "capture": "image-son",
       "villes": [
         {
           "date": "2020-11",
@@ -1675,6 +1683,7 @@
       "cle": "jeux-video",
       "libelle": "Expert jeux vidéo",
       "couleur": "#a16207",
+      "capture": "jeux-video",
       "villes": [
         {
           "date": "2026-07",

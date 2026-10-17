@@ -43,6 +43,7 @@ jobs:
       - name: Capturer le baromètre
         env:
           BAROMETRE_URL: ${{ secrets.BAROMETRE_URL }}
+          RESUME_CAPTURE: ${{ runner.temp }}/resume-capture.md
         run: node scripts/capture-barometre.mjs
 
       - name: Stop si rien de neuf
@@ -80,5 +81,5 @@ jobs:
             --base main \
             --head "$BRANCHE" \
             --title "TJM data : point $MOIS" \
-            --body "Capture mensuelle automatique du baromètre public (point réel daté $MOIS). À relire avant fusion." \
+            --body-file "$RUNNER_TEMP/resume-capture.md" \
             || echo "Une PR existe déjà pour $BRANCHE."

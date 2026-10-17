@@ -17,6 +17,16 @@ describe('données du baromètre', () => {
     expect(PROFESSIONS.map((p) => p.cle)).toContain('developpeur');
   });
 
+  it('donne à chaque métier sa propre adresse de capture, sans nom de site', () => {
+    // The monthly capture loops over the dataset: a profession without a path
+    // would silently stop growing, and a host in the data would name the source.
+    const chemins = PROFESSIONS.map((p) => p.capture);
+    for (const [i, c] of chemins.entries()) {
+      expect(c, PROFESSIONS[i].cle).toMatch(/^[a-z0-9-]+$/);
+    }
+    expect(new Set(chemins).size).toBe(chemins.length);
+  });
+
   it('ne projette qu’après la dernière mesure, avec une fourchette', () => {
     for (const p of PROFESSIONS) {
       const projections = p.villes.filter((pt) => pt.origine === 'projection');

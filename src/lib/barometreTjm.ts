@@ -75,6 +75,11 @@ export type Profession = {
   /** Short form, for the cramped picker; falls back to `libelle`. */
   court?: string;
   couleur: string;
+  /**
+   * Path segment of this profession's barometer page, read by the monthly
+   * capture script. Only the trade name: the host stays in a repository secret.
+   */
+  capture?: string;
   villes: PointVille[];
   experience: NiveauExperience[];
   experienceHistorique?: PointExperience[];

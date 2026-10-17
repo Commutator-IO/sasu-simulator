@@ -36,19 +36,8 @@ const CHEMIN_JSON = new URL('../src/data/barometreTjm.json', import.meta.url);
 const VILLES = ['Paris', 'Lyon', 'Bordeaux', 'Lille', 'Marseille'];
 const COLONNES = ['national', ...VILLES];
 
-// Profession key in the dataset -> the path segment its page sits under. The
-// secret carries the host and the section; only these trade names are in code.
-const SEGMENTS = {
-  'expert-data': 'expert-data',
-  developpeur: 'tech',
-  consultant: 'business-conseil',
-  'chef-de-projet': 'gestion-de-projets-coaching',
-  marketing: 'marketing',
-  graphiste: 'web-graphic-design',
-  redacteur: 'communication',
-  motion: 'image-son',
-  'jeux-video': 'jeux-video',
-};
+// Where to write the run's summary, which the workflow uses as the PR body.
+const CHEMIN_RESUME = process.env.RESUME_CAPTURE;
 
 // BAROMETRE_URL points at one profession's page; its parent is the section.
 const base = CIBLE.replace(/\/+$/, '').replace(/\/[^/]*$/, '');
@@ -216,10 +205,14 @@ const ignores = [];
 try {
   const page = await navigateur.newPage();
 
-  for (const [cle, segment] of Object.entries(SEGMENTS)) {
-    const prof = donnees.professions.find((p) => p.cle === cle);
-    if (!prof) {
-      ignores.push(`${cle} : absent du jeu de données`);
+  // Each profession carries the path segment its page sits under, in the
+  // dataset rather than here: adding a trade is a data change, not a code one.
+  // The secret carries the host and the section; only trade names are stored.
+  for (const prof of donnees.professions) {
+    const cle = prof.cle;
+    const segment = prof.capture;
+    if (!segment) {
+      ignores.push(`${cle} : aucune adresse de capture dans le jeu de données`);
       continue;
     }
     if (prof.villes.some((p) => p.date === mois && p.origine === 'live')) {
@@ -273,6 +266,21 @@ try {
 } finally {
   await navigateur.close();
 }
+
+/** Markdown summary for the pull request: what was added, and what was not. */
+function resume() {
+  const lignes = [
+    `Capture mensuelle du baromètre public, point réel daté ${mois}. À relire avant fusion.`,
+    '',
+    `**Ajoutés (${ajoutes.length})**`,
+    ...(ajoutes.length ? ajoutes.map((l) => `- ${l}`) : ['- aucun']),
+  ];
+  if (ignores.length) {
+    lignes.push('', `**Non lus (${ignores.length})**`, ...ignores.map((l) => `- ${l}`));
+  }
+  return `${lignes.join('\n')}\n`;
+}
+if (CHEMIN_RESUME) writeFileSync(CHEMIN_RESUME, resume());
 
 if (!ajoutes.length) {
   console.log('Aucun point ajouté.');
