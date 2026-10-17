@@ -56,6 +56,32 @@ jobs:
       - name: Build
         run: npm run build
 
+      # The dependency inventory of the exact commit being published. sbom.yml
+      # downloads it every week and scans it again, because the advisories that
+      # concern a live build are published after it was built.
+      - name: Inventory the dependencies (SBOM)
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          upload-artifact: false
+
+      - name: Record which commit the SBOM describes
+        if: github.event_name != 'pull_request'
+        run: git rev-parse HEAD > sbom.commit
+
+      - name: Keep the production SBOM
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-production
+          path: |
+            sbom.cdx.json
+            sbom.commit
+          retention-days: 90
+
       # `enablement: true` provisions GitHub Pages on the repository if it is
       # not set up yet. Without it the step fails with "Get Pages site failed"
       # until someone enables Pages by hand in the repository settings.

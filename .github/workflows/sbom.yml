@@ -1,0 +1,106 @@
+name: sbom
+
+# The site's dependency inventory (SBOM), and a weekly re-scan of it.
+#
+# A scan at build time only knows the advisories published before the build.
+# The ones that concern a live site come out later, so the inventory is kept
+# and checked again against current vulnerability data every Monday.
+#
+# Two inventories are scanned:
+#   staging     generated from the commit being checked (main, or a pull request)
+#   production  the SBOM that deploy.yml kept when it last published. It is
+#               scanned as it was stored, because production runs whatever commit
+#               was last deployed, which is not necessarily the tip of main.
+#
+# The site is served as static files, so most of these packages only run during
+# the build. When a finding cannot be reached in what is served, record it in
+# .github/vex.openvex.json with its justification. Do not hide it with a scan
+# setting: the VEX file keeps the decision, its reason and its date in one place.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/vex.openvex.json
+      - .github/workflows/sbom.yml
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/vex.openvex.json
+      - .github/workflows/sbom.yml
+  schedule:
+    - cron: '23 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Needed to download the artifact kept by the last deploy.yml run.
+  actions: read
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Inventory the dependencies (SBOM)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cdx.json
+          upload-artifact: false
+
+      - name: Keep the SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-staging-${{ github.sha }}
+          path: sbom.cdx.json
+          retention-days: 90
+
+      - name: Scan against current vulnerability data
+        uses: anchore/scan-action@v7
+        with:
+          sbom: sbom.cdx.json
+          vex: .github/vex.openvex.json
+          severity-cutoff: high
+          fail-build: true
+          output-format: table
+
+  production:
+    # A push or a pull request changes main, not what is deployed.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      # For the VEX file only. The inventory comes from the deployment.
+      - uses: actions/checkout@v7
+
+      - name: Fetch the SBOM of the last deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Pull request runs build but never deploy, so only main counts.
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow deploy.yml \
+            --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -z "$run_id" ]; then
+            echo "::error::No successful run of deploy.yml on main was found."
+            exit 1
+          fi
+          if ! gh run download "$run_id" --repo "$GITHUB_REPOSITORY" \
+              --name sbom-production --dir production; then
+            echo "::error::deploy.yml run $run_id kept no SBOM. It predates the inventory step, or its artifact is older than 90 days. Deploy again to produce one."
+            exit 1
+          fi
+          echo "Scanning production at commit $(cat production/sbom.commit), deployed by run $run_id."
+
+      - name: Scan against current vulnerability data
+        uses: anchore/scan-action@v7
+        with:
+          sbom: production/sbom.cdx.json
+          vex: .github/vex.openvex.json
+          severity-cutoff: high
+          fail-build: true
+          output-format: table

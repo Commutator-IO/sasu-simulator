@@ -90,6 +90,16 @@ Le domaine étant personnalisé, le site est servi **à la racine** et les URL
 d'assets ne sont pas préfixées. Sans domaine personnalisé, un site de projet
 vit sous `/<dépôt>/` et le build a besoin de `BASE_PATH=/<dépôt>/`.
 
+## Inventaire des dépendances
+
+Chaque déploiement garde le SBOM (CycloneDX) du commit publié, 90 jours, avec
+le commit qu'il décrit. Le workflow `sbom` le scanne chaque lundi avec Grype
+contre les vulnérabilités publiées depuis, et scanne aussi l'inventaire de
+`main` à chaque changement de dépendances. Il échoue dès une faille haute ou
+critique. Une faille inatteignable dans les fichiers statiques servis se
+documente dans `.github/vex.openvex.json`, avec sa justification, plutôt que
+d'être masquée par un réglage du scan.
+
 ## Partage d'une simulation
 
 Le site est entièrement statique : il n'y a ni base de données ni identifiant
