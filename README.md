@@ -90,6 +90,19 @@ Le domaine étant personnalisé, le site est servi **à la racine** et les URL
 d'assets ne sont pas préfixées. Sans domaine personnalisé, un site de projet
 vit sous `/<dépôt>/` et le build a besoin de `BASE_PATH=/<dépôt>/`.
 
+## Aperçu des liens partagés
+
+Chaque page porte ses balises Open Graph et sa carte Twitter : Slack, LinkedIn
+ou X affichent alors son titre, sa description et une image plutôt qu'une URL
+brute. Elles sont ajoutées au build par un plugin de `vite.config.ts`
+(`src/lib/balisesSociales.ts`), qui reprend le `<title>` et la
+`<meta name="description">` de la page : modifier l'un suffit à mettre l'autre
+à jour.
+
+L'image, `public/apercu.png` (1200 × 630), se régénère en ouvrant
+`scripts/apercu-social.html` dans un navigateur puis en cliquant sur
+« Télécharger apercu.png ».
+
 ## Inventaire des dépendances
 
 Chaque déploiement garde le SBOM (CycloneDX) du commit publié, 90 jours, avec

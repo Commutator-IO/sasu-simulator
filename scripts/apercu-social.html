@@ -1,0 +1,209 @@
+<!doctype html>
+<!--
+  Source de public/apercu.png : l'image que Slack, LinkedIn ou X affichent quand
+  on partage un lien du site (balise og:image), au format 1200 × 630 qu'ils
+  attendent tous.
+
+  Pour la régénérer : ouvrir ce fichier dans un navigateur connecté (la police
+  Inter vient de Google Fonts, comme sur le site), puis cliquer sur
+  « Télécharger apercu.png » et remplacer public/apercu.png. Le dessin se fait
+  sur un canvas à la taille exacte, si bien que le résultat ne dépend ni de la
+  fenêtre ni de l'écran. Les couleurs reprennent les jetons de src/index.css, le
+  logo est celui de public/favicon.svg, la courbe est celle du net en poche avec
+  son optimum.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Aperçu social — SASU simulator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 24px;
+        font-family: Inter, system-ui, sans-serif;
+        background: #eef0ee;
+      }
+      canvas {
+        display: block;
+        width: 1200px;
+        height: 630px;
+        box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
+      }
+      button {
+        margin-top: 16px;
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 10px;
+        background: #0f7b5a;
+        color: #fff;
+        font: 600 15px Inter, system-ui, sans-serif;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="apercu" width="1200" height="630"></canvas>
+    <button id="telecharger" type="button">Télécharger apercu.png</button>
+
+    <script type="module">
+      // The S of the header mark, copied from public/favicon.svg (32 × 32 box).
+      const S =
+        'M16.14 25.5q-2.74 0-4.42-1.22-1.68-1.23-1.9-3.5l3.36-.35q.2 1.1.96 1.65.77.55 2.04.55 1.23 0 1.89-.47.66-.47.66-1.29 0-.51-.29-.86-.28-.34-.96-.61-.68-.27-1.98-.57-1.88-.43-3.01-.96-1.13-.53-1.72-1.44-.6-.9-.6-2.27 0-1.34.71-2.35.72-1.02 2-1.57 1.3-.55 2.98-.55 2.57 0 4.16 1.13 1.59 1.14 1.88 3.25l-3.39.41q-.18-.93-.85-1.4-.66-.49-1.79-.49-1.11 0-1.71.44-.6.44-.6 1.19 0 .49.29.81.29.33.97.57.68.25 1.99.55 1.9.43 3.04.98 1.15.54 1.75 1.46.61.91.61 2.31 0 1.45-.75 2.52-.74 1.07-2.1 1.65-1.34.58-3.12.58Z';
+      const C = {
+        brand50: '#eefaf4',
+        brand500: '#1e9970',
+        brand600: '#0f7b5a',
+        ink200: '#dee2df',
+        ink500: '#64736c',
+        ink900: '#16201b',
+        gold500: '#d99b1f',
+      };
+      const W = 1200;
+      const H = 630;
+      const canvas = document.getElementById('apercu');
+      const x = canvas.getContext('2d');
+
+      // Drawing before Inter is loaded would bake a fallback font into the PNG.
+      await Promise.all(
+        ['400 26px Inter', '500 24px Inter', '600 34px Inter', '700 60px Inter'].map((f) =>
+          document.fonts.load(f),
+        ),
+      );
+
+      const lignes = (texte, largeur) => {
+        const out = [];
+        let ligne = '';
+        for (const mot of texte.split(' ')) {
+          const essai = ligne ? `${ligne} ${mot}` : mot;
+          if (x.measureText(essai).width > largeur && ligne) {
+            out.push(ligne);
+            ligne = mot;
+          } else ligne = essai;
+        }
+        out.push(ligne);
+        return out;
+      };
+
+      // Background: white fading to brand-50 in the bottom-right corner.
+      let degrade = x.createLinearGradient(0, 0, W, H);
+      degrade.addColorStop(0, '#fff');
+      degrade.addColorStop(0.55, '#fff');
+      degrade.addColorStop(1, C.brand50);
+      x.fillStyle = degrade;
+      x.fillRect(0, 0, W, H);
+
+      // Header mark and wordmark.
+      x.save();
+      x.translate(80, 72);
+      x.beginPath();
+      x.roundRect(0, 0, 56, 56, 14);
+      x.fillStyle = C.brand600;
+      x.fill();
+      x.scale(56 / 32, 56 / 32);
+      x.fillStyle = '#fff';
+      x.fill(new Path2D(S));
+      x.restore();
+      x.textBaseline = 'middle';
+      x.font = '600 34px Inter';
+      x.letterSpacing = '-0.34px';
+      x.fillStyle = C.ink900;
+      x.fillText('SASU ', 154, 101);
+      x.fillStyle = C.brand600;
+      x.fillText('simulator', 154 + x.measureText('SASU ').width, 101);
+
+      // Headline, then the tools.
+      x.textBaseline = 'alphabetic';
+      x.font = '700 60px Inter';
+      x.letterSpacing = '-1.5px';
+      x.fillStyle = C.ink900;
+      let y = 184;
+      for (const l of lignes('Salaire ou dividendes ? Trouvez le bon dosage.', 700)) {
+        x.fillText(l, 80, y + 2.4 + 48);
+        y += 64.8;
+      }
+      x.font = '400 26px Inter';
+      x.letterSpacing = '0px';
+      x.fillStyle = C.ink500;
+      y += 28;
+      for (const l of lignes(
+        "Acomptes d'IS, CFE, PER, CESU, retraite, prévisionnel et TJM du marché.",
+        640,
+      )) {
+        x.fillText(l, 80, y + 5.85 + 20.8);
+        y += 37.7;
+      }
+
+      // Footer: the site's badge, then its address.
+      const haut = H - 64 - 46;
+      x.font = '600 24px Inter';
+      const badge = 'Barèmes 2026 sourcés';
+      const largeurBadge = 18 + 10 + 10 + x.measureText(badge).width + 18;
+      x.beginPath();
+      x.roundRect(80, haut, largeurBadge, 46, 23);
+      x.fillStyle = C.brand50;
+      x.fill();
+      x.beginPath();
+      x.arc(80 + 18 + 5, haut + 23, 5, 0, Math.PI * 2);
+      x.fillStyle = C.brand500;
+      x.fill();
+      x.textBaseline = 'middle';
+      x.fillStyle = C.brand600;
+      x.fillText(badge, 80 + 38, haut + 24);
+      x.font = '500 24px Inter';
+      x.fillStyle = C.ink500;
+      x.fillText('sasu.commutator.io', 80 + largeurBadge + 14, haut + 24);
+
+      // Take-home pay against salary: it rises, peaks at the optimum, falls.
+      x.save();
+      x.translate(W - 64 - 400, 150);
+      x.strokeStyle = C.ink200;
+      x.lineWidth = 1;
+      x.setLineDash([4, 6]);
+      for (const ligne of [80, 170, 260]) {
+        x.beginPath();
+        x.moveTo(0, ligne);
+        x.lineTo(400, ligne);
+        x.stroke();
+      }
+      x.setLineDash([]);
+      const courbe =
+        'M0 210 C 60 150, 110 92, 150 78 C 190 66, 230 92, 280 132 C 320 164, 360 200, 400 236';
+      degrade = x.createLinearGradient(0, 0, 0, 330);
+      degrade.addColorStop(0, 'rgba(30, 153, 112, 0.22)');
+      degrade.addColorStop(1, 'rgba(30, 153, 112, 0)');
+      x.fillStyle = degrade;
+      x.fill(new Path2D(`${courbe} L 400 330 L 0 330 Z`));
+      x.strokeStyle = C.brand500;
+      x.lineWidth = 6;
+      x.lineCap = 'round';
+      x.stroke(new Path2D(courbe));
+      x.strokeStyle = C.gold500;
+      x.lineWidth = 3;
+      x.lineCap = 'butt';
+      x.setLineDash([8, 8]);
+      x.beginPath();
+      x.moveTo(168, 20);
+      x.lineTo(168, 330);
+      x.stroke();
+      x.setLineDash([]);
+      x.beginPath();
+      x.arc(168, 74, 12, 0, Math.PI * 2);
+      x.fillStyle = C.gold500;
+      x.fill();
+      x.lineWidth = 4;
+      x.strokeStyle = '#fff';
+      x.stroke();
+      x.restore();
+
+      document.getElementById('telecharger').addEventListener('click', () => {
+        const lien = document.createElement('a');
+        lien.download = 'apercu.png';
+        lien.href = canvas.toDataURL('image/png');
+        lien.click();
+      });
+    </script>
+  </body>
+</html>

@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { insererBalisesSociales } from './src/lib/balisesSociales.ts'
 
 // Le site est servi à la racine de son domaine ; l'origine reste surchargeable
 // pour un déploiement ailleurs.
@@ -40,6 +41,28 @@ function dernierCommit(): string | null {
   }
 }
 
+/** "acomptes/index.html" est servi comme "/acomptes/", "index.html" comme "/". */
+function cheminPublic(page: string): string {
+  return page === 'index.html' ? '/' : `/${page.replace(/index\.html$/, '')}`
+}
+
+/**
+ * Ajoute à chaque page les balises d'aperçu (Open Graph, carte Twitter) et son
+ * URL canonique, pour qu'un lien partagé sur Slack ou LinkedIn s'affiche avec
+ * le titre, la description et l'image du site plutôt qu'en URL brute.
+ */
+function apercuSocial(): Plugin {
+  return {
+    name: 'apercu-social',
+    transformIndexHtml(html, { filename }) {
+      const page = filename
+        .slice(import.meta.dirname.length + 1)
+        .replace(/\\/g, '/')
+      return insererBalisesSociales(html, `${ORIGINE}${cheminPublic(page)}`, ORIGINE)
+    },
+  }
+}
+
 /** Écrit sitemap.xml et robots.txt à partir de PAGES, pendant le build. */
 function planDuSite(): Plugin {
   return {
@@ -48,11 +71,9 @@ function planDuSite(): Plugin {
     generateBundle() {
       const modifie = dernierCommit()
       const url = (page: string) => {
-        // "acomptes/index.html" est servi comme "/acomptes/", "index.html" comme "/".
-        const chemin = page === 'index.html' ? '/' : `/${page.replace(/index\.html$/, '')}`
         return [
           '  <url>',
-          `    <loc>${ORIGINE}${chemin}</loc>`,
+          `    <loc>${ORIGINE}${cheminPublic(page)}</loc>`,
           ...(modifie ? [`    <lastmod>${modifie}</lastmod>`] : []),
           '  </url>',
         ].join('\n')
@@ -81,7 +102,7 @@ function planDuSite(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), planDuSite()],
+  plugins: [react(), tailwindcss(), apercuSocial(), planDuSite()],
   // GitHub Pages sert un site de projet sous /<dépôt>/ : le workflow de
   // déploiement renseigne BASE_PATH. En local et sur un domaine dédié, la
   // racine suffit.
