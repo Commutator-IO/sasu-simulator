@@ -8,14 +8,13 @@
       "date": "2026-11-01",
       "quand": "1ᵉʳ novembre 2026",
       "categorie": "fiscal",
-      "titre": "Revalorisation annuelle du point Agirc-Arrco",
-      "detail": "La valeur de service du point, qui convertit les points acquis en rente, est revue chaque 1ᵉʳ novembre ; elle vaut 1,4386 € depuis novembre 2025. Le simulateur la tient pour valable jusqu'au 31 octobre : au-delà, ses tests échouent tant que la nouvelle valeur n'est pas reportée.",
-      "url": "https://reglementation.agirc-arrco.fr/home/baremes/listes-area/baremes-1/valeur-de-service-du-point-agirc-arrco.html",
+      "titre": "Le point Agirc-Arrco revalorisé de 1,4 %",
+      "detail": "Décision du conseil d'administration du 14 octobre 2026, applicable au 1ᵉʳ novembre : la valeur de service du point passe de 1,4386 € à environ 1,4587 €, valeur calculée en attendant la circulaire qui la fixera. Le salaire de référence, qui fixe le prix d'achat du point, sera arrêté plus tard, lors de la négociation de l'accord 2027-2030.",
+      "url": "https://www.agirc-arrco.fr/nous-connaitre/nos-actualites/retraites-complementaires-agirc-arrco-une-revalorisation-de-14-au-1er-novembre-2026/",
       "hote": "agirc-arrco.fr",
       "themes": [
         "salaire"
-      ],
-      "aVenir": true
+      ]
     },
     {
       "date": "2026-07-27",
@@ -106,7 +105,7 @@
       ]
     }
   ],
-  "misAJourLe": "2026-10-17",
+  "misAJourLe": "2026-11-02",
   "calendrier": [
     {
       "quand": "Chaque mois, le 15",

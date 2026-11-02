@@ -27,8 +27,8 @@ describe('validité des paramètres', () => {
   });
 
   it('repère les paramètres périmés à une date donnée', () => {
-    expect(P.parametresPerimes('2026-10-31')).toEqual([]);
-    expect(P.parametresPerimes('2026-11-01').flatMap((v) => v.constantes)).toEqual([
+    expect(P.parametresPerimes('2026-11-30')).toEqual([]);
+    expect(P.parametresPerimes('2026-12-01').flatMap((v) => v.constantes)).toEqual([
       'VALEUR_POINT_AGIRC_ARRCO',
     ]);
     // A convention never goes stale.

@@ -451,8 +451,15 @@ export function tjmEquivalent(resultatAvantRemuneration: number): number {
 export const BRUT_PAR_TRIMESTRE = 150 * SMIC_HORAIRE;
 /** Agirc-Arrco 2026 reference salary (purchase price of one point). */
 export const SALAIRE_REFERENCE_AGIRC_ARRCO = 20.1877;
-/** Agirc-Arrco point value in 2026: the yearly pension paid per point. */
-export const VALEUR_POINT_AGIRC_ARRCO = 1.4386;
+/**
+ * Agirc-Arrco point value from 1 November 2026: the yearly pension paid per
+ * point. The board raised it by 1.4% on 14 October 2026 (press release of that
+ * day), from €1.4386. The release gives the rate, not the value: €1.4386 ×
+ * 1.014 = €1.45874, rounded to the ten-thousandth like every value since 2019
+ * (€1.4159 × 1.016 = €1.43855 became €1.4386). To be confirmed against the
+ * Agirc-Arrco circular once it is published.
+ */
+export const VALEUR_POINT_AGIRC_ARRCO = 1.4587;
 /**
  * Base pension of the general scheme at the full rate: 50% of the average of
  * the 25 best years of salary, each year counting only up to the social
@@ -667,9 +674,12 @@ export const VALIDITE_PARAMETRES: Validite[] = [
   },
   {
     constantes: ['VALEUR_POINT_AGIRC_ARRCO'],
-    // The point is revalued every 1 November.
-    valableJusquau: '2026-10-31',
-    aVerifier: 'Valeur de service du point Agirc-Arrco, revalorisée chaque 1ᵉʳ novembre.',
+    // Computed from the announced +1.4%, not yet read in the official table:
+    // kept short so the check asks for confirmation. Once confirmed, the next
+    // date is 2027-10-31, the point being revalued every 1 November.
+    valableJusquau: '2026-11-30',
+    aVerifier:
+      "Valeur de service du point Agirc-Arrco au 1ᵉʳ novembre 2026 : confirmer 1,4587 € (1,4386 € revalorisé de 1,4 %) dans le barème publié, puis repousser la date au 31 octobre 2027.",
     source:
       'https://reglementation.agirc-arrco.fr/home/baremes/listes-area/baremes-1/valeur-de-service-du-point-agirc-arrco.html',
   },
